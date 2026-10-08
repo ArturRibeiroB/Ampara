@@ -1,0 +1,10 @@
+namespace Funeraria.Modules.Tenants.Contracts;
+
+/// <summary>API pública do módulo Tenants. Usada pelo host para resolver o tenant da requisição (TEN-01).</summary>
+public interface ITenantsApi
+{
+    /// <summary>Busca a funerária pelo subdomínio. O resultado é cacheado por alguns minutos.</summary>
+    Task<FunerariaResumoDto?> ObterPorSlugAsync(string slug, CancellationToken cancellationToken = default);
+}
+
+public sealed record FunerariaResumoDto(Guid IdTenant, string Slug, string NomeFantasia, bool Suspensa);

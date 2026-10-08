@@ -1,0 +1,22 @@
+using Funeraria.BuildingBlocks.Infrastructure.Modules;
+using Funeraria.Modules.Tenants.Contracts;
+using Funeraria.Modules.Tenants.Infrastructure.Database;
+using Funeraria.Modules.Tenants.Infrastructure.Funerarias;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Funeraria.Modules.Tenants.Infrastructure;
+
+public static class TenantsModule
+{
+    public static IServiceCollection AddTenantsModule(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddModuleApplication(Application.AssemblyReference.Assembly);
+        services.AddModuleDbContext<TenantsDbContext>(TenantsDbContext.SchemaName);
+
+        services.AddMemoryCache();
+        services.AddScoped<ITenantsApi, TenantsApi>();
+
+        return services;
+    }
+}

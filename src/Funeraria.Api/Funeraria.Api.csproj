@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <UserSecretsId>funeraria-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BuildingBlocks\Funeraria.BuildingBlocks.Infrastructure\Funeraria.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Identidade\Funeraria.Modules.Identidade.Infrastructure\Funeraria.Modules.Identidade.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Identidade\Funeraria.Modules.Identidade.Endpoints\Funeraria.Modules.Identidade.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Tenants\Funeraria.Modules.Tenants.Infrastructure\Funeraria.Modules.Tenants.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Tenants\Funeraria.Modules.Tenants.Endpoints\Funeraria.Modules.Tenants.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Clientes\Funeraria.Modules.Clientes.Infrastructure\Funeraria.Modules.Clientes.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Clientes\Funeraria.Modules.Clientes.Endpoints\Funeraria.Modules.Clientes.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Planos\Funeraria.Modules.Planos.Infrastructure\Funeraria.Modules.Planos.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Planos\Funeraria.Modules.Planos.Endpoints\Funeraria.Modules.Planos.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Catalogo\Funeraria.Modules.Catalogo.Infrastructure\Funeraria.Modules.Catalogo.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Catalogo\Funeraria.Modules.Catalogo.Endpoints\Funeraria.Modules.Catalogo.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Contratos\Funeraria.Modules.Contratos.Infrastructure\Funeraria.Modules.Contratos.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Contratos\Funeraria.Modules.Contratos.Endpoints\Funeraria.Modules.Contratos.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Financeiro\Funeraria.Modules.Financeiro.Infrastructure\Funeraria.Modules.Financeiro.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Financeiro\Funeraria.Modules.Financeiro.Endpoints\Funeraria.Modules.Financeiro.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Funeral\Funeraria.Modules.Funeral.Infrastructure\Funeraria.Modules.Funeral.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Funeral\Funeraria.Modules.Funeral.Endpoints\Funeraria.Modules.Funeral.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Documentos\Funeraria.Modules.Documentos.Infrastructure\Funeraria.Modules.Documentos.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Documentos\Funeraria.Modules.Documentos.Endpoints\Funeraria.Modules.Documentos.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Translado\Funeraria.Modules.Translado.Infrastructure\Funeraria.Modules.Translado.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Translado\Funeraria.Modules.Translado.Endpoints\Funeraria.Modules.Translado.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Terceiros\Funeraria.Modules.Terceiros.Infrastructure\Funeraria.Modules.Terceiros.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Terceiros\Funeraria.Modules.Terceiros.Endpoints\Funeraria.Modules.Terceiros.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Notificacoes\Funeraria.Modules.Notificacoes.Infrastructure\Funeraria.Modules.Notificacoes.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Notificacoes\Funeraria.Modules.Notificacoes.Endpoints\Funeraria.Modules.Notificacoes.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Relatorios\Funeraria.Modules.Relatorios.Infrastructure\Funeraria.Modules.Relatorios.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Relatorios\Funeraria.Modules.Relatorios.Endpoints\Funeraria.Modules.Relatorios.Endpoints.csproj" />
+  </ItemGroup>
+
+</Project>

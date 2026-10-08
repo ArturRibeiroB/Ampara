@@ -1,0 +1,70 @@
+# Ambiente local de desenvolvimento (INF-02). Credenciais só para uso local.
+name: funeraria
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: funeraria
+      POSTGRES_USER: funeraria
+      POSTGRES_PASSWORD: funeraria
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U funeraria -d funeraria"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Armazenamento de arquivos compatível com S3 (INF-18). Console em http://localhost:9001
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: funeraria
+      MINIO_ROOT_PASSWORD: funeraria123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 funeraria funeraria123; do sleep 1; done;
+      mc mb --ignore-existing local/funeraria-documentos;
+      "
+
+  # Cache e backplane do SignalR (INF-19, opcional).
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # Captura os e-mails enviados em desenvolvimento. Interface em http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.24
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  pgadmin:
+    image: dpage/pgadmin4:9
+    profiles: ["tools"]
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@funeraria.localhost
+      PGADMIN_DEFAULT_PASSWORD: funeraria
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-data:
+  minio-data:

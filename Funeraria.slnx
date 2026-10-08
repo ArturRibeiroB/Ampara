@@ -1,0 +1,109 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Funeraria.Api/Funeraria.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/Funeraria.BuildingBlocks.Application/Funeraria.BuildingBlocks.Application.csproj" />
+    <Project Path="src/BuildingBlocks/Funeraria.BuildingBlocks.Domain/Funeraria.BuildingBlocks.Domain.csproj" />
+    <Project Path="src/BuildingBlocks/Funeraria.BuildingBlocks.Infrastructure/Funeraria.BuildingBlocks.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Catalogo/">
+    <Project Path="src/Modules/Catalogo/Funeraria.Modules.Catalogo.Application/Funeraria.Modules.Catalogo.Application.csproj" />
+    <Project Path="src/Modules/Catalogo/Funeraria.Modules.Catalogo.Contracts/Funeraria.Modules.Catalogo.Contracts.csproj" />
+    <Project Path="src/Modules/Catalogo/Funeraria.Modules.Catalogo.Domain/Funeraria.Modules.Catalogo.Domain.csproj" />
+    <Project Path="src/Modules/Catalogo/Funeraria.Modules.Catalogo.Endpoints/Funeraria.Modules.Catalogo.Endpoints.csproj" />
+    <Project Path="src/Modules/Catalogo/Funeraria.Modules.Catalogo.Infrastructure/Funeraria.Modules.Catalogo.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Clientes/">
+    <Project Path="src/Modules/Clientes/Funeraria.Modules.Clientes.Application/Funeraria.Modules.Clientes.Application.csproj" />
+    <Project Path="src/Modules/Clientes/Funeraria.Modules.Clientes.Contracts/Funeraria.Modules.Clientes.Contracts.csproj" />
+    <Project Path="src/Modules/Clientes/Funeraria.Modules.Clientes.Domain/Funeraria.Modules.Clientes.Domain.csproj" />
+    <Project Path="src/Modules/Clientes/Funeraria.Modules.Clientes.Endpoints/Funeraria.Modules.Clientes.Endpoints.csproj" />
+    <Project Path="src/Modules/Clientes/Funeraria.Modules.Clientes.Infrastructure/Funeraria.Modules.Clientes.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Contratos/">
+    <Project Path="src/Modules/Contratos/Funeraria.Modules.Contratos.Application/Funeraria.Modules.Contratos.Application.csproj" />
+    <Project Path="src/Modules/Contratos/Funeraria.Modules.Contratos.Contracts/Funeraria.Modules.Contratos.Contracts.csproj" />
+    <Project Path="src/Modules/Contratos/Funeraria.Modules.Contratos.Domain/Funeraria.Modules.Contratos.Domain.csproj" />
+    <Project Path="src/Modules/Contratos/Funeraria.Modules.Contratos.Endpoints/Funeraria.Modules.Contratos.Endpoints.csproj" />
+    <Project Path="src/Modules/Contratos/Funeraria.Modules.Contratos.Infrastructure/Funeraria.Modules.Contratos.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Documentos/">
+    <Project Path="src/Modules/Documentos/Funeraria.Modules.Documentos.Application/Funeraria.Modules.Documentos.Application.csproj" />
+    <Project Path="src/Modules/Documentos/Funeraria.Modules.Documentos.Contracts/Funeraria.Modules.Documentos.Contracts.csproj" />
+    <Project Path="src/Modules/Documentos/Funeraria.Modules.Documentos.Domain/Funeraria.Modules.Documentos.Domain.csproj" />
+    <Project Path="src/Modules/Documentos/Funeraria.Modules.Documentos.Endpoints/Funeraria.Modules.Documentos.Endpoints.csproj" />
+    <Project Path="src/Modules/Documentos/Funeraria.Modules.Documentos.Infrastructure/Funeraria.Modules.Documentos.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Financeiro/">
+    <Project Path="src/Modules/Financeiro/Funeraria.Modules.Financeiro.Application/Funeraria.Modules.Financeiro.Application.csproj" />
+    <Project Path="src/Modules/Financeiro/Funeraria.Modules.Financeiro.Contracts/Funeraria.Modules.Financeiro.Contracts.csproj" />
+    <Project Path="src/Modules/Financeiro/Funeraria.Modules.Financeiro.Domain/Funeraria.Modules.Financeiro.Domain.csproj" />
+    <Project Path="src/Modules/Financeiro/Funeraria.Modules.Financeiro.Endpoints/Funeraria.Modules.Financeiro.Endpoints.csproj" />
+    <Project Path="src/Modules/Financeiro/Funeraria.Modules.Financeiro.Infrastructure/Funeraria.Modules.Financeiro.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Funeral/">
+    <Project Path="src/Modules/Funeral/Funeraria.Modules.Funeral.Application/Funeraria.Modules.Funeral.Application.csproj" />
+    <Project Path="src/Modules/Funeral/Funeraria.Modules.Funeral.Contracts/Funeraria.Modules.Funeral.Contracts.csproj" />
+    <Project Path="src/Modules/Funeral/Funeraria.Modules.Funeral.Domain/Funeraria.Modules.Funeral.Domain.csproj" />
+    <Project Path="src/Modules/Funeral/Funeraria.Modules.Funeral.Endpoints/Funeraria.Modules.Funeral.Endpoints.csproj" />
+    <Project Path="src/Modules/Funeral/Funeraria.Modules.Funeral.Infrastructure/Funeraria.Modules.Funeral.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identidade/">
+    <Project Path="src/Modules/Identidade/Funeraria.Modules.Identidade.Application/Funeraria.Modules.Identidade.Application.csproj" />
+    <Project Path="src/Modules/Identidade/Funeraria.Modules.Identidade.Contracts/Funeraria.Modules.Identidade.Contracts.csproj" />
+    <Project Path="src/Modules/Identidade/Funeraria.Modules.Identidade.Domain/Funeraria.Modules.Identidade.Domain.csproj" />
+    <Project Path="src/Modules/Identidade/Funeraria.Modules.Identidade.Endpoints/Funeraria.Modules.Identidade.Endpoints.csproj" />
+    <Project Path="src/Modules/Identidade/Funeraria.Modules.Identidade.Infrastructure/Funeraria.Modules.Identidade.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notificacoes/">
+    <Project Path="src/Modules/Notificacoes/Funeraria.Modules.Notificacoes.Application/Funeraria.Modules.Notificacoes.Application.csproj" />
+    <Project Path="src/Modules/Notificacoes/Funeraria.Modules.Notificacoes.Contracts/Funeraria.Modules.Notificacoes.Contracts.csproj" />
+    <Project Path="src/Modules/Notificacoes/Funeraria.Modules.Notificacoes.Domain/Funeraria.Modules.Notificacoes.Domain.csproj" />
+    <Project Path="src/Modules/Notificacoes/Funeraria.Modules.Notificacoes.Endpoints/Funeraria.Modules.Notificacoes.Endpoints.csproj" />
+    <Project Path="src/Modules/Notificacoes/Funeraria.Modules.Notificacoes.Infrastructure/Funeraria.Modules.Notificacoes.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Planos/">
+    <Project Path="src/Modules/Planos/Funeraria.Modules.Planos.Application/Funeraria.Modules.Planos.Application.csproj" />
+    <Project Path="src/Modules/Planos/Funeraria.Modules.Planos.Contracts/Funeraria.Modules.Planos.Contracts.csproj" />
+    <Project Path="src/Modules/Planos/Funeraria.Modules.Planos.Domain/Funeraria.Modules.Planos.Domain.csproj" />
+    <Project Path="src/Modules/Planos/Funeraria.Modules.Planos.Endpoints/Funeraria.Modules.Planos.Endpoints.csproj" />
+    <Project Path="src/Modules/Planos/Funeraria.Modules.Planos.Infrastructure/Funeraria.Modules.Planos.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Relatorios/">
+    <Project Path="src/Modules/Relatorios/Funeraria.Modules.Relatorios.Application/Funeraria.Modules.Relatorios.Application.csproj" />
+    <Project Path="src/Modules/Relatorios/Funeraria.Modules.Relatorios.Contracts/Funeraria.Modules.Relatorios.Contracts.csproj" />
+    <Project Path="src/Modules/Relatorios/Funeraria.Modules.Relatorios.Domain/Funeraria.Modules.Relatorios.Domain.csproj" />
+    <Project Path="src/Modules/Relatorios/Funeraria.Modules.Relatorios.Endpoints/Funeraria.Modules.Relatorios.Endpoints.csproj" />
+    <Project Path="src/Modules/Relatorios/Funeraria.Modules.Relatorios.Infrastructure/Funeraria.Modules.Relatorios.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Tenants/">
+    <Project Path="src/Modules/Tenants/Funeraria.Modules.Tenants.Application/Funeraria.Modules.Tenants.Application.csproj" />
+    <Project Path="src/Modules/Tenants/Funeraria.Modules.Tenants.Contracts/Funeraria.Modules.Tenants.Contracts.csproj" />
+    <Project Path="src/Modules/Tenants/Funeraria.Modules.Tenants.Domain/Funeraria.Modules.Tenants.Domain.csproj" />
+    <Project Path="src/Modules/Tenants/Funeraria.Modules.Tenants.Endpoints/Funeraria.Modules.Tenants.Endpoints.csproj" />
+    <Project Path="src/Modules/Tenants/Funeraria.Modules.Tenants.Infrastructure/Funeraria.Modules.Tenants.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Terceiros/">
+    <Project Path="src/Modules/Terceiros/Funeraria.Modules.Terceiros.Application/Funeraria.Modules.Terceiros.Application.csproj" />
+    <Project Path="src/Modules/Terceiros/Funeraria.Modules.Terceiros.Contracts/Funeraria.Modules.Terceiros.Contracts.csproj" />
+    <Project Path="src/Modules/Terceiros/Funeraria.Modules.Terceiros.Domain/Funeraria.Modules.Terceiros.Domain.csproj" />
+    <Project Path="src/Modules/Terceiros/Funeraria.Modules.Terceiros.Endpoints/Funeraria.Modules.Terceiros.Endpoints.csproj" />
+    <Project Path="src/Modules/Terceiros/Funeraria.Modules.Terceiros.Infrastructure/Funeraria.Modules.Terceiros.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Translado/">
+    <Project Path="src/Modules/Translado/Funeraria.Modules.Translado.Application/Funeraria.Modules.Translado.Application.csproj" />
+    <Project Path="src/Modules/Translado/Funeraria.Modules.Translado.Contracts/Funeraria.Modules.Translado.Contracts.csproj" />
+    <Project Path="src/Modules/Translado/Funeraria.Modules.Translado.Domain/Funeraria.Modules.Translado.Domain.csproj" />
+    <Project Path="src/Modules/Translado/Funeraria.Modules.Translado.Endpoints/Funeraria.Modules.Translado.Endpoints.csproj" />
+    <Project Path="src/Modules/Translado/Funeraria.Modules.Translado.Infrastructure/Funeraria.Modules.Translado.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Funeraria.ArchitectureTests/Funeraria.ArchitectureTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Modules/">
+    <Project Path="tests/Modules/Funeraria.Modules.Planos.IntegrationTests/Funeraria.Modules.Planos.IntegrationTests.csproj" />
+    <Project Path="tests/Modules/Funeraria.Modules.Planos.UnitTests/Funeraria.Modules.Planos.UnitTests.csproj" />
+  </Folder>
+</Solution>

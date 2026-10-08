@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Funeraria.BuildingBlocks.Domain\Funeraria.BuildingBlocks.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

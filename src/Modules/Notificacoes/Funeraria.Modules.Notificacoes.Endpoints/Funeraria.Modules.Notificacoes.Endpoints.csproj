@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Funeraria.Modules.Notificacoes.Application\Funeraria.Modules.Notificacoes.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Funeraria.BuildingBlocks.Infrastructure\Funeraria.BuildingBlocks.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

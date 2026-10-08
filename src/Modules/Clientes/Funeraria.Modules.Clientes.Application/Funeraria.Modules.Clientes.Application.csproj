@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Funeraria.Modules.Clientes.Domain\Funeraria.Modules.Clientes.Domain.csproj" />
+    <ProjectReference Include="..\Funeraria.Modules.Clientes.Contracts\Funeraria.Modules.Clientes.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Funeraria.BuildingBlocks.Application\Funeraria.BuildingBlocks.Application.csproj" />
+  </ItemGroup>
+
+</Project>
