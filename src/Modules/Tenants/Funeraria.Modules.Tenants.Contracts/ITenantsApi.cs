@@ -5,6 +5,9 @@ public interface ITenantsApi
 {
     /// <summary>Busca a funerária pelo subdomínio. O resultado é cacheado por alguns minutos.</summary>
     Task<FunerariaResumoDto?> ObterPorSlugAsync(string slug, CancellationToken cancellationToken = default);
+
+    /// <summary>Resumo das funerárias informadas. Ids inexistentes são ignorados.</summary>
+    Task<IReadOnlyList<FunerariaResumoDto>> ListarAsync(IReadOnlyCollection<Guid> idsTenant, CancellationToken cancellationToken = default);
 }
 
 public sealed record FunerariaResumoDto(Guid IdTenant, string Slug, string NomeFantasia, bool Suspensa);

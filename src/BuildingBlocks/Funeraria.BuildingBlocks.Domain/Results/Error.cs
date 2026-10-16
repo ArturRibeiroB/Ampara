@@ -16,4 +16,10 @@ public record Error(string Code, string Description, ErrorType Type)
     public static Error Conflito(string code, string description) => new(code, description, ErrorType.Conflito);
 
     public static Error Proibido(string code, string description) => new(code, description, ErrorType.Proibido);
+
+    /// <summary>Credenciais ou sessão inválidas (401).</summary>
+    public static Error NaoAutorizado(string code, string description) => new(code, description, ErrorType.NaoAutorizado);
+
+    /// <summary>Recurso bloqueado temporariamente, como a conta após várias tentativas de login (423).</summary>
+    public static Error Bloqueado(string code, string description) => new(code, description, ErrorType.Bloqueado);
 }

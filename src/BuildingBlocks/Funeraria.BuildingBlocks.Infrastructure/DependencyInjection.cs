@@ -5,6 +5,7 @@ using Funeraria.BuildingBlocks.Infrastructure.Database.Interceptors;
 using Funeraria.BuildingBlocks.Infrastructure.Events;
 using Funeraria.BuildingBlocks.Infrastructure.Identity;
 using Funeraria.BuildingBlocks.Infrastructure.Outbox;
+using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Funeraria.BuildingBlocks.Infrastructure.Tenancy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<TenantAuditInterceptor>();
         services.AddScoped<InsertOutboxMessagesInterceptor>();
         services.AddOptions<OutboxOptions>().Bind(configuration.GetSection(OutboxOptions.Section));
+        services.AddOptions<SeedOptions>().Bind(configuration.GetSection(SeedOptions.Section));
 
         services.AddScoped<DomainEventDispatcher>();
         services.AddScoped<IEventBus, InMemoryEventBus>();

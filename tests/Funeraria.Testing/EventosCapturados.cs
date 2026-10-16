@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Funeraria.BuildingBlocks.Application.Events;
 
-namespace Funeraria.Modules.Planos.IntegrationTests.Infrastructure;
+namespace Funeraria.Testing;
 
 /// <summary>Guarda os eventos de integração publicados, para os testes conferirem o fluxo do outbox.</summary>
 public sealed class EventosCapturados
@@ -29,7 +29,7 @@ public sealed class EventosCapturados
     }
 }
 
-internal sealed class CapturarEvento<TEvento>(EventosCapturados eventos) : IIntegrationEventHandler<TEvento>
+public sealed class CapturarEvento<TEvento>(EventosCapturados eventos) : IIntegrationEventHandler<TEvento>
     where TEvento : IIntegrationEvent
 {
     public Task Handle(TEvento integrationEvent, CancellationToken cancellationToken)

@@ -1,4 +1,5 @@
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
+using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Funeraria.Modules.Tenants.Contracts;
 using Funeraria.Modules.Tenants.Infrastructure.Database;
 using Funeraria.Modules.Tenants.Infrastructure.Funerarias;
@@ -16,6 +17,7 @@ public static class TenantsModule
 
         services.AddMemoryCache();
         services.AddScoped<ITenantsApi, TenantsApi>();
+        services.AddScoped<IModuleSeeder, TenantsSeed>();
 
         return services;
     }

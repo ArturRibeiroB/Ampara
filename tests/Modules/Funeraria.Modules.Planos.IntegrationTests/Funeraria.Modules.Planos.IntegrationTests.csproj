@@ -7,12 +7,10 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
-    <PackageReference Include="Testcontainers.PostgreSql" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Funeraria.Api\Funeraria.Api.csproj" />
+    <ProjectReference Include="..\..\Funeraria.Testing\Funeraria.Testing.csproj" />
   </ItemGroup>
 
 </Project>

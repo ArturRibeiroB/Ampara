@@ -23,7 +23,7 @@ public sealed partial class OutboxProcessor<TContext>(
     TimeProvider timeProvider,
     ILogger<OutboxProcessor<TContext>> logger)
     : BackgroundService
-    where TContext : ModuleDbContext
+    where TContext : DbContext, IModuleDbContext
 {
     private readonly OutboxOptions _options = options.Value;
 

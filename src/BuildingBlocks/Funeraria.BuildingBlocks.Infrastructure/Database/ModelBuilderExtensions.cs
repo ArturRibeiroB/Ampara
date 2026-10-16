@@ -1,6 +1,7 @@
 using System.Reflection;
 using Funeraria.BuildingBlocks.Domain.Entities;
 using Funeraria.BuildingBlocks.Domain.Tenancy;
+using Funeraria.BuildingBlocks.Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -16,6 +17,10 @@ public static class ModelBuilderExtensions
 
     private static readonly MethodInfo ApplyTenantFilterMethod = typeof(ModelBuilderExtensions)
         .GetMethod(nameof(ApplyTenantFilter), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    /// <summary>Tabela <c>outbox_messages</c> no schema do módulo.</summary>
+    public static ModelBuilder ApplyOutbox(this ModelBuilder modelBuilder) =>
+        modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
 
     /// <summary>
     /// Filtro global por tenant em toda entidade <see cref="ITenantEntity"/> (TEN-01).

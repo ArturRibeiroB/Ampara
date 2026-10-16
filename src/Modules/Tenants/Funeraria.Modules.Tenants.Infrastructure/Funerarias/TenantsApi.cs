@@ -31,4 +31,14 @@ internal sealed class TenantsApi(TenantsDbContext context, IMemoryCache cache) :
 
         return funeraria;
     }
+
+    public async Task<IReadOnlyList<FunerariaResumoDto>> ListarAsync(
+        IReadOnlyCollection<Guid> idsTenant,
+        CancellationToken cancellationToken = default) =>
+        await context.Funerarias
+            .AsNoTracking()
+            .Where(f => idsTenant.Contains(f.Id))
+            .OrderBy(f => f.NomeFantasia)
+            .Select(f => new FunerariaResumoDto(f.Id, f.Slug, f.NomeFantasia, f.Status == StatusFuneraria.Suspensa))
+            .ToListAsync(cancellationToken);
 }

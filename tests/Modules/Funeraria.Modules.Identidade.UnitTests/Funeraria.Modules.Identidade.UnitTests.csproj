@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Modules\Identidade\Funeraria.Modules.Identidade.Domain\Funeraria.Modules.Identidade.Domain.csproj" />
+    <ProjectReference Include="..\..\..\src\Modules\Identidade\Funeraria.Modules.Identidade.Application\Funeraria.Modules.Identidade.Application.csproj" />
+  </ItemGroup>
+
+</Project>

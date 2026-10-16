@@ -1,21 +1,20 @@
+using Funeraria.BuildingBlocks.Infrastructure.Seeding;
+using Funeraria.Modules.Tenants.Contracts;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using FunerariaEntity = Funeraria.Modules.Tenants.Domain.Funerarias.Funeraria;
 
 namespace Funeraria.Modules.Tenants.Infrastructure.Database;
 
 /// <summary>Funerária de demonstração, só para desenvolvimento e testes (INF-16). Idempotente.</summary>
-public static class TenantsSeed
+internal sealed class TenantsSeed(TenantsDbContext context, IOptions<SeedOptions> options) : IModuleSeeder
 {
-    public const string SlugDemo = "demo";
+    public int Ordem => 10;
 
-    public static async Task SeedDemoAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
+    public async Task SeedAsync(CancellationToken cancellationToken)
     {
-        await using AsyncServiceScope scope = services.CreateAsyncScope();
-        var context = scope.ServiceProvider.GetRequiredService<TenantsDbContext>();
-
-        if (await context.Funerarias.AnyAsync(f => f.Slug == SlugDemo, cancellationToken))
+        if (!options.Value.Demo || await context.Funerarias.AnyAsync(f => f.Slug == FunerariaDemonstracao.Slug, cancellationToken))
         {
             return;
         }
@@ -24,7 +23,7 @@ public static class TenantsSeed
             nomeFantasia: "Funerária Demonstração",
             razaoSocial: "Funerária Demonstração Ltda",
             cnpj: "11222333000181",
-            slug: SlugDemo,
+            slug: FunerariaDemonstracao.Slug,
             emailContato: "contato@demo.localhost",
             telefone: null,
             origem: OrigemCadastro.Admin,

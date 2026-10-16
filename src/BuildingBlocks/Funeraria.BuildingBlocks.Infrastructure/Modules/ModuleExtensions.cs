@@ -40,7 +40,7 @@ public static class ModuleExtensions
     /// histórico de migrations no próprio schema e o processador do outbox (INF-03).
     /// </summary>
     public static IServiceCollection AddModuleDbContext<TContext>(this IServiceCollection services, string schema)
-        where TContext : ModuleDbContext
+        where TContext : DbContext, IModuleDbContext
     {
         services.AddDbContext<TContext>((sp, options) => options
             .UseNpgsql(

@@ -5,12 +5,12 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Funeraria.BuildingBlocks.Application.Authorization;
 using Funeraria.Modules.Planos.Contracts.IntegrationEvents;
-using Funeraria.Modules.Planos.IntegrationTests.Infrastructure;
+using Funeraria.Testing;
 
 namespace Funeraria.Modules.Planos.IntegrationTests;
 
 [Collection(ApiCollection.Nome)]
-public sealed class PlanosEndpointsTests(FunerariaApiFactory factory)
+public sealed class PlanosEndpointsTests(PlanosApiFactory factory)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {

@@ -7,7 +7,7 @@ using Funeraria.Api.Modules;
 using Funeraria.Api.OpenApi;
 using Funeraria.BuildingBlocks.Infrastructure;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
-using Funeraria.Modules.Tenants.Infrastructure.Database;
+using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -32,7 +32,7 @@ builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddOptions<TenancyOptions>().Bind(builder.Configuration.GetSection(TenancyOptions.Section));
-builder.Services.AddAutenticacao(builder.Configuration);
+builder.Services.AddAutorizacao();
 builder.Services.AddDocumentacaoApi();
 
 builder.Services.AddBuildingBlocks(builder.Configuration);
@@ -60,9 +60,9 @@ if (app.Configuration.GetValue<bool>("Database:AplicarMigrations"))
     await app.Services.ApplyModuleMigrationsAsync();
 }
 
-if (app.Configuration.GetValue<bool>("Database:SeedDemo"))
+if (app.Configuration.GetValue<bool>("Seed:Executar"))
 {
-    await app.Services.SeedDemoAsync();
+    await app.Services.SeedModulesAsync();
 }
 
 await app.RunAsync();

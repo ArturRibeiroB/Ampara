@@ -4,7 +4,7 @@ using System.Text;
 using Funeraria.BuildingBlocks.Application.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Funeraria.Modules.Planos.IntegrationTests.Infrastructure;
+namespace Funeraria.Testing;
 
 /// <summary>Gera JWT de teste por perfil (INF-14), assinado com a mesma chave configurada na API dos testes.</summary>
 public static class TokenDeTeste

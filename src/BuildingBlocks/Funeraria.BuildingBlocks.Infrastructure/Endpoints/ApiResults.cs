@@ -5,7 +5,8 @@ namespace Funeraria.BuildingBlocks.Infrastructure.Endpoints;
 
 /// <summary>
 /// Converte um <see cref="Result"/> de falha em ProblemDetails (INF-07):
-/// Validacao → 400, Proibido → 403, NaoEncontrado → 404, Conflito → 409, Falha → 400.
+/// Validacao → 400, NaoAutorizado → 401, Proibido → 403, NaoEncontrado → 404, Conflito → 409,
+/// Bloqueado → 423, Falha → 400.
 /// O traceId é incluído pela configuração de ProblemDetails do host.
 /// </summary>
 public static class ApiResults
@@ -21,9 +22,11 @@ public static class ApiResults
         (int status, string title) = error.Type switch
         {
             ErrorType.Validacao => (StatusCodes.Status400BadRequest, "Requisição inválida"),
+            ErrorType.NaoAutorizado => (StatusCodes.Status401Unauthorized, "Não autorizado"),
             ErrorType.Proibido => (StatusCodes.Status403Forbidden, "Proibido"),
             ErrorType.NaoEncontrado => (StatusCodes.Status404NotFound, "Não encontrado"),
             ErrorType.Conflito => (StatusCodes.Status409Conflict, "Conflito"),
+            ErrorType.Bloqueado => (StatusCodes.Status423Locked, "Bloqueado"),
             _ => (StatusCodes.Status400BadRequest, "Falha")
         };
 

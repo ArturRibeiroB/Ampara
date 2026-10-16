@@ -6,5 +6,7 @@ public enum ErrorType
     Validacao = 1,
     NaoEncontrado = 2,
     Conflito = 3,
-    Proibido = 4
+    Proibido = 4,
+    NaoAutorizado = 5,
+    Bloqueado = 6
 }

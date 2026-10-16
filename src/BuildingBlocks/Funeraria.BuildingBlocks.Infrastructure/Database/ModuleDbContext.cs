@@ -1,5 +1,4 @@
 using Funeraria.BuildingBlocks.Application.Abstractions;
-using Funeraria.BuildingBlocks.Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace Funeraria.BuildingBlocks.Infrastructure.Database;
@@ -13,9 +12,9 @@ namespace Funeraria.BuildingBlocks.Infrastructure.Database;
 /// DbContext da Identidade, que precisa herdar de <c>IdentityDbContext</c>.
 /// </remarks>
 public abstract class ModuleDbContext(DbContextOptions options, ITenantContext tenantContext)
-    : DbContext(options), IUnitOfWork
+    : DbContext(options), IModuleDbContext, IUnitOfWork
 {
-    /// <summary>Schema do módulo no PostgreSQL. Também guarda o histórico de migrations e o outbox.</summary>
+    /// <inheritdoc />
     public abstract string Schema { get; }
 
     /// <summary>Lido pelo filtro global a cada consulta. Sem tenant, as consultas não retornam nada.</summary>
@@ -27,7 +26,7 @@ public abstract class ModuleDbContext(DbContextOptions options, ITenantContext t
 
         ConfigureModel(modelBuilder);
 
-        modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
+        modelBuilder.ApplyOutbox();
         modelBuilder.ApplyTenantQueryFilters(this);
         modelBuilder.ApplyConcurrencyTokens();
         modelBuilder.ApplyAuditProperties();
