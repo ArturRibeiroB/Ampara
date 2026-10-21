@@ -13,5 +13,8 @@ internal sealed class PlanoRepository(PlanosDbContext context) : IPlanoRepositor
     public Task<bool> ExisteComNomeAsync(string nome, Guid? exceto = null, CancellationToken cancellationToken = default) =>
         context.Planos.AnyAsync(p => p.Nome == nome && p.Id != exceto, cancellationToken);
 
+    public Task<bool> ExisteAlgumAsync(CancellationToken cancellationToken = default) =>
+        context.Planos.AnyAsync(cancellationToken);
+
     public void Adicionar(Plano plano) => context.Planos.Add(plano);
 }

@@ -7,7 +7,7 @@ namespace Funeraria.BuildingBlocks.Infrastructure.Endpoints;
 /// Converte um <see cref="Result"/> de falha em ProblemDetails (INF-07):
 /// Validacao → 400, NaoAutorizado → 401, Proibido → 403, NaoEncontrado → 404, Conflito → 409,
 /// Bloqueado → 423, Falha → 400.
-/// O traceId é incluído pela configuração de ProblemDetails do host.
+/// O <c>trace_id</c> é incluído pelo ASP.NET em todo ProblemDetails.
 /// </summary>
 public static class ApiResults
 {

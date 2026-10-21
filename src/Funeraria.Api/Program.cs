@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Funeraria.Api.HealthChecks;
@@ -25,17 +24,16 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper));
 });
 
+// O ASP.NET já inclui o trace id em todo ProblemDetails; com a política snake_case ele sai como "trace_id".
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
-{
-    context.ProblemDetails.Instance = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
-    context.ProblemDetails.Extensions["traceId"] = Activity.Current?.Id ?? context.HttpContext.TraceIdentifier;
-});
+    context.ProblemDetails.Instance = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}");
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddOptions<TenancyOptions>().Bind(builder.Configuration.GetSection(TenancyOptions.Section));
 builder.Services.AddAutorizacao();
 builder.Services.AddDocumentacaoApi();
 builder.Services.AddVerificacoesDeSaude();
+builder.Services.AddLimiteDeRequisicoes(builder.Configuration);
 
 builder.Services.AddBuildingBlocks(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
@@ -51,6 +49,7 @@ app.MapDocumentacaoApi();
 app.UseAuthentication();
 app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapModuleEndpoints();
 app.MapVerificacoesDeSaude();

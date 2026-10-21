@@ -1,3 +1,4 @@
+using Funeraria.Modules.Notificacoes.Contracts;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
 using Funeraria.Modules.Tenants.Infrastructure.Database;
 using Microsoft.AspNetCore.Hosting;
@@ -25,6 +26,8 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
 
     public EventosCapturados Eventos { get; } = new();
+
+    public EmailsCapturados Emails { get; } = new();
 
     public async ValueTask IniciarAsync()
     {
@@ -59,10 +62,14 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Seed:AdminEmail", EmailAdmin);
         builder.UseSetting("Seed:AdminSenha", SenhaPadrao);
         builder.UseSetting("Outbox:Intervalo", "00:00:00.200");
+        builder.UseSetting("LimiteRequisicoes:Onboarding:Limite", "100000");
+        builder.UseSetting("Identidade:Links:UrlDefinirSenha", "http://{slug}.teste.localhost/definir-senha");
+        builder.UseSetting("Identidade:Links:UrlLogin", "http://{slug}.teste.localhost/login");
 
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton(Eventos);
+            services.AddSingleton<IEmailSender>(Emails);
             ConfigurarServicos(services);
         });
     }
@@ -71,7 +78,7 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
     public async Task<(Guid IdTenant, string Slug)> CriarFunerariaAsync(StatusFuneraria status = StatusFuneraria.Ativa)
     {
         string slug = $"fun-{Guid.NewGuid():N}"[..20];
-        string cnpj = Random.Shared.NextInt64(10_000_000_000_000, 99_999_999_999_999).ToString();
+        string cnpj = DocumentosDeTeste.NovoCnpj();
 
         await using AsyncServiceScope scope = Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<TenantsDbContext>();

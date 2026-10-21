@@ -1,6 +1,8 @@
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
+using Funeraria.Modules.Tenants.Application.Abstractions;
 using Funeraria.Modules.Tenants.Contracts;
+using Funeraria.Modules.Tenants.Domain.Funerarias;
 using Funeraria.Modules.Tenants.Infrastructure.Database;
 using Funeraria.Modules.Tenants.Infrastructure.Funerarias;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +18,11 @@ public static class TenantsModule
         services.AddModuleDbContext<TenantsDbContext>(TenantsDbContext.SchemaName);
 
         services.AddMemoryCache();
-        services.AddScoped<ITenantsApi, TenantsApi>();
+        services.AddScoped<ITenantsUnitOfWork>(sp => sp.GetRequiredService<TenantsDbContext>());
+        services.AddScoped<IFunerariaRepository, FunerariaRepository>();
+        services.AddScoped<TenantsApi>();
+        services.AddScoped<ITenantsApi>(sp => sp.GetRequiredService<TenantsApi>());
+        services.AddScoped<ITenantCache>(sp => sp.GetRequiredService<TenantsApi>());
         services.AddScoped<IModuleSeeder, TenantsSeed>();
 
         return services;

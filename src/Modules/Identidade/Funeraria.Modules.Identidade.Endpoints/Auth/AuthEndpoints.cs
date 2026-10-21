@@ -1,5 +1,6 @@
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.BuildingBlocks.Infrastructure.Endpoints;
+using Funeraria.Modules.Identidade.Application.Commands.DefinirSenha;
 using Funeraria.Modules.Identidade.Application.Commands.EncerrarSessao;
 using Funeraria.Modules.Identidade.Application.Commands.Login;
 using Funeraria.Modules.Identidade.Application.Commands.RenovarSessao;
@@ -51,6 +52,16 @@ internal sealed class AuthEndpoints : IEndpoint
             .WithSummary("Encerra a sessão e revoga o refresh token")
             .Produces(StatusCodes.Status204NoContent);
 
+        group.MapPost("definir-senha", async (DefinirSenhaRequest request, ISender sender, CancellationToken ct) =>
+                (await sender.Send(new DefinirSenhaCommand(request.Token ?? string.Empty, request.Senha ?? string.Empty), ct))
+                    .Match(Results.NoContent))
+            .AllowAnonymous()
+            .WithName("DefinirSenha")
+            .WithSummary("Define a senha pelo link do convite e confirma o e-mail")
+            .WithDescription("O token vem no link enviado por e-mail. Vale uma vez e expira (TEN-02, AUT-07).")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem();
+
         group.MapGet("minhas-funerarias", async (ISender sender, CancellationToken ct) =>
                 (await sender.Send(new MinhasFunerariasQuery(), ct)).Match(Results.Ok))
             .RequireAuthorization()
@@ -77,6 +88,9 @@ internal sealed class AuthEndpoints : IEndpoint
 
 /// <summary>Campos opcionais aqui para a validação devolver as mensagens do card em vez de erro de desserialização.</summary>
 public sealed record LoginRequest(string? Email, string? Senha);
+
+/// <summary>Corpo de POST /auth/definir-senha.</summary>
+public sealed record DefinirSenhaRequest(string? Token, string? Senha);
 
 /// <summary>Resposta do login e da renovação (AUT-02). O refresh token vai só no cookie.</summary>
 public sealed record LoginResponse(string AccessToken, DateTime ExpiraEm, UsuarioSessao Usuario);

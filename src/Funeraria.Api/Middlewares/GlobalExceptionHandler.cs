@@ -23,21 +23,21 @@ internal sealed partial class GlobalExceptionHandler(
                 Status = bad.StatusCode,
                 Title = "Requisição inválida",
                 Detail = "O corpo ou os parâmetros da requisição estão em formato inválido.",
-                Extensions = { ["code"] = "Requisicao.Invalida" }
+                Extensions = { ["code"] = "Requisicao.Invalida", ["errors"] = new Dictionary<string, string[]>() }
             },
             DbUpdateConcurrencyException => new ProblemDetails
             {
                 Status = StatusCodes.Status409Conflict,
                 Title = "Conflito",
                 Detail = "O registro foi alterado por outra pessoa. Recarregue e tente novamente.",
-                Extensions = { ["code"] = "Concorrencia" }
+                Extensions = { ["code"] = "Concorrencia", ["errors"] = new Dictionary<string, string[]>() }
             },
             _ => new ProblemDetails
             {
                 Status = StatusCodes.Status500InternalServerError,
                 Title = "Erro interno",
                 Detail = environment.IsDevelopment() ? exception.ToString() : "Ocorreu um erro inesperado.",
-                Extensions = { ["code"] = "Erro.Interno" }
+                Extensions = { ["code"] = "Erro.Interno", ["errors"] = new Dictionary<string, string[]>() }
             }
         };
 

@@ -69,6 +69,22 @@ subdomínio: http://demo.localhost:5080.
 
 Sem a chave JWT a API não sobe. Sem a senha do ADMIN ele não é criado (aparece um aviso no log).
 
+### Cadastrando uma funerária (TEN-02)
+
+1. `POST /api/v1/onboarding/funerarias` (público, sem X-Tenant) ou `POST /api/v1/admin/tenants` (ADMIN).
+   A funerária nasce **PENDENTE**.
+2. O gestor recebe o convite por e-mail. Em desenvolvimento ele aparece no Mailpit (http://localhost:8025).
+   O link aponta para o frontend (`Identidade:Links`) e leva o token: `.../definir-senha?token=...`.
+3. O frontend chama `POST /api/v1/auth/definir-senha` com `{ "token", "senha" }`. Isso também confirma o e-mail.
+   O link vale 3 dias e uma única vez.
+4. O gestor entra com `POST /api/v1/auth/login` usando o X-Tenant da funerária.
+5. Os planos modelo (Essencial, Familiar, Premium) já estão lá, **inativos**: os valores são só ponto de partida.
+6. O ADMIN aprova com `PATCH /api/v1/admin/tenants/{id}/status` e `{ "status": "ATIVA" }`. Suspender bloqueia
+   na hora o acesso de todos os usuários da funerária.
+
+Se quem for indicado como gestor já tiver conta na plataforma, recebe só um aviso de acesso e entra com a
+senha que já usa (DEC-02).
+
 ## Testes
 
 ```bash
@@ -119,10 +135,11 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 
 | Módulo | Schema | Estado |
 |---|---|---|
-| Identidade | `identidade` | Login, refresh token com rotação, logout, minhas funerárias (AUT-01 a AUT-04) |
-| Tenants | `tenants` | Entidade Funerária e resolução por subdomínio. Cadastro/onboarding pendente (TEN-02) |
-| Planos | `planos` | Gestão de planos e configurações em jsonb (PLA-01, PLA-03) |
-| Clientes, Catalogo, Contratos, Financeiro, Funeral, Documentos, Translado, Terceiros, Notificacoes, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso |
+| Identidade | `identidade` | Login, refresh token com rotação, logout, minhas funerárias, convite e definição de senha (AUT-01 a AUT-04) |
+| Tenants | `tenants` | Auto-cadastro e cadastro pelo ADMIN, aprovação/suspensão, configurações da funerária (TEN-01 a TEN-03) |
+| Planos | `planos` | Gestão de planos, configurações em jsonb e planos modelo copiados para cada funerária nova (PLA-01, PLA-03) |
+| Notificacoes | — | Envio de e-mail por SMTP (Mailpit em desenvolvimento). Templates e provider de produção pendentes (NOT-01) |
+| Clientes, Catalogo, Contratos, Financeiro, Funeral, Documentos, Translado, Terceiros, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 
@@ -131,7 +148,7 @@ Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 - **Rotas** em `/api/v1`. Prefixos por perfil: `/admin` (ADMIN), `/gestao` (FUNERARIA e FUNCIONARIO),
   `/terceiros`, e o restante para clientes e rotas compartilhadas.
 - **JSON** em snake_case (`valor_mensal`, `access_token`).
-- **Erros** em ProblemDetails com `code`, `traceId` e `errors` por campo:
+- **Erros** em ProblemDetails com `code`, `trace_id` e `errors` por campo:
   400 validação, 401 credenciais/sessão, 403 sem permissão, 404, 409 conflito, 423 conta bloqueada.
   Handlers devolvem `Result`; exceção só para falha inesperada (500).
 - **Tenant**: vem do subdomínio (ou do cabeçalho `X-Tenant`, enviado pelo frontend) e precisa bater com o

@@ -23,4 +23,7 @@ public static class IdentidadeErros
 
     public static readonly Error SessaoInvalida =
         Error.NaoAutorizado("Auth.SessaoInvalida", "Sessão expirada. Faça login novamente.");
+
+    public static readonly Error LinkSenhaInvalido =
+        Error.Validacao("Auth.LinkSenhaInvalido", "Link inválido ou expirado. Peça um novo convite.");
 }

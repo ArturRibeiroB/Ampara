@@ -1,18 +1,55 @@
+using System.Linq.Expressions;
+using Funeraria.Modules.Tenants.Application.Abstractions;
 using Funeraria.Modules.Tenants.Contracts;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
 using Funeraria.Modules.Tenants.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using FunerariaEntity = Funeraria.Modules.Tenants.Domain.Funerarias.Funeraria;
 
 namespace Funeraria.Modules.Tenants.Infrastructure.Funerarias;
 
-internal sealed class TenantsApi(TenantsDbContext context, IMemoryCache cache) : ITenantsApi
+/// <summary>
+/// Resolução de tenant usada em toda requisição: por isso cacheada. A mudança de status limpa o cache
+/// (<see cref="ITenantCache"/>), para uma suspensão valer na hora.
+/// </summary>
+internal sealed class TenantsApi(TenantsDbContext context, IMemoryCache cache) : ITenantsApi, ITenantCache
 {
     private static readonly TimeSpan Duracao = TimeSpan.FromMinutes(5);
 
-    public async Task<FunerariaResumoDto?> ObterPorSlugAsync(string slug, CancellationToken cancellationToken = default)
+    private static readonly Expression<Func<FunerariaEntity, FunerariaResumoDto>> Resumo =
+        f => new FunerariaResumoDto(f.Id, f.Slug, f.NomeFantasia, f.Status == StatusFuneraria.Suspensa);
+
+    public Task<FunerariaResumoDto?> ObterPorSlugAsync(string slug, CancellationToken cancellationToken = default)
     {
-        string chave = $"tenants:slug:{slug.ToLowerInvariant()}";
+        string normalizado = slug.ToLowerInvariant();
+        return ObterAsync(ChaveSlug(normalizado), f => f.Slug == normalizado, cancellationToken);
+    }
+
+    public Task<FunerariaResumoDto?> ObterPorIdAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
+        ObterAsync(ChaveId(idTenant), f => f.Id == idTenant, cancellationToken);
+
+    public async Task<IReadOnlyList<FunerariaResumoDto>> ListarAsync(
+        IReadOnlyCollection<Guid> idsTenant,
+        CancellationToken cancellationToken = default) =>
+        await context.Funerarias
+            .AsNoTracking()
+            .Where(f => idsTenant.Contains(f.Id))
+            .OrderBy(f => f.NomeFantasia)
+            .Select(Resumo)
+            .ToListAsync(cancellationToken);
+
+    public void Invalidar(Guid idTenant, string slug)
+    {
+        cache.Remove(ChaveId(idTenant));
+        cache.Remove(ChaveSlug(slug.ToLowerInvariant()));
+    }
+
+    private async Task<FunerariaResumoDto?> ObterAsync(
+        string chave,
+        Expression<Func<FunerariaEntity, bool>> filtro,
+        CancellationToken cancellationToken)
+    {
         if (cache.TryGetValue(chave, out FunerariaResumoDto? cached))
         {
             return cached;
@@ -20,8 +57,8 @@ internal sealed class TenantsApi(TenantsDbContext context, IMemoryCache cache) :
 
         FunerariaResumoDto? funeraria = await context.Funerarias
             .AsNoTracking()
-            .Where(f => f.Slug == slug.ToLowerInvariant())
-            .Select(f => new FunerariaResumoDto(f.Id, f.Slug, f.NomeFantasia, f.Status == StatusFuneraria.Suspensa))
+            .Where(filtro)
+            .Select(Resumo)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (funeraria is not null)
@@ -32,13 +69,7 @@ internal sealed class TenantsApi(TenantsDbContext context, IMemoryCache cache) :
         return funeraria;
     }
 
-    public async Task<IReadOnlyList<FunerariaResumoDto>> ListarAsync(
-        IReadOnlyCollection<Guid> idsTenant,
-        CancellationToken cancellationToken = default) =>
-        await context.Funerarias
-            .AsNoTracking()
-            .Where(f => idsTenant.Contains(f.Id))
-            .OrderBy(f => f.NomeFantasia)
-            .Select(f => new FunerariaResumoDto(f.Id, f.Slug, f.NomeFantasia, f.Status == StatusFuneraria.Suspensa))
-            .ToListAsync(cancellationToken);
+    private static string ChaveSlug(string slug) => $"tenants:slug:{slug}";
+
+    private static string ChaveId(Guid idTenant) => $"tenants:id:{idTenant}";
 }

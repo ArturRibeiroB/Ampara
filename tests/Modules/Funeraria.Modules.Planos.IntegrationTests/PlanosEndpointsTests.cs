@@ -88,7 +88,8 @@ public sealed class PlanosEndpointsTests(PlanosApiFactory factory)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         JsonObject problem = (await response.Content.ReadFromJsonAsync<JsonObject>(Json, Ct))!;
         Assert.Equal("Validacao", problem["code"]!.GetValue<string>());
-        Assert.NotNull(problem["traceId"]);
+        Assert.NotNull(problem["trace_id"]);
+        Assert.Null(problem["traceId"]); // uma única chave de trace, em snake_case como o resto da API
         JsonObject erros = problem["errors"]!.AsObject();
         Assert.Equal("Nome do plano é obrigatório.", erros["nome"]![0]!.GetValue<string>());
         Assert.Equal("Valor mensal deve ser maior que zero.", erros["valor_mensal"]![0]!.GetValue<string>());

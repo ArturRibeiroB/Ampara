@@ -29,7 +29,7 @@ public sealed class EmissorSessao(ITokenService tokens, IRefreshTokenRepository 
             vinculo?.IdTerceiro,
             vinculo?.TipoTerceiro));
 
-        RefreshTokenGerado gerado = tokens.GerarRefreshToken();
+        TokenOpaco gerado = tokens.GerarTokenOpaco();
         RefreshToken refresh = anterior is null
             ? RefreshToken.Criar(usuario.Id, vinculo?.IdTenant, gerado.Hash, agora, tokens.DuracaoRefreshToken)
             : anterior.Rotacionar(gerado.Hash, agora, tokens.DuracaoRefreshToken);
