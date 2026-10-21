@@ -1,6 +1,7 @@
 using FluentValidation.Results;
 using Funeraria.Modules.Tenants.Application.Commands.AtualizarConfiguracoes;
 using Funeraria.Modules.Tenants.Application.Commands.CadastrarFuneraria;
+using Funeraria.BuildingBlocks.Domain.ValueObjects;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
 
 namespace Funeraria.Modules.Tenants.UnitTests;

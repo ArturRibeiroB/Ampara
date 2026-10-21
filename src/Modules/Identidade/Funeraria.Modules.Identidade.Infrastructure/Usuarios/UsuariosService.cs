@@ -72,6 +72,35 @@ internal sealed class UsuariosService(UserManager<Usuario> userManager, TimeProv
         return await MapearAsync(usuario);
     }
 
+    public async Task<Result<UsuarioInfo>> CriarComSenhaAsync(
+        string email,
+        string nome,
+        string senha,
+        CancellationToken cancellationToken = default)
+    {
+        var usuario = new Usuario
+        {
+            Id = Guid.CreateVersion7(),
+            UserName = email.Trim(),
+            Email = email.Trim(),
+            EmailConfirmed = false,
+            Nome = nome.Trim(),
+            CriadoEm = timeProvider.GetUtcNow().UtcDateTime
+        };
+
+        // CreateAsync com senha valida a senha antes de gravar: senha fraca não deixa conta criada.
+        IdentityResult result = await userManager.CreateAsync(usuario, senha);
+        if (!result.Succeeded)
+        {
+            string[] erros = [.. result.Errors.Select(e => e.Description).Distinct()];
+            return result.Errors.All(e => e.Code.StartsWith("Password", StringComparison.Ordinal))
+                ? new ValidationError(new Dictionary<string, string[]> { ["senha"] = erros })
+                : new ValidationError(new Dictionary<string, string[]> { ["email"] = erros });
+        }
+
+        return await MapearAsync(usuario);
+    }
+
     public async Task<bool> PossuiSenhaAsync(Guid idUsuario, CancellationToken cancellationToken = default)
     {
         Usuario? usuario = await userManager.FindByIdAsync(idUsuario.ToString());

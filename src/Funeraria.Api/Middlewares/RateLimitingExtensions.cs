@@ -10,18 +10,10 @@ internal static class RateLimitingExtensions
 {
     public static IServiceCollection AddLimiteDeRequisicoes(this IServiceCollection services, IConfiguration configuration)
     {
-        var onboarding = configuration.GetSection("LimiteRequisicoes:Onboarding").Get<LimiteOptions>() ?? new LimiteOptions();
-
         services.AddRateLimiter(options =>
         {
-            options.AddPolicy(PoliticasLimite.Onboarding, http => RateLimitPartition.GetFixedWindowLimiter(
-                http.Connection.RemoteIpAddress?.ToString() ?? "desconhecido",
-                _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = onboarding.Limite,
-                    Window = onboarding.Janela,
-                    QueueLimit = 0
-                }));
+            PorIp(options, configuration, PoliticasLimite.Onboarding, new LimiteOptions { Limite = 5 });
+            PorIp(options, configuration, PoliticasLimite.CadastroCliente, new LimiteOptions { Limite = 10 });
 
             options.OnRejected = async (context, cancellationToken) =>
             {
@@ -47,6 +39,21 @@ internal static class RateLimitingExtensions
         });
 
         return services;
+    }
+
+    /// <summary>Janela fixa por IP, configurável em <c>LimiteRequisicoes:{politica}</c>.</summary>
+    private static void PorIp(RateLimiterOptions options, IConfiguration configuration, string politica, LimiteOptions padrao)
+    {
+        LimiteOptions limite = configuration.GetSection($"LimiteRequisicoes:{politica}").Get<LimiteOptions>() ?? padrao;
+
+        options.AddPolicy(politica, http => RateLimitPartition.GetFixedWindowLimiter(
+            http.Connection.RemoteIpAddress?.ToString() ?? "desconhecido",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = limite.Limite,
+                Window = limite.Janela,
+                QueueLimit = 0
+            }));
     }
 
     private sealed class LimiteOptions

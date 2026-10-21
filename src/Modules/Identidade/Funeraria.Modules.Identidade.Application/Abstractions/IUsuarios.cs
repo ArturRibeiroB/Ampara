@@ -23,6 +23,12 @@ public interface IUsuarios
     /// </summary>
     Task<UsuarioInfo> CriarConvidadoAsync(string email, string nome, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Cria a conta já com senha. A senha é validada antes de gravar: senha fraca vira erro de validação
+    /// e nenhuma conta é criada.
+    /// </summary>
+    Task<Result<UsuarioInfo>> CriarComSenhaAsync(string email, string nome, string senha, CancellationToken cancellationToken = default);
+
     Task<bool> PossuiSenhaAsync(Guid idUsuario, CancellationToken cancellationToken = default);
 
     /// <summary>Define a senha pela política de senha forte e confirma o e-mail. Senha fraca vira erro de validação.</summary>

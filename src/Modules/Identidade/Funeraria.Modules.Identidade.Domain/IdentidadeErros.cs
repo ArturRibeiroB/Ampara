@@ -24,6 +24,10 @@ public static class IdentidadeErros
     public static readonly Error SessaoInvalida =
         Error.NaoAutorizado("Auth.SessaoInvalida", "Sessão expirada. Faça login novamente.");
 
+    /// <summary>Cadastro com e-mail que já tem conta (DEC-02): a pessoa confirma que é dona da conta pela senha.</summary>
+    public static readonly Error SenhaContaExistente =
+        Error.NaoAutorizado("Auth.ContaExistente", "Este e-mail já tem conta na plataforma. Informe a senha dessa conta para continuar.");
+
     public static readonly Error LinkSenhaInvalido =
         Error.Validacao("Auth.LinkSenhaInvalido", "Link inválido ou expirado. Peça um novo convite.");
 }
