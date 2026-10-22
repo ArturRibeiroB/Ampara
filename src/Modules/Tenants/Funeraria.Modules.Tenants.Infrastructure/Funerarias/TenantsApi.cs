@@ -42,6 +42,26 @@ internal sealed class TenantsApi(TenantsDbContext context, IMemoryCache cache) :
         return new MarcaFunerariaDto(funeraria.Id, funeraria.Slug, nome, visual.LogoUrl, visual.CorPrimaria);
     }
 
+    public async Task<ParametrosCobrancaDto?> ObterParametrosCobrancaAsync(Guid idTenant, CancellationToken cancellationToken = default)
+    {
+        ParametrosFuneraria? parametros = await context.Funerarias
+            .AsNoTracking()
+            .Where(f => f.Id == idTenant)
+            .Select(f => f.Parametros)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (parametros is null)
+        {
+            return null;
+        }
+
+        ParametrosCobranca cobranca = parametros.Cobranca;
+        return new ParametrosCobrancaDto(
+            cobranca.ModoVencimento == ModoVencimento.EscolhaCliente,
+            cobranca.DiaVencimentoFixo,
+            cobranca.DiasVencimentoPermitidos,
+            cobranca.EstaCompleta());
+    }
+
     public async Task<IReadOnlyList<FunerariaResumoDto>> ListarAsync(
         IReadOnlyCollection<Guid> idsTenant,
         CancellationToken cancellationToken = default) =>
