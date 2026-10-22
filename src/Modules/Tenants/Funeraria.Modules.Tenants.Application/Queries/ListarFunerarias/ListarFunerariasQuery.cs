@@ -9,7 +9,7 @@ using Funeraria.Modules.Tenants.Domain.Funerarias;
 namespace Funeraria.Modules.Tenants.Application.Queries.ListarFunerarias;
 
 /// <summary>Funerárias da plataforma para o ADMIN (TEN-02), com busca, filtro de status e paginação (INF-17).</summary>
-public sealed record ListarFunerariasQuery(PaginaRequest Pagina, string? Busca, StatusFuneraria? Status)
+public sealed record ListarFunerariasQuery(PaginaRequest Pagina, string? Busca, StatusFuneraria? Status, OrdenacaoRequest? Ordenacao = null)
     : IQuery<PaginaResult<FunerariaListaResponse>>;
 
 public sealed record FunerariaListaResponse
@@ -56,20 +56,37 @@ public sealed class ListarFunerariasQueryHandler(IDbConnectionFactory connection
         WHERE (@Busca IS NULL
                OR nome_fantasia ILIKE @Busca OR razao_social ILIKE @Busca OR slug ILIKE @Busca OR cnpj ILIKE @Busca)
           AND (@Status IS NULL OR status = @Status)
-        ORDER BY nome_fantasia
+        /*ORDENACAO*/
         LIMIT @Tamanho OFFSET @Deslocamento
         """;
+
+    private static readonly OrdenacaoPermitida Ordenacoes = new(
+        new Dictionary<string, string>
+        {
+            ["nome_fantasia"] = "nome_fantasia",
+            ["slug"] = "slug",
+            ["status"] = "status",
+            ["criada_em"] = "created_at"
+        },
+        padrao: "nome_fantasia",
+        desempate: "id_tenant");
 
     public async ValueTask<Result<PaginaResult<FunerariaListaResponse>>> Handle(
         ListarFunerariasQuery query,
         CancellationToken cancellationToken)
     {
+        Result<string> orderBy = Ordenacoes.OrderBy(query.Ordenacao);
+        if (orderBy.IsFailure)
+        {
+            return Result.Failure<PaginaResult<FunerariaListaResponse>>(orderBy.Error);
+        }
+
         PaginaRequest pagina = query.Pagina.Normalizada();
         string? busca = string.IsNullOrWhiteSpace(query.Busca) ? null : $"%{EscaparLike(query.Busca.Trim())}%";
 
         await using DbConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         List<Linha> linhas = (await connection.QueryAsync<Linha>(new CommandDefinition(
-            Sql,
+            Sql.Replace("/*ORDENACAO*/", orderBy.Value, StringComparison.Ordinal),
             new { Busca = busca, Status = query.Status?.ToString(), pagina.Tamanho, pagina.Deslocamento },
             cancellationToken: cancellationToken))).ToList();
 

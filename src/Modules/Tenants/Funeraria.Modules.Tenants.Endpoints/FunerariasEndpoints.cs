@@ -54,10 +54,15 @@ internal sealed class FunerariasEndpoints : IEndpoint
                 int pagina = 1,
                 int tamanho = PaginaRequest.TamanhoPadrao,
                 string? busca = null,
-                StatusFuneraria? status = null) =>
-                (await sender.Send(new ListarFunerariasQuery(new PaginaRequest(pagina, tamanho), busca, status), ct)).Match(Results.Ok))
+                StatusFuneraria? status = null,
+                string? ordenarPor = null,
+                string? direcao = null) =>
+                (await sender.Send(new ListarFunerariasQuery(
+                    new PaginaRequest(pagina, tamanho), busca, status, new OrdenacaoRequest(ordenarPor, direcao)), ct)).Match(Results.Ok))
             .WithName("ListarFunerarias")
             .WithSummary("Lista as funerárias da plataforma")
+            .WithDescription("Ordenação: ordenarPor = nome_fantasia (padrão), slug, status ou criada_em; direcao = asc ou desc.")
+            .ProducesValidationProblem()
             .Produces<PaginaResult<FunerariaListaResponse>>();
 
         admin.MapPatch("{id:guid}/status", async (Guid id, AlterarStatusFunerariaRequest request, ISender sender, CancellationToken ct) =>

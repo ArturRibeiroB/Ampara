@@ -83,10 +83,15 @@ internal sealed class ClientesEndpoints : IEndpoint
                 string? nome = null,
                 string? cpf = null,
                 int pagina = 1,
-                int tamanho = PaginaRequest.TamanhoPadrao) =>
-                (await sender.Send(new BuscarClientesQuery(new PaginaRequest(pagina, tamanho), nome, cpf), ct)).Match(Results.Ok))
+                int tamanho = PaginaRequest.TamanhoPadrao,
+                string? ordenarPor = null,
+                string? direcao = null) =>
+                (await sender.Send(new BuscarClientesQuery(
+                    new PaginaRequest(pagina, tamanho), nome, cpf, new OrdenacaoRequest(ordenarPor, direcao)), ct)).Match(Results.Ok))
             .WithName("BuscarClientes")
             .WithSummary("Busca clientes da funerária por nome ou CPF")
+            .WithDescription("Ordenação: ordenarPor = nome (padrão), cpf, cidade ou cadastrado_em; direcao = asc ou desc.")
+            .ProducesValidationProblem()
             .Produces<PaginaResult<ClienteResumoResponse>>();
 
         gestao.MapGet("{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
