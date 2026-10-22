@@ -163,6 +163,16 @@ Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 - **Banco**: tabelas e colunas em snake_case, `timestamptz`, concorrência otimista pela coluna `xmin`,
   auditoria (`created_at`, `updated_at`, `created_by`) preenchida por interceptor.
 
+## Decisões técnicas
+
+| Card | Decisão | Por quê |
+|---|---|---|
+| INF-05 | **Mediator** (source generator) para commands e queries | Registro gerado no build, sem reflexão em tempo de execução; behaviors de validação e log em um lugar só |
+| INF-10 | **Mapeamento manual**, sem Mapster | Os DTOs são `record` com um método `De(entidade)`. Fica explícito o que sai na API (nunca vaza senha ou campo interno), o compilador acusa campo esquecido e não há configuração de mapeamento para testar |
+| INF-04 | EF Core para escrita, **Dapper** para listagens e buscas | Consultas Dapper filtram `id_tenant` à mão e só leem o schema do próprio módulo |
+| INF-08 | Serilog: console e arquivo JSON (`logs/`), Seq opcional em desenvolvimento | Correlation id por requisição (`X-Correlation-Id`); senha, tokens e CPF mascarados nos logs |
+| INF-18 | Armazenamento compatível com S3: **SeaweedFS** em desenvolvimento | A MinIO deixou de publicar imagens públicas |
+
 ## Migrations
 
 Cada módulo tem as próprias migrations, com histórico no próprio schema:

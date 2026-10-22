@@ -7,6 +7,7 @@ using Funeraria.Api.Modules;
 using Funeraria.Api.OpenApi;
 using Funeraria.BuildingBlocks.Infrastructure;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
+using Funeraria.BuildingBlocks.Infrastructure.Logging;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Serilog;
 
@@ -15,7 +16,8 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSerilog((services, logger) => logger
     .ReadFrom.Configuration(builder.Configuration)
     .ReadFrom.Services(services)
-    .Enrich.FromLogContext());
+    .Enrich.FromLogContext()
+    .Enrich.With<MascaraDadosSensiveis>());
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -40,6 +42,7 @@ builder.Services.AddModules(builder.Configuration);
 
 WebApplication app = builder.Build();
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseSerilogRequestLogging();

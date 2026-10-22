@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BuildingBlocks\Funeraria.BuildingBlocks.Application\Funeraria.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\src\BuildingBlocks\Funeraria.BuildingBlocks.Infrastructure\Funeraria.BuildingBlocks.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
