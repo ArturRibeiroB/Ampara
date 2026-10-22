@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Funeraria.Api.HealthChecks;
 using Funeraria.Api.Identity;
 using Funeraria.Api.Middlewares;
 using Funeraria.Api.Modules;
@@ -34,6 +35,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddOptions<TenancyOptions>().Bind(builder.Configuration.GetSection(TenancyOptions.Section));
 builder.Services.AddAutorizacao();
 builder.Services.AddDocumentacaoApi();
+builder.Services.AddVerificacoesDeSaude();
 
 builder.Services.AddBuildingBlocks(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
@@ -44,16 +46,14 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseSerilogRequestLogging();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapDocumentacaoApi();
-}
+app.MapDocumentacaoApi();
 
 app.UseAuthentication();
 app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthorization();
 
 app.MapModuleEndpoints();
+app.MapVerificacoesDeSaude();
 
 if (app.Configuration.GetValue<bool>("Database:AplicarMigrations"))
 {

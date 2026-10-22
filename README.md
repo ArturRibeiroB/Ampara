@@ -6,42 +6,68 @@ O frontend fica em outro repositório e conversa com esta API pelo contrato Open
 
 ## Rodando localmente
 
-Pré-requisitos: .NET SDK 10 e Docker.
+Pré-requisito: Docker. O .NET SDK 10 só é necessário para rodar a API fora do Docker e para os testes.
+
+### Tudo no Docker (mais simples)
 
 ```bash
-docker compose up -d
+cp .env.example .env
+docker compose up -d --build
 ```
 
-Sobe PostgreSQL (5432), MinIO (9000, console em 9001), Redis (6379) e Mailpit (8025).
-As credenciais do compose são só para uso local.
+| O quê | Endereço |
+|---|---|
+| Swagger | http://localhost:5080/swagger |
+| Scalar | http://localhost:5080/scalar |
+| OpenAPI | http://localhost:5080/openapi/v1.json |
+| Saúde da API / do banco | http://localhost:5080/health · http://localhost:5080/health/ready |
+| PostgreSQL | `localhost:5433` (usuário, senha e banco `funeraria`) |
+| S3 (SeaweedFS) | http://localhost:8333, access key `funeraria`, secret `funeraria123`, bucket `funeraria-documentos` |
+| E-mails (Mailpit) | http://localhost:8025 |
+| pgAdmin (opcional) | `docker compose --profile tools up -d pgadmin` → http://localhost:5050 |
 
-Configure os segredos uma vez (ficam fora do repositório, no user-secrets):
+Depois de mudar o código da API, rode `docker compose up -d --build api`.
+
+**Porta ocupada?** Se o compose disser que uma porta não está disponível, troque a porta no `.env`
+(`POSTGRES_PORTA`, `API_PORTA` etc.). O PostgreSQL usa a 5433 por padrão para não conflitar com um
+PostgreSQL instalado no Windows. No Windows, o Hyper-V também reserva faixas de portas; para ver quais:
+`netsh interface ipv4 show excludedportrange protocol=tcp`.
+
+> O armazenamento de arquivos usa **SeaweedFS** em vez da MinIO: a MinIO deixou de publicar imagens públicas
+> e as tags antigas não existem mais. A API vai falar S3, então em produção vale S3 ou Azure Blob (INF-18).
+
+### API com `dotnet run` (para debugar)
+
+Suba só a infraestrutura e configure os segredos uma vez (ficam no user-secrets, fora do repositório):
 
 ```bash
+docker compose up -d postgres seaweedfs seaweedfs-init redis mailpit
 cd src/Funeraria.Api
 dotnet user-secrets set "Jwt:ChaveAssinatura" "<uma chave aleatória com pelo menos 32 caracteres>"
 dotnet user-secrets set "Seed:AdminSenha" "<senha do ADMIN da plataforma>"
 dotnet user-secrets set "Seed:SenhaDemo" "<senha dos usuários de demonstração>"
-```
-
-Rode a API:
-
-```bash
+cd ../..
 dotnet run --project src/Funeraria.Api --launch-profile http
 ```
 
+Se a API do Docker estiver rodando, pare-a antes (`docker compose stop api`): as duas usam a porta 5080.
+Se mudou `POSTGRES_PORTA`, ajuste a connection string em `appsettings.Development.json`.
+
+### Usuários e funerária de demonstração
+
 Em Development a API aplica as migrations de todos os módulos e roda o seed ao iniciar:
 
-| O quê | Acesso |
+| Quem | Login |
 |---|---|
-| Documentação (Scalar) | http://localhost:5080/scalar |
-| OpenAPI | http://localhost:5080/openapi/v1.json |
-| ADMIN da plataforma | `admin@funeraria.localhost` + `Seed:AdminSenha`, sem funerária |
-| Funerária de demonstração | slug `demo`: http://demo.localhost:5080 ou cabeçalho `X-Tenant: demo` |
-| Gestor da demo (FUNERARIA) | `gestor@demo.localhost` + `Seed:SenhaDemo` |
-| Funcionário da demo | `funcionario@demo.localhost` + `Seed:SenhaDemo` |
+| ADMIN da plataforma | `admin@funeraria.localhost` + `SEED_ADMIN_SENHA` (ou `Seed:AdminSenha`), **sem** X-Tenant |
+| Gestor da demo (FUNERARIA) | `gestor@demo.localhost` + `SEED_SENHA_DEMO` (ou `Seed:SenhaDemo`), X-Tenant `demo` |
+| Funcionário da demo | `funcionario@demo.localhost` + a mesma senha da demo, X-Tenant `demo` |
 
-Sem a chave JWT a API não sobe. Sem `Seed:AdminSenha` o ADMIN não é criado (aparece um aviso no log).
+**Testando pelo Swagger:** preencha o campo `X-Tenant` com `demo`, chame `POST /api/v1/auth/login`, copie o
+`access_token`, clique em **Authorize** e cole o token. No navegador, a funerária também pode vir do
+subdomínio: http://demo.localhost:5080.
+
+Sem a chave JWT a API não sobe. Sem a senha do ADMIN ele não é criado (aparece um aviso no log).
 
 ## Testes
 

@@ -1,0 +1,9 @@
+# Normaliza fins de linha no repositório.
+* text=auto
+
+# Arquivos lidos dentro de containers Linux: sempre LF, mesmo em checkout no Windows.
+Dockerfile text eol=lf
+*.sh text eol=lf
+docker-compose*.yml text eol=lf
+docker/** text eol=lf
+.env.example text eol=lf

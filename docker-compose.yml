@@ -1,4 +1,11 @@
 # Ambiente local de desenvolvimento (INF-02). Credenciais só para uso local.
+#
+# Primeira vez:   cp .env.example .env      (ajuste portas e senhas se precisar)
+# Tudo:           docker compose up -d --build
+# Só a infra:     docker compose up -d postgres seaweedfs seaweedfs-init redis mailpit
+#                 (e rode a API com "dotnet run", ver README)
+#
+# Porta ocupada? Troque a porta correspondente no .env. As portas do lado esquerdo são as do seu computador.
 name: funeraria
 
 services:
@@ -9,7 +16,8 @@ services:
       POSTGRES_USER: funeraria
       POSTGRES_PASSWORD: funeraria
     ports:
-      - "5432:5432"
+      # 5433 por padrão para não conflitar com um PostgreSQL instalado no Windows (que usa a 5432).
+      - "${POSTGRES_PORTA:-5433}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -18,41 +26,64 @@ services:
       timeout: 5s
       retries: 10
 
-  # Armazenamento de arquivos compatível com S3 (INF-18). Console em http://localhost:9001
-  minio:
-    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: funeraria
-      MINIO_ROOT_PASSWORD: funeraria123
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio-data:/data
-
-  minio-init:
-    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
-      - minio
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=funeraria;Username=funeraria;Password=funeraria"
+      Jwt__ChaveAssinatura: ${JWT_CHAVE_ASSINATURA:?Copie .env.example para .env antes de subir a API}
+      Seed__AdminSenha: ${SEED_ADMIN_SENHA:-}
+      Seed__SenhaDemo: ${SEED_SENHA_DEMO:-}
+    ports:
+      # Swagger em http://localhost:5080/swagger
+      - "${API_PORTA:-5080}:8080"
+
+  # Armazenamento compatível com S3 (INF-18). Substitui a MinIO, que deixou de publicar imagens públicas.
+  # Endpoint S3: http://localhost:8333, access key "funeraria", secret "funeraria123" (docker/seaweedfs/s3.json).
+  seaweedfs:
+    image: chrislusf/seaweedfs:3.97
+    command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json -volume.max=0
+    ports:
+      - "${S3_PORTA:-8333}:8333"
+    volumes:
+      - seaweedfs-data:/data
+      - ./docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+
+  # Cria o bucket inicial. Roda uma vez e termina.
+  seaweedfs-init:
+    image: chrislusf/seaweedfs:3.97
+    depends_on:
+      - seaweedfs
+    # Tenta até o filer ficar pronto e o bucket aparecer na listagem.
     entrypoint: >
       /bin/sh -c "
-      until mc alias set local http://minio:9000 funeraria funeraria123; do sleep 1; done;
-      mc mb --ignore-existing local/funeraria-documentos;
+      for tentativa in $$(seq 1 60); do
+        echo 's3.bucket.create -name funeraria-documentos' | weed shell -master=seaweedfs:9333 -filer=seaweedfs:8888 >/dev/null 2>&1;
+        if echo 's3.bucket.list' | weed shell -master=seaweedfs:9333 -filer=seaweedfs:8888 2>/dev/null | grep -q funeraria-documentos; then
+          echo 'Bucket funeraria-documentos pronto.'; exit 0;
+        fi;
+        sleep 2;
+      done;
+      echo 'Não foi possível criar o bucket funeraria-documentos.'; exit 1
       "
 
   # Cache e backplane do SignalR (INF-19, opcional).
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "${REDIS_PORTA:-6379}:6379"
 
   # Captura os e-mails enviados em desenvolvimento. Interface em http://localhost:8025
   mailpit:
     image: axllent/mailpit:v1.24
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "${SMTP_PORTA:-1025}:1025"
+      - "${MAILPIT_PORTA:-8025}:8025"
 
   pgadmin:
     image: dpage/pgadmin4:9
@@ -61,10 +92,10 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@funeraria.localhost
       PGADMIN_DEFAULT_PASSWORD: funeraria
     ports:
-      - "5050:80"
+      - "${PGADMIN_PORTA:-5050}:80"
     depends_on:
       - postgres
 
 volumes:
   postgres-data:
-  minio-data:
+  seaweedfs-data:
