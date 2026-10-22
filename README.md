@@ -87,6 +87,15 @@ Sem a chave JWT a API não sobe. Sem a senha do ADMIN ele não é criado (aparec
 Se quem for indicado como gestor já tiver conta na plataforma, recebe só um aviso de acesso e entra com a
 senha que já usa (DEC-02).
 
+### Confirmação de e-mail e senha esquecida (AUT-05)
+
+- O cliente que se cadastra recebe o link `.../confirmar-email?token=...`; o frontend chama
+  `POST /api/v1/auth/confirmar-email` com `{ "token" }`. Quem já tinha o e-mail confirmado recebe só as boas-vindas.
+- `POST /api/v1/auth/esqueci-senha` com `{ "email" }` responde 204 sempre. O link vai para quem tem vínculo ativo
+  com a funerária do X-Tenant; sem X-Tenant, só para o ADMIN (link no subdomínio `admin`).
+- `POST /api/v1/auth/redefinir-senha` com `{ "token", "senha" }`. O link vale 30 minutos e uma vez; a troca
+  encerra as sessões abertas. Validades e links em `Identidade` no appsettings.
+
 ## Testes
 
 ```bash
@@ -137,7 +146,7 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 
 | Módulo | Schema | Estado |
 |---|---|---|
-| Identidade | `identidade` | Login, refresh token com rotação, logout, minhas funerárias, convite e definição de senha (AUT-01 a AUT-04) |
+| Identidade | `identidade` | Login, refresh token com rotação, logout, minhas funerárias, convite, definição e recuperação de senha, confirmação de e-mail (AUT-01 a AUT-05) |
 | Tenants | `tenants` | Auto-cadastro e cadastro pelo ADMIN, aprovação/suspensão, configurações da funerária (TEN-01 a TEN-03) |
 | Clientes | `clientes` | Cadastro do cliente (conta + vínculo CLIENTE), meus dados, dependentes e busca pela equipe (Criar Cliente, Criar Dependente, CLI-01 a CLI-03) |
 | Planos | `planos` | Gestão de planos, configurações em jsonb e planos modelo copiados para cada funerária nova (PLA-01, PLA-03) |

@@ -68,6 +68,8 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("LimiteRequisicoes:Autenticacao:Limite", "100000");
         builder.UseSetting("Seguranca:ForcarHttps", "false");
         builder.UseSetting("Identidade:Links:UrlDefinirSenha", "http://{slug}.teste.localhost/definir-senha");
+        builder.UseSetting("Identidade:Links:UrlConfirmarEmail", "http://{slug}.teste.localhost/confirmar-email");
+        builder.UseSetting("Identidade:Links:UrlRedefinirSenha", "http://{slug}.teste.localhost/redefinir-senha");
         builder.UseSetting("Identidade:Links:UrlLogin", "http://{slug}.teste.localhost/login");
 
         builder.ConfigureTestServices(services =>

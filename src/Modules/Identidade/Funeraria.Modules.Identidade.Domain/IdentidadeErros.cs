@@ -2,7 +2,7 @@ using Funeraria.BuildingBlocks.Domain.Results;
 
 namespace Funeraria.Modules.Identidade.Domain;
 
-/// <summary>Erros da autenticação, com as mensagens do AUT-02 e do AUT-03.</summary>
+/// <summary>Erros da autenticação, com as mensagens do AUT-02, do AUT-03 e do AUT-05.</summary>
 public static class IdentidadeErros
 {
     /// <summary>Mesma mensagem para e-mail inexistente e senha errada: não revela se o e-mail existe.</summary>
@@ -30,4 +30,10 @@ public static class IdentidadeErros
 
     public static readonly Error LinkSenhaInvalido =
         Error.Validacao("Auth.LinkSenhaInvalido", "Link inválido ou expirado. Peça um novo convite.");
+
+    public static readonly Error LinkRedefinicaoInvalido =
+        Error.Validacao("Auth.LinkRedefinicaoInvalido", "Link inválido ou expirado. Solicite uma nova redefinição de senha.");
+
+    public static readonly Error LinkConfirmacaoInvalido =
+        Error.Validacao("Auth.LinkConfirmacaoInvalido", "Link de confirmação inválido ou expirado.");
 }

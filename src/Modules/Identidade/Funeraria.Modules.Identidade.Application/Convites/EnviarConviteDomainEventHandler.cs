@@ -22,7 +22,7 @@ internal sealed class EnviarConviteDomainEventHandler(
     ITokenService tokens,
     ITokenSenhaRepository tokensSenha,
     IIdentidadeUnitOfWork unitOfWork,
-    IConfiguracaoConvite convite,
+    ILinksIdentidade links,
     IEnvioEmail email,
     TimeProvider timeProvider)
     : IDomainEventHandler<VinculoCriadoDomainEvent>
@@ -52,18 +52,18 @@ internal sealed class EnviarConviteDomainEventHandler(
         if (await usuarios.PossuiSenhaAsync(usuario.Id, cancellationToken))
         {
             modelo = ModelosEmail.AcessoLiberado;
-            dados["link"] = convite.UrlLogin(funeraria.Slug);
+            dados["link"] = links.UrlLogin(funeraria.Slug);
         }
         else
         {
             TokenOpaco token = tokens.GerarTokenOpaco();
             tokensSenha.Adicionar(TokenSenha.Criar(
-                usuario.Id, FinalidadeTokenSenha.DefinirSenha, token.Hash, timeProvider.GetUtcNow().UtcDateTime, convite.ValidadeConvite));
+                usuario.Id, FinalidadeTokenSenha.DefinirSenha, token.Hash, timeProvider.GetUtcNow().UtcDateTime, links.ValidadeConvite));
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             modelo = ModelosEmail.Convite;
-            dados["link"] = convite.UrlDefinirSenha(funeraria.Slug, token.Valor);
-            dados["horas"] = ((int)convite.ValidadeConvite.TotalHours).ToString(CultureInfo.InvariantCulture);
+            dados["link"] = links.UrlDefinirSenha(funeraria.Slug, token.Valor);
+            dados["horas"] = ((int)links.ValidadeConvite.TotalHours).ToString(CultureInfo.InvariantCulture);
         }
 
         await email.EnfileirarAsync(new EmailSolicitado(modelo, usuario.Email, usuario.Nome, funeraria.IdTenant, dados), cancellationToken);

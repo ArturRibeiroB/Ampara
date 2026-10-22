@@ -3,8 +3,8 @@ using Funeraria.BuildingBlocks.Domain.Entities;
 namespace Funeraria.Modules.Identidade.Domain.Senhas;
 
 /// <summary>
-/// Token de uso único para definir ou redefinir a senha (convite do TEN-02/AUT-07 e recuperação do AUT-05).
-/// Só o hash é gravado; o valor vai apenas no link enviado por e-mail.
+/// Token de uso único enviado por e-mail: definir a senha (convite do TEN-02/AUT-07), redefinir a senha e
+/// confirmar o e-mail (AUT-05). Só o hash é gravado; o valor vai apenas no link.
 /// </summary>
 public sealed class TokenSenha : AggregateRoot<Guid>
 {
@@ -58,7 +58,10 @@ public enum FinalidadeTokenSenha
     DefinirSenha = 1,
 
     /// <summary>"Esqueci minha senha" (AUT-05).</summary>
-    RedefinirSenha = 2
+    RedefinirSenha = 2,
+
+    /// <summary>Confirmação do e-mail de quem se cadastrou com senha (AUT-05).</summary>
+    ConfirmarEmail = 3
 }
 
 public interface ITokenSenhaRepository
