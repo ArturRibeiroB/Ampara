@@ -12,6 +12,24 @@ internal sealed class ClientesApi(ClientesDbContext context) : IClientesApi
             .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf))
             .FirstOrDefaultAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<TitularDto>> ObterTitularesAsync(
+        IReadOnlyCollection<Guid> idsCliente,
+        CancellationToken cancellationToken = default) =>
+        idsCliente.Count == 0
+            ? []
+            : await context.Clientes
+                .AsNoTracking()
+                .Where(c => idsCliente.Contains(c.Id))
+                .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf))
+                .ToListAsync(cancellationToken);
+
+    public Task<TitularDto?> ObterTitularPorCpfAsync(string cpf, CancellationToken cancellationToken = default) =>
+        context.Clientes
+            .AsNoTracking()
+            .Where(c => c.Cpf == cpf)
+            .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf))
+            .FirstOrDefaultAsync(cancellationToken);
+
     public async Task<IReadOnlyList<DependenteDto>> ObterDependentesAsync(
         IReadOnlyCollection<Guid> idsDependente,
         CancellationToken cancellationToken = default) =>

@@ -10,6 +10,10 @@ public static class ContratoErros
     public const string TipoCoberturaObrigatorio = "Tipo de cobertura é obrigatório.";
     public const string DependenteInvalido = "Dependente selecionado é inválido.";
 
+    /// <summary>Também para o cliente que pede o contrato de outro: não revela que ele existe (CON-01).</summary>
+    public static readonly Error NaoEncontrado =
+        Error.NaoEncontrado("Contrato.NaoEncontrado", "Contrato não encontrado.");
+
     public static readonly Error TitularNaoEncontrado =
         Error.NaoEncontrado("Contrato.TitularNaoEncontrado", "Cliente titular não encontrado.");
 
@@ -46,6 +50,9 @@ public static class ContratoErros
 public interface IContratoRepository
 {
     Task<Contrato?> ObterAsync(Guid idContrato, CancellationToken cancellationToken = default);
+
+    /// <summary>Contratos do cliente, do mais recente para o mais antigo, com as pessoas cobertas.</summary>
+    Task<IReadOnlyList<Contrato>> ListarDoClienteAsync(Guid idCliente, CancellationToken cancellationToken = default);
 
     /// <summary>O cliente tem contrato não cancelado neste plano.</summary>
     Task<bool> ExisteVigenteAsync(Guid idCliente, Guid idPlano, CancellationToken cancellationToken = default);

@@ -171,7 +171,7 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Clientes | `clientes` | Cadastro do cliente (conta + vínculo CLIENTE), meus dados, dependentes e busca pela equipe (Criar Cliente, Criar Dependente, CLI-01 a CLI-03) |
 | Planos | `planos` | Gestão de planos, configurações em jsonb e planos modelo copiados para cada funerária nova (PLA-01, PLA-03) |
 | Notificacoes | — | Envio de e-mail por SMTP (Mailpit em desenvolvimento). Templates e provider de produção pendentes (NOT-01) |
-| Contratos | `contratos` | Contratação pelo cliente (`POST /contratos`) e pela equipe (`POST /gestao/contratos`), com pessoas cobertas, valor e periodicidade da contratação (Criar Contrato) |
+| Contratos | `contratos` | Contratação pelo cliente (`POST /contratos`) e pela equipe (`POST /gestao/contratos`), com pessoas cobertas, valor e periodicidade da contratação; consulta pelo cliente e busca pela equipe (Criar Contrato, CON-01) |
 | Catalogo, Financeiro, Funeral, Documentos, Translado, Terceiros, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.

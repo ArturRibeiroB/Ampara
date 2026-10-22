@@ -25,6 +25,9 @@ public static class Politicas
     public const string GestaoFuneraria = nameof(GestaoFuneraria);
     public const string EquipeFuneraria = nameof(EquipeFuneraria);
     public const string Cliente = nameof(Cliente);
+
+    /// <summary>Cliente ou equipe da funerária. O caso de uso limita o cliente aos próprios registros (DEC-06).</summary>
+    public const string ClienteOuEquipe = nameof(ClienteOuEquipe);
     public const string TerceiroFrota = nameof(TerceiroFrota);
     public const string TerceiroDespachante = nameof(TerceiroDespachante);
     public const string TerceiroFornecedor = nameof(TerceiroFornecedor);
