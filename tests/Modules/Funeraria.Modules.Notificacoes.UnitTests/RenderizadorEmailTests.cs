@@ -87,6 +87,9 @@ public sealed class RenderizadorEmailTests
         public Task<MarcaFunerariaDto?> ObterMarcaAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
             Task.FromResult<MarcaFunerariaDto?>(idTenant == marca.IdTenant ? marca : null);
 
+        public Task<ParametrosCobrancaDto?> ObterParametrosCobrancaAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
         public Task<FunerariaResumoDto?> ObterPorSlugAsync(string slug, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 

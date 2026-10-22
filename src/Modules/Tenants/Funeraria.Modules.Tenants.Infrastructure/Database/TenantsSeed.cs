@@ -19,7 +19,7 @@ internal sealed class TenantsSeed(TenantsDbContext context, IOptions<SeedOptions
             return;
         }
 
-        context.Funerarias.Add(FunerariaEntity.Criar(
+        var funeraria = FunerariaEntity.Criar(
             nomeFantasia: "Funerária Demonstração",
             razaoSocial: "Funerária Demonstração Ltda",
             cnpj: "11222333000181",
@@ -27,8 +27,15 @@ internal sealed class TenantsSeed(TenantsDbContext context, IOptions<SeedOptions
             emailContato: "contato@demo.localhost",
             telefone: null,
             origem: OrigemCadastro.Admin,
-            status: StatusFuneraria.Ativa));
+            status: StatusFuneraria.Ativa);
 
+        // Valores de exemplo para a demonstração conseguir contratar. Os valores reais dependem do DEC-12.
+        funeraria.AtualizarConfiguracoes(funeraria.IdentidadeVisual, funeraria.Parametros with
+        {
+            Cobranca = funeraria.Parametros.Cobranca with { MultaPercentual = 2, JurosMensalPercentual = 1, DescontoAnualPercentual = 10 }
+        });
+
+        context.Funerarias.Add(funeraria);
         await context.SaveChangesAsync(cancellationToken);
     }
 }
