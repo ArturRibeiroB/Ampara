@@ -24,6 +24,7 @@ docker compose up -d --build
 | PostgreSQL | `localhost:5433` (usuário, senha e banco `funeraria`) |
 | S3 (SeaweedFS) | http://localhost:8333, access key `funeraria`, secret `funeraria123`, bucket `funeraria-documentos` |
 | E-mails (Mailpit) | http://localhost:8025 |
+| Painel de jobs (Hangfire) | http://localhost:5080/hangfire?access_token=`<token do ADMIN>`. A API troca o token por um cookie e abre o painel |
 | pgAdmin (opcional) | `docker compose --profile tools up -d pgadmin` → http://localhost:5050 |
 
 Depois de mudar o código da API, rode `docker compose up -d --build api`.

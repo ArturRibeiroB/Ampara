@@ -7,6 +7,7 @@ using Funeraria.Api.Modules;
 using Funeraria.Api.OpenApi;
 using Funeraria.BuildingBlocks.Infrastructure;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
+using Funeraria.BuildingBlocks.Infrastructure.Jobs;
 using Funeraria.BuildingBlocks.Infrastructure.Logging;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Serilog;
@@ -40,6 +41,8 @@ builder.Services.AddSeguranca(builder.Configuration);
 
 builder.Services.AddBuildingBlocks(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
+builder.Services.AddJobs(builder.Configuration);
+builder.Services.AddPainelJobs();
 
 WebApplication app = builder.Build();
 
@@ -57,6 +60,7 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapModuleEndpoints();
+app.MapPainelJobs();
 app.MapVerificacoesDeSaude();
 
 if (app.Configuration.GetValue<bool>("Database:AplicarMigrations"))
@@ -68,6 +72,8 @@ if (app.Configuration.GetValue<bool>("Seed:Executar"))
 {
     await app.Services.SeedModulesAsync();
 }
+
+await app.Services.AgendarJobsRecorrentesAsync();
 
 await app.RunAsync();
 

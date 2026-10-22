@@ -72,7 +72,7 @@ internal static class SegurancaExtensions
             headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
             headers["Cross-Origin-Opener-Policy"] = "same-origin";
 
-            // A API só devolve JSON. As páginas de documentação carregam scripts e ficam com a política padrão.
+            // A API só devolve JSON. As páginas de documentação e o painel de jobs carregam scripts e ficam de fora.
             if (!EhDocumentacao(context.Request.Path))
             {
                 headers.ContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
@@ -86,7 +86,8 @@ internal static class SegurancaExtensions
     }
 
     private static bool EhDocumentacao(PathString path) =>
-        path.StartsWithSegments("/swagger") || path.StartsWithSegments("/scalar") || path.StartsWithSegments("/openapi");
+        path.StartsWithSegments("/swagger") || path.StartsWithSegments("/scalar") || path.StartsWithSegments("/openapi")
+        || path.StartsWithSegments("/hangfire");
 
     /// <summary>Aceita o domínio da plataforma, os subdomínios das funerárias e as origens extras configuradas.</summary>
     internal static bool OrigemPermitida(string origem, string dominioBase, SegurancaOptions opcoes)

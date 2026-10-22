@@ -1,3 +1,4 @@
+using Funeraria.BuildingBlocks.Infrastructure.Jobs;
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Funeraria.Modules.Identidade.Application;
@@ -61,6 +62,7 @@ public static class IdentidadeModule
         services.AddSingleton<IConfiguracaoConvite, ConfiguracaoConvite>();
         services.AddScoped<IIdentidadeApi, IdentidadeApi>();
         services.AddScoped<IModuleSeeder, IdentidadeSeed>();
+        services.AddScoped<IJobRecorrente, LimpezaSessoesJob>();
 
         return services;
     }

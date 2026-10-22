@@ -5,7 +5,7 @@ namespace Funeraria.Api.HealthChecks;
 
 /// <summary>
 /// Health checks (INF-13): <c>/health</c> diz se o processo está de pé; <c>/health/ready</c> confere o banco.
-/// Hangfire e integrações externas entram aqui quando forem configurados.
+/// As integrações externas (Stripe, API de distância) entram aqui quando forem configuradas.
 /// </summary>
 internal static class HealthCheckExtensions
 {
@@ -13,7 +13,9 @@ internal static class HealthCheckExtensions
 
     public static IServiceCollection AddVerificacoesDeSaude(this IServiceCollection services)
     {
-        services.AddHealthChecks().AddCheck<PostgresHealthCheck>("postgres", tags: [Ready]);
+        services.AddHealthChecks()
+            .AddCheck<PostgresHealthCheck>("postgres", tags: [Ready])
+            .AddCheck<HangfireHealthCheck>("hangfire", tags: [Ready]);
         return services;
     }
 
