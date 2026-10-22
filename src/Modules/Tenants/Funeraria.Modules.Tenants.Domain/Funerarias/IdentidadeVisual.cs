@@ -7,7 +7,10 @@ public sealed record IdentidadeVisual
 {
     public string NomeExibicao { get; init; } = string.Empty;
 
-    /// <summary>Endereço do logo no armazenamento de arquivos. O upload entra com o INF-18.</summary>
+    /// <summary>
+    /// Endereço público do logo, servido pela API. Definido pelo upload (POST /gestao/configuracoes/logo);
+    /// o valor enviado no PUT das configurações é ignorado.
+    /// </summary>
     public string? LogoUrl { get; init; }
 
     public string CorPrimaria { get; init; } = "#1F3A5F";

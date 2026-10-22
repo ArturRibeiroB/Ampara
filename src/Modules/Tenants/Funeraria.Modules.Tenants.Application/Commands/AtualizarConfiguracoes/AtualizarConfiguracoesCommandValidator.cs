@@ -34,7 +34,6 @@ internal sealed partial class IdentidadeVisualValidator : AbstractValidator<Iden
 
         RuleFor(v => v.Telefone).Telefone();
         RuleFor(v => v.Whatsapp).Telefone();
-        RuleFor(v => v.LogoUrl).MaximumLength(500).WithMessage("Endereço do logo deve ter no máximo 500 caracteres.");
         RuleFor(v => v.HorarioAtendimento).MaximumLength(200).WithMessage("Horário de atendimento deve ter no máximo 200 caracteres.");
 
         RuleFor(v => v.Endereco).NotNull().WithMessage("Endereço é obrigatório.").SetValidator(new EnderecoValidator());

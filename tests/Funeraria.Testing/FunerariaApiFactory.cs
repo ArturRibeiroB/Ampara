@@ -29,9 +29,23 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
 
     public EmailsCapturados Emails { get; } = new();
 
+    /// <summary>SeaweedFS dos testes; só existe quando <see cref="UsaArmazenamento"/> é verdadeiro.</summary>
+    public ArmazenamentoDeTeste? Armazenamento { get; private set; }
+
+    /// <summary>Sobe o armazenamento de arquivos (INF-18) junto com o banco.</summary>
+    protected virtual bool UsaArmazenamento => false;
+
     public async ValueTask IniciarAsync()
     {
-        await _postgres.StartAsync();
+        if (UsaArmazenamento)
+        {
+            Armazenamento = new ArmazenamentoDeTeste();
+            await Task.WhenAll(_postgres.StartAsync(), Armazenamento.IniciarAsync());
+        }
+        else
+        {
+            await _postgres.StartAsync();
+        }
 
         // Força a criação do host (migrations e seed) antes do primeiro teste.
         _ = Services;
@@ -41,6 +55,11 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();
+        if (Armazenamento is not null)
+        {
+            await Armazenamento.DisposeAsync();
+        }
+
         GC.SuppressFinalize(this);
     }
 
@@ -71,6 +90,16 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Identidade:Links:UrlConfirmarEmail", "http://{slug}.teste.localhost/confirmar-email");
         builder.UseSetting("Identidade:Links:UrlRedefinirSenha", "http://{slug}.teste.localhost/redefinir-senha");
         builder.UseSetting("Identidade:Links:UrlLogin", "http://{slug}.teste.localhost/login");
+
+        builder.UseSetting("Api:UrlPublica", "http://api.teste.localhost");
+        if (Armazenamento is not null)
+        {
+            builder.UseSetting("Armazenamento:S3:ServiceUrl", Armazenamento.ServiceUrl);
+            builder.UseSetting("Armazenamento:S3:Bucket", ArmazenamentoDeTeste.Bucket);
+            builder.UseSetting("Armazenamento:S3:ForcarPathStyle", "true");
+            builder.UseSetting("Armazenamento:S3:AccessKey", ArmazenamentoDeTeste.AccessKey);
+            builder.UseSetting("Armazenamento:S3:SecretKey", ArmazenamentoDeTeste.SecretKey);
+        }
 
         builder.ConfigureTestServices(services =>
         {

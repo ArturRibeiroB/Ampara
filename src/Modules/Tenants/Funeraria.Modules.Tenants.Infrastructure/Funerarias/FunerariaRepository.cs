@@ -10,6 +10,12 @@ internal sealed class FunerariaRepository(TenantsDbContext context) : IFuneraria
     public Task<FunerariaEntity?> ObterPorIdAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
         context.Funerarias.FirstOrDefaultAsync(f => f.Id == idTenant, cancellationToken);
 
+    public Task<FunerariaEntity?> ObterPorSlugAsync(string slug, CancellationToken cancellationToken = default)
+    {
+        string normalizado = slug.ToLowerInvariant();
+        return context.Funerarias.FirstOrDefaultAsync(f => f.Slug == normalizado, cancellationToken);
+    }
+
     public Task<bool> ExisteCnpjAsync(string cnpj, CancellationToken cancellationToken = default) =>
         context.Funerarias.AnyAsync(f => f.Cnpj == cnpj, cancellationToken);
 

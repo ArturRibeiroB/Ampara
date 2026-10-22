@@ -4,6 +4,8 @@ namespace Funeraria.Modules.Tenants.IntegrationTests;
 
 public sealed class TenantsApiFactory : FunerariaApiFactory, IAsyncLifetime
 {
+    protected override bool UsaArmazenamento => true;
+
     public ValueTask InitializeAsync() => IniciarAsync();
 }
 

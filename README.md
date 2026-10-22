@@ -104,7 +104,7 @@ dotnet test --solution Funeraria.slnx
 
 - **Unitários** (`tests/Modules/*.UnitTests`): domínio e validadores.
 - **Integração** (`tests/Modules/*.IntegrationTests`): a API inteira contra um PostgreSQL real em container
-  (Testcontainers). Precisam do Docker rodando.
+  (Testcontainers). Precisam do Docker rodando. Os testes do Tenants sobem também um SeaweedFS, para o logo.
 - **Arquitetura** (`tests/Funeraria.ArchitectureTests`): garantem as fronteiras entre módulos e camadas.
 
 O runner é o Microsoft.Testing.Platform (configurado no `global.json`).
@@ -193,6 +193,19 @@ e-mail com o nome, o logo e a cor da funerária e entrega pela fila `emails` do 
 - Desenvolvimento: tudo cai no Mailpit (http://localhost:8025).
 - Produção: configure `Email:Smtp` com o SMTP do provider. Resend: `smtp.resend.com`, porta 587, usuário `resend`,
   senha = API key. SendGrid: `smtp.sendgrid.net`, porta 587, usuário `apikey`, senha = API key. A senha vai em secret.
+
+## Arquivos
+
+Os módulos gravam arquivos por `IArmazenamentoArquivos` (INF-18), sempre na pasta da funerária
+(`tenants/{id_tenant}/...`). O tipo é conferido pelos primeiros bytes do arquivo, não pela extensão, e cada uso tem a sua
+política em `PoliticaArquivo` (logo: PNG/JPEG/WEBP até 2 MB; documento: PDF/PNG/JPEG até 10 MB). SVG não é aceito.
+
+- O bucket é privado. O navegador baixa por link temporário (`GerarLinkTemporarioAsync`) ou pela API.
+- O logo da funerária é a exceção pública: `POST /api/v1/gestao/configuracoes/logo` (campo `arquivo`) grava e devolve
+  o endereço `GET /api/v1/funerarias/{slug}/logo?v=...`, que aparece nas telas e nos e-mails. Configure `Api:UrlPublica`.
+- Desenvolvimento: SeaweedFS do docker-compose. Produção: `Armazenamento:S3` com o bucket da AWS (deixe `ServiceUrl`
+  vazio e use a credencial da instância ou `AccessKey`/`SecretKey` em secret) ou outro serviço compatível com S3.
+  `UrlPublica` só é necessária quando o navegador não alcança o `ServiceUrl` (caso do Docker local).
 
 ## Migrations
 
