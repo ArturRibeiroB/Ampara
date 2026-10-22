@@ -23,6 +23,7 @@ internal sealed class AuthEndpoints : IEndpoint
         group.MapPost("login", async (LoginRequest request, ISender sender, HttpContext http, CancellationToken ct) =>
                 Sessao(await sender.Send(new LoginCommand(request.Email ?? string.Empty, request.Senha ?? string.Empty), ct), http))
             .AllowAnonymous()
+            .RequireRateLimiting(PoliticasLimite.Autenticacao)
             .WithName("Login")
             .WithSummary("Entra na funerária do endereço acessado (ou na plataforma, para o ADMIN)")
             .WithDescription("Devolve o access token no corpo e o refresh token em cookie httpOnly.")
@@ -30,7 +31,8 @@ internal sealed class AuthEndpoints : IEndpoint
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
-            .ProducesProblem(StatusCodes.Status423Locked);
+            .ProducesProblem(StatusCodes.Status423Locked)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
         group.MapPost("refresh", async (ISender sender, HttpContext http, CancellationToken ct) =>
                 Sessao(await sender.Send(new RenovarSessaoCommand(RefreshTokenCookie.Ler(http)), ct), http))
@@ -56,6 +58,7 @@ internal sealed class AuthEndpoints : IEndpoint
                 (await sender.Send(new DefinirSenhaCommand(request.Token ?? string.Empty, request.Senha ?? string.Empty), ct))
                     .Match(Results.NoContent))
             .AllowAnonymous()
+            .RequireRateLimiting(PoliticasLimite.Autenticacao)
             .WithName("DefinirSenha")
             .WithSummary("Define a senha pelo link do convite e confirma o e-mail")
             .WithDescription("O token vem no link enviado por e-mail. Vale uma vez e expira (TEN-02, AUT-07).")

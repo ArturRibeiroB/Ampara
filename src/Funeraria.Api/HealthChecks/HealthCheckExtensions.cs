@@ -19,8 +19,12 @@ internal static class HealthCheckExtensions
 
     public static WebApplication MapVerificacoesDeSaude(this WebApplication app)
     {
-        app.MapHealthChecks("/health", new() { Predicate = _ => false }).AllowAnonymous();
-        app.MapHealthChecks("/health/ready", new() { Predicate = c => c.Tags.Contains(Ready) }).AllowAnonymous();
+        app.MapHealthChecks("/health", new() { Predicate = _ => false })
+            .WithMetadata(new HttpMethodMetadata(["GET"]))
+            .AllowAnonymous();
+        app.MapHealthChecks("/health/ready", new() { Predicate = c => c.Tags.Contains(Ready) })
+            .WithMetadata(new HttpMethodMetadata(["GET"]))
+            .AllowAnonymous();
         return app;
     }
 

@@ -64,6 +64,8 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Outbox:Intervalo", "00:00:00.200");
         builder.UseSetting("LimiteRequisicoes:Onboarding:Limite", "100000");
         builder.UseSetting("LimiteRequisicoes:CadastroCliente:Limite", "100000");
+        builder.UseSetting("LimiteRequisicoes:Autenticacao:Limite", "100000");
+        builder.UseSetting("Seguranca:ForcarHttps", "false");
         builder.UseSetting("Identidade:Links:UrlDefinirSenha", "http://{slug}.teste.localhost/definir-senha");
         builder.UseSetting("Identidade:Links:UrlLogin", "http://{slug}.teste.localhost/login");
 

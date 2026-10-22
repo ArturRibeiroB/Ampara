@@ -36,12 +36,14 @@ builder.Services.AddAutorizacao();
 builder.Services.AddDocumentacaoApi();
 builder.Services.AddVerificacoesDeSaude();
 builder.Services.AddLimiteDeRequisicoes(builder.Configuration);
+builder.Services.AddSeguranca(builder.Configuration);
 
 builder.Services.AddBuildingBlocks(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
 
 WebApplication app = builder.Build();
 
+app.UseSeguranca();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();

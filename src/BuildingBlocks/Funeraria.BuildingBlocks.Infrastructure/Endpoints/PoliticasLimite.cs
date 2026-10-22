@@ -8,4 +8,7 @@ public static class PoliticasLimite
 
     /// <summary>Cadastro público de clientes na funerária (card Criar Cliente).</summary>
     public const string CadastroCliente = nameof(CadastroCliente);
+
+    /// <summary>Login, definição e recuperação de senha: freia tentativa em massa de senhas (SEG-02).</summary>
+    public const string Autenticacao = nameof(Autenticacao);
 }
