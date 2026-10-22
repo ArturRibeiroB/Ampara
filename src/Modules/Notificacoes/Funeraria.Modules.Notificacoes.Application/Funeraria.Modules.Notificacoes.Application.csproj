@@ -8,6 +8,15 @@
     <ProjectReference Include="..\Funeraria.Modules.Notificacoes.Domain\Funeraria.Modules.Notificacoes.Domain.csproj" />
     <ProjectReference Include="..\Funeraria.Modules.Notificacoes.Contracts\Funeraria.Modules.Notificacoes.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Funeraria.BuildingBlocks.Application\Funeraria.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\Tenants\Funeraria.Modules.Tenants.Contracts\Funeraria.Modules.Tenants.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Email\Modelos\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Funeraria.Modules.Notificacoes.UnitTests" />
   </ItemGroup>
 
 </Project>

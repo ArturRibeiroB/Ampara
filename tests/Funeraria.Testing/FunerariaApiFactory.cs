@@ -1,4 +1,4 @@
-using Funeraria.Modules.Notificacoes.Contracts;
+using Funeraria.Modules.Notificacoes.Application.Email;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
 using Funeraria.Modules.Tenants.Infrastructure.Database;
 using Microsoft.AspNetCore.Hosting;
@@ -62,6 +62,7 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Seed:AdminEmail", EmailAdmin);
         builder.UseSetting("Seed:AdminSenha", SenhaPadrao);
         builder.UseSetting("Outbox:Intervalo", "00:00:00.200");
+        builder.UseSetting("Jobs:IntervaloFila", "00:00:00.200");
         builder.UseSetting("LimiteRequisicoes:Onboarding:Limite", "100000");
         builder.UseSetting("LimiteRequisicoes:CadastroCliente:Limite", "100000");
         builder.UseSetting("LimiteRequisicoes:Autenticacao:Limite", "100000");
@@ -72,7 +73,7 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton(Eventos);
-            services.AddSingleton<IEmailSender>(Emails);
+            services.AddSingleton<IEmailTransporte>(Emails);
             ConfigurarServicos(services);
         });
     }

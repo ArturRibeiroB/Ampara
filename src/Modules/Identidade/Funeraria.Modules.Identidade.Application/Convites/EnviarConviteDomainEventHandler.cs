@@ -1,3 +1,4 @@
+using System.Globalization;
 using Funeraria.BuildingBlocks.Application.Events;
 using Funeraria.Modules.Identidade.Application.Abstractions;
 using Funeraria.Modules.Identidade.Domain.Senhas;
@@ -12,8 +13,8 @@ namespace Funeraria.Modules.Identidade.Application.Convites;
 /// definir a senha; quem já tem conta na plataforma recebe só o aviso de acesso (DEC-02).
 /// </summary>
 /// <remarks>
-/// Roda pelo outbox: se o envio falhar, o evento é processado de novo e um link novo é gerado. O link antigo,
-/// que nunca chegou a ninguém, expira sozinho.
+/// Roda pelo outbox: se algo falhar antes de enfileirar o e-mail, o evento é processado de novo e um link novo é
+/// gerado. O link antigo, que nunca chegou a ninguém, expira sozinho.
 /// </remarks>
 internal sealed class EnviarConviteDomainEventHandler(
     IUsuarios usuarios,
@@ -22,7 +23,7 @@ internal sealed class EnviarConviteDomainEventHandler(
     ITokenSenhaRepository tokensSenha,
     IIdentidadeUnitOfWork unitOfWork,
     IConfiguracaoConvite convite,
-    IEmailSender email,
+    IEnvioEmail email,
     TimeProvider timeProvider)
     : IDomainEventHandler<VinculoCriadoDomainEvent>
 {
@@ -41,10 +42,17 @@ internal sealed class EnviarConviteDomainEventHandler(
             return;
         }
 
-        EmailMensagem mensagem;
+        var dados = new Dictionary<string, string>
+        {
+            ["nome"] = usuario.Nome,
+            ["papel"] = Papel(evento.Perfil)
+        };
+
+        string modelo;
         if (await usuarios.PossuiSenhaAsync(usuario.Id, cancellationToken))
         {
-            mensagem = ModelosEmail.AcessoLiberado(usuario, funeraria, evento.Perfil, convite.UrlLogin(funeraria.Slug));
+            modelo = ModelosEmail.AcessoLiberado;
+            dados["link"] = convite.UrlLogin(funeraria.Slug);
         }
         else
         {
@@ -53,10 +61,19 @@ internal sealed class EnviarConviteDomainEventHandler(
                 usuario.Id, FinalidadeTokenSenha.DefinirSenha, token.Hash, timeProvider.GetUtcNow().UtcDateTime, convite.ValidadeConvite));
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            mensagem = ModelosEmail.Convite(
-                usuario, funeraria, evento.Perfil, convite.UrlDefinirSenha(funeraria.Slug, token.Valor), convite.ValidadeConvite);
+            modelo = ModelosEmail.Convite;
+            dados["link"] = convite.UrlDefinirSenha(funeraria.Slug, token.Valor);
+            dados["horas"] = ((int)convite.ValidadeConvite.TotalHours).ToString(CultureInfo.InvariantCulture);
         }
 
-        await email.EnviarAsync(mensagem, cancellationToken);
+        await email.EnfileirarAsync(new EmailSolicitado(modelo, usuario.Email, usuario.Nome, funeraria.IdTenant, dados), cancellationToken);
     }
+
+    private static string Papel(PerfilVinculo perfil) => perfil switch
+    {
+        PerfilVinculo.Funeraria => "gestor(a)",
+        PerfilVinculo.Funcionario => "funcionário(a)",
+        PerfilVinculo.Cliente => "cliente",
+        _ => "parceiro(a)"
+    };
 }

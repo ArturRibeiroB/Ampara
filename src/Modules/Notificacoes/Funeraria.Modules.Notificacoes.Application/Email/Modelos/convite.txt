@@ -1,0 +1,6 @@
+Olá, {{nome}}.
+
+Você foi convidado(a) como {{papel}} da {{nome_funeraria}}.
+Defina sua senha pelo link abaixo. Ele vale por {{horas}} horas e só pode ser usado uma vez.
+
+{{link}}

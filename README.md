@@ -174,6 +174,17 @@ Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 | INF-08 | Serilog: console e arquivo JSON (`logs/`), Seq opcional em desenvolvimento | Correlation id por requisição (`X-Correlation-Id`); senha, tokens e CPF mascarados nos logs |
 | INF-18 | Armazenamento compatível com S3: **SeaweedFS** em desenvolvimento | A MinIO deixou de publicar imagens públicas |
 
+## E-mails
+
+Os módulos pedem o envio por `IEnvioEmail` informando o modelo (`ModelosEmail`) e os dados. O módulo Notificacoes monta o
+e-mail com o nome, o logo e a cor da funerária e entrega pela fila `emails` do Hangfire, com retry.
+
+- Modelos: `src/Modules/Notificacoes/Funeraria.Modules.Notificacoes.Application/Email/Modelos/` (`.html` e `.txt`).
+  `{{campo}}` é escapado; campo sem valor faz a renderização falhar (e o teste do renderizador pega).
+- Desenvolvimento: tudo cai no Mailpit (http://localhost:8025).
+- Produção: configure `Email:Smtp` com o SMTP do provider. Resend: `smtp.resend.com`, porta 587, usuário `resend`,
+  senha = API key. SendGrid: `smtp.sendgrid.net`, porta 587, usuário `apikey`, senha = API key. A senha vai em secret.
+
 ## Migrations
 
 Cada módulo tem as próprias migrations, com histórico no próprio schema:

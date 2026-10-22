@@ -1,0 +1,5 @@
+Olá, {{nome}}.
+
+Seu cadastro na {{nome_funeraria}} foi concluído. Agora você pode consultar os planos, cadastrar seus dependentes e acompanhar seus contratos.
+
+Acesse: {{link}}

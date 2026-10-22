@@ -109,6 +109,7 @@
     <Project Path="tests/Modules/Funeraria.Modules.Clientes.UnitTests/Funeraria.Modules.Clientes.UnitTests.csproj" />
     <Project Path="tests/Modules/Funeraria.Modules.Identidade.IntegrationTests/Funeraria.Modules.Identidade.IntegrationTests.csproj" />
     <Project Path="tests/Modules/Funeraria.Modules.Identidade.UnitTests/Funeraria.Modules.Identidade.UnitTests.csproj" />
+    <Project Path="tests/Modules/Funeraria.Modules.Notificacoes.UnitTests/Funeraria.Modules.Notificacoes.UnitTests.csproj" />
     <Project Path="tests/Modules/Funeraria.Modules.Planos.IntegrationTests/Funeraria.Modules.Planos.IntegrationTests.csproj" />
     <Project Path="tests/Modules/Funeraria.Modules.Planos.UnitTests/Funeraria.Modules.Planos.UnitTests.csproj" />
     <Project Path="tests/Modules/Funeraria.Modules.Tenants.IntegrationTests/Funeraria.Modules.Tenants.IntegrationTests.csproj" />

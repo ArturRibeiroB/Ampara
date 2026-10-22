@@ -1,0 +1,5 @@
+Olá, {{nome}}.
+
+Confirme o seu e-mail para concluir o cadastro na {{nome_funeraria}}. O link vale por {{horas}} horas:
+
+{{link}}
