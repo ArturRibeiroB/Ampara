@@ -1,4 +1,4 @@
-using Funeraria.Modules.Notificacoes.Contracts;
+using Funeraria.Modules.Notificacoes.Application.Email;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
 using Funeraria.Modules.Tenants.Infrastructure.Database;
 using Microsoft.AspNetCore.Hosting;
@@ -29,9 +29,23 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
 
     public EmailsCapturados Emails { get; } = new();
 
+    /// <summary>SeaweedFS dos testes; só existe quando <see cref="UsaArmazenamento"/> é verdadeiro.</summary>
+    public ArmazenamentoDeTeste? Armazenamento { get; private set; }
+
+    /// <summary>Sobe o armazenamento de arquivos (INF-18) junto com o banco.</summary>
+    protected virtual bool UsaArmazenamento => false;
+
     public async ValueTask IniciarAsync()
     {
-        await _postgres.StartAsync();
+        if (UsaArmazenamento)
+        {
+            Armazenamento = new ArmazenamentoDeTeste();
+            await Task.WhenAll(_postgres.StartAsync(), Armazenamento.IniciarAsync());
+        }
+        else
+        {
+            await _postgres.StartAsync();
+        }
 
         // Força a criação do host (migrations e seed) antes do primeiro teste.
         _ = Services;
@@ -41,6 +55,11 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();
+        if (Armazenamento is not null)
+        {
+            await Armazenamento.DisposeAsync();
+        }
+
         GC.SuppressFinalize(this);
     }
 
@@ -62,15 +81,30 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Seed:AdminEmail", EmailAdmin);
         builder.UseSetting("Seed:AdminSenha", SenhaPadrao);
         builder.UseSetting("Outbox:Intervalo", "00:00:00.200");
+        builder.UseSetting("Jobs:IntervaloFila", "00:00:00.200");
         builder.UseSetting("LimiteRequisicoes:Onboarding:Limite", "100000");
         builder.UseSetting("LimiteRequisicoes:CadastroCliente:Limite", "100000");
+        builder.UseSetting("LimiteRequisicoes:Autenticacao:Limite", "100000");
+        builder.UseSetting("Seguranca:ForcarHttps", "false");
         builder.UseSetting("Identidade:Links:UrlDefinirSenha", "http://{slug}.teste.localhost/definir-senha");
+        builder.UseSetting("Identidade:Links:UrlConfirmarEmail", "http://{slug}.teste.localhost/confirmar-email");
+        builder.UseSetting("Identidade:Links:UrlRedefinirSenha", "http://{slug}.teste.localhost/redefinir-senha");
         builder.UseSetting("Identidade:Links:UrlLogin", "http://{slug}.teste.localhost/login");
+
+        builder.UseSetting("Api:UrlPublica", "http://api.teste.localhost");
+        if (Armazenamento is not null)
+        {
+            builder.UseSetting("Armazenamento:S3:ServiceUrl", Armazenamento.ServiceUrl);
+            builder.UseSetting("Armazenamento:S3:Bucket", ArmazenamentoDeTeste.Bucket);
+            builder.UseSetting("Armazenamento:S3:ForcarPathStyle", "true");
+            builder.UseSetting("Armazenamento:S3:AccessKey", ArmazenamentoDeTeste.AccessKey);
+            builder.UseSetting("Armazenamento:S3:SecretKey", ArmazenamentoDeTeste.SecretKey);
+        }
 
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton(Eventos);
-            services.AddSingleton<IEmailSender>(Emails);
+            services.AddSingleton<IEmailTransporte>(Emails);
             ConfigurarServicos(services);
         });
     }

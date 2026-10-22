@@ -1,5 +1,6 @@
 using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Application.Events;
+using Funeraria.BuildingBlocks.Infrastructure.Arquivos;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
 using Funeraria.BuildingBlocks.Infrastructure.Database.Interceptors;
 using Funeraria.BuildingBlocks.Infrastructure.Events;
@@ -43,6 +44,8 @@ public static class DependencyInjection
 
         services.AddScoped<DomainEventDispatcher>();
         services.AddScoped<IEventBus, InMemoryEventBus>();
+
+        services.AddArmazenamentoArquivos(configuration);
 
         return services;
     }

@@ -13,6 +13,9 @@ public static class FunerariaErros
     public static readonly Error SlugEmUso =
         Error.Conflito("Funeraria.SlugEmUso", "Este endereço já está em uso. Escolha outro.");
 
+    public static readonly Error SemLogo =
+        Error.NaoEncontrado("Funeraria.SemLogo", "Esta funerária não tem logo.");
+
     public static Error TransicaoInvalida(StatusFuneraria atual, StatusFuneraria novo) =>
         Error.Conflito("Funeraria.TransicaoInvalida", $"Não é possível mudar o status de {Nome(atual)} para {Nome(novo)}.");
 

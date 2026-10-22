@@ -12,6 +12,9 @@ internal static class AuthorizationExtensions
     public static IServiceCollection AddAutorizacao(this IServiceCollection services)
     {
         services.AddAuthorizationBuilder()
+            // Toda rota exige login, a menos que esteja marcada com AllowAnonymous (SEG-02).
+            // Assim uma rota nova esquecida sem RequireAuthorization não fica pública por engano.
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
             .AddPolicy(Politicas.Plataforma, p => p.RequireRole(Perfis.Admin))
             .AddPolicy(Politicas.GestaoFuneraria, p => p
                 .RequireRole(Perfis.Funeraria)

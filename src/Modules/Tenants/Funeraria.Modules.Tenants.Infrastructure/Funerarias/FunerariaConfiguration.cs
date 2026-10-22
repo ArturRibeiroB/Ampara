@@ -23,6 +23,7 @@ internal sealed class FunerariaConfiguration : IEntityTypeConfiguration<Funerari
         builder.Property(f => f.EmailContato).HasMaxLength(254);
         builder.Property(f => f.Telefone).HasMaxLength(20);
         builder.Property(f => f.IdStripeAccount).HasMaxLength(100);
+        builder.Property(f => f.LogoChave).HasMaxLength(300);
 
         builder.Property(f => f.Status).HasConversion<string>().HasMaxLength(20);
         builder.Property(f => f.OrigemCadastro).HasConversion<string>().HasMaxLength(20);

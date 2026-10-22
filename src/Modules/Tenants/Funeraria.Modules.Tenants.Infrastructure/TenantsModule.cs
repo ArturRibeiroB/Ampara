@@ -24,6 +24,8 @@ public static class TenantsModule
         services.AddScoped<ITenantsApi>(sp => sp.GetRequiredService<TenantsApi>());
         services.AddScoped<ITenantCache>(sp => sp.GetRequiredService<TenantsApi>());
         services.AddScoped<IModuleSeeder, TenantsSeed>();
+        services.AddOptions<ApiPublicaOptions>().Bind(configuration.GetSection(ApiPublicaOptions.Section));
+        services.AddSingleton<ILinksTenants, LinksTenants>();
 
         return services;
     }

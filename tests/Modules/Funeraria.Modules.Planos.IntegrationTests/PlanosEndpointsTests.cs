@@ -169,6 +169,25 @@ public sealed class PlanosEndpointsTests(PlanosApiFactory factory)
     }
 
     [Fact]
+    public async Task Correlation_id_do_frontend_volta_na_resposta_e_sem_ele_a_api_gera_um()
+    {
+        (_, string slug) = await factory.CriarFunerariaAsync();
+        HttpClient client = Publico(slug);
+        client.DefaultRequestHeaders.Add("X-Correlation-Id", "front-1234-abcd");
+
+        HttpResponseMessage comId = await client.GetAsync("/api/v1/planos", Ct);
+        HttpResponseMessage semId = await Publico(slug).GetAsync("/api/v1/planos", Ct);
+        HttpResponseMessage invalido = await factory.CreateClient().SendAsync(new HttpRequestMessage(HttpMethod.Get, "/health")
+        {
+            Headers = { { "X-Correlation-Id", "curto" } }
+        }, Ct);
+
+        Assert.Equal("front-1234-abcd", Assert.Single(comId.Headers.GetValues("X-Correlation-Id")));
+        Assert.Matches("^[0-9a-f]{32}$", Assert.Single(semId.Headers.GetValues("X-Correlation-Id")));
+        Assert.Matches("^[0-9a-f]{32}$", Assert.Single(invalido.Headers.GetValues("X-Correlation-Id")));
+    }
+
+    [Fact]
     public async Task Funeraria_inexistente_retorna_404()
     {
         HttpResponseMessage response = await Publico("nao-existe").GetAsync("/api/v1/planos", Ct);

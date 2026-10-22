@@ -33,9 +33,12 @@ public interface IUsuarios
 
     /// <summary>Define a senha pela política de senha forte e confirma o e-mail. Senha fraca vira erro de validação.</summary>
     Task<Result> DefinirSenhaAsync(Guid idUsuario, string senha, CancellationToken cancellationToken = default);
+
+    /// <summary>Marca o e-mail como confirmado (link do AUT-05).</summary>
+    Task ConfirmarEmailAsync(Guid idUsuario, CancellationToken cancellationToken = default);
 }
 
-public sealed record UsuarioInfo(Guid Id, string Nome, string Email, bool Ativo, bool Bloqueado, bool Admin);
+public sealed record UsuarioInfo(Guid Id, string Nome, string Email, bool Ativo, bool Bloqueado, bool Admin, bool EmailConfirmado);
 
 public enum ResultadoCredenciais
 {

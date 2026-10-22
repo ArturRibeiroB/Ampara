@@ -1,4 +1,4 @@
-using Funeraria.Modules.Notificacoes.Contracts;
+using Funeraria.Modules.Notificacoes.Application.Email;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
@@ -7,10 +7,11 @@ using MimeKit;
 namespace Funeraria.Modules.Notificacoes.Infrastructure.Email;
 
 /// <summary>
-/// Envio por SMTP com MailKit. Em desenvolvimento aponta para o Mailpit (http://localhost:8025).
-/// O provider de produção (Resend ou SendGrid, NOT-01) entra como outra implementação de <see cref="IEmailSender"/>.
+/// Entrega por SMTP com MailKit (NOT-01). Em desenvolvimento aponta para o Mailpit (http://localhost:8025).
+/// Em produção, Resend e SendGrid oferecem SMTP: basta configurar a seção <c>Email:Smtp</c>
+/// (ex.: smtp.resend.com:587, usuário "resend", senha = API key; smtp.sendgrid.net:587, usuário "apikey").
 /// </summary>
-internal sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSender
+internal sealed class SmtpEmailTransporte(IOptions<EmailOptions> options) : IEmailTransporte
 {
     private readonly EmailOptions _options = options.Value;
 

@@ -29,6 +29,19 @@ internal sealed class TenantsApi(TenantsDbContext context, IMemoryCache cache) :
     public Task<FunerariaResumoDto?> ObterPorIdAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
         ObterAsync(ChaveId(idTenant), f => f.Id == idTenant, cancellationToken);
 
+    public async Task<MarcaFunerariaDto?> ObterMarcaAsync(Guid idTenant, CancellationToken cancellationToken = default)
+    {
+        FunerariaEntity? funeraria = await context.Funerarias.AsNoTracking().FirstOrDefaultAsync(f => f.Id == idTenant, cancellationToken);
+        if (funeraria is null)
+        {
+            return null;
+        }
+
+        IdentidadeVisual visual = funeraria.IdentidadeVisual;
+        string nome = string.IsNullOrWhiteSpace(visual.NomeExibicao) ? funeraria.NomeFantasia : visual.NomeExibicao;
+        return new MarcaFunerariaDto(funeraria.Id, funeraria.Slug, nome, visual.LogoUrl, visual.CorPrimaria);
+    }
+
     public async Task<IReadOnlyList<FunerariaResumoDto>> ListarAsync(
         IReadOnlyCollection<Guid> idsTenant,
         CancellationToken cancellationToken = default) =>

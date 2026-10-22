@@ -1,0 +1,7 @@
+Olá, {{nome}}.
+
+Recebemos um pedido para redefinir a sua senha. Use o link abaixo em até {{minutos}} minutos; ele só pode ser usado uma vez.
+
+{{link}}
+
+Se não foi você, ignore este e-mail: sua senha continua a mesma.

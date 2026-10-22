@@ -51,6 +51,30 @@ public sealed class GestaoClientesTests(ClientesApiFactory factory)
     }
 
     [Fact]
+    public async Task Busca_ordena_pelo_campo_pedido_e_recusa_campo_desconhecido()
+    {
+        (Guid tenant, string slug) = await factory.CriarFunerariaAsync();
+        foreach (string nome in new[] { "Bruno", "Carla", "Ana" })
+        {
+            Dictionary<string, object?> corpo = NovoCliente();
+            corpo["nome"] = nome;
+            await factory.CadastrarAsync(slug, corpo);
+        }
+
+        HttpClient equipe = factory.Cliente(slug, TokenDeTeste.Gerar("FUNCIONARIO", tenant));
+
+        JsonObject desc = (await equipe.GetFromJsonAsync<JsonObject>("/api/v1/gestao/clientes?ordenarPor=nome&direcao=desc", Json, Ct))!;
+        Assert.Equal(["Carla", "Bruno", "Ana"], desc["itens"]!.AsArray().Select(c => c!["nome"]!.GetValue<string>()));
+
+        JsonObject padrao = (await equipe.GetFromJsonAsync<JsonObject>("/api/v1/gestao/clientes", Json, Ct))!;
+        Assert.Equal(["Ana", "Bruno", "Carla"], padrao["itens"]!.AsArray().Select(c => c!["nome"]!.GetValue<string>()));
+
+        JsonObject problem = await (await equipe.GetAsync("/api/v1/gestao/clientes?ordenarPor=senha", Ct))
+            .ProblemAsync(HttpStatusCode.BadRequest);
+        Assert.NotNull(problem["errors"]!["ordenarPor"]);
+    }
+
+    [Fact]
     public async Task Equipe_nao_ve_cliente_de_outra_funeraria_e_cliente_nao_acessa_a_gestao()
     {
         (_, Guid idClienteA, HttpClient clienteA) = await factory.ClienteLogadoAsync();

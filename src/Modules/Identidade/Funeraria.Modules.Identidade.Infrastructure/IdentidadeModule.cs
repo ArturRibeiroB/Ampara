@@ -1,7 +1,9 @@
+using Funeraria.BuildingBlocks.Infrastructure.Jobs;
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Funeraria.Modules.Identidade.Application;
 using Funeraria.Modules.Identidade.Application.Abstractions;
+using Funeraria.Modules.Identidade.Application.Senhas;
 using Funeraria.Modules.Identidade.Application.Sessoes;
 using Funeraria.Modules.Identidade.Contracts;
 using Funeraria.Modules.Identidade.Domain.Senhas;
@@ -57,10 +59,12 @@ public static class IdentidadeModule
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<EmissorSessao>();
         services.AddScoped<ITokenSenhaRepository, TokenSenhaRepository>();
-        services.AddOptions<ConviteOptions>().Bind(configuration.GetSection(ConviteOptions.Section));
-        services.AddSingleton<IConfiguracaoConvite, ConfiguracaoConvite>();
+        services.AddOptions<IdentidadeOptions>().Bind(configuration.GetSection(IdentidadeOptions.Section));
+        services.AddSingleton<ILinksIdentidade, LinksIdentidade>();
+        services.AddScoped<SenhaPorLink>();
         services.AddScoped<IIdentidadeApi, IdentidadeApi>();
         services.AddScoped<IModuleSeeder, IdentidadeSeed>();
+        services.AddScoped<IJobRecorrente, LimpezaSessoesJob>();
 
         return services;
     }

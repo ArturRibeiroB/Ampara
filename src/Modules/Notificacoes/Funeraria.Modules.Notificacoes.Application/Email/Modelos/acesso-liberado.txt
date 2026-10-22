@@ -1,0 +1,4 @@
+Olá, {{nome}}.
+
+Sua conta agora tem acesso como {{papel}} da {{nome_funeraria}}.
+Entre com o seu e-mail e a senha que você já tem na plataforma: {{link}}

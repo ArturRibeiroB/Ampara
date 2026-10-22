@@ -42,7 +42,7 @@ internal static class OpenApiExtensions
             return app;
         }
 
-        app.MapOpenApi();
+        app.MapOpenApi().AllowAnonymous();
 
         app.UseSwaggerUI(options =>
         {
@@ -53,7 +53,7 @@ internal static class OpenApiExtensions
             options.DisplayRequestDuration();
         });
 
-        app.MapScalarApiReference(options => options.WithTitle(Titulo));
+        app.MapScalarApiReference(options => options.WithTitle(Titulo)).AllowAnonymous();
 
         return app;
     }

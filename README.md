@@ -24,6 +24,7 @@ docker compose up -d --build
 | PostgreSQL | `localhost:5433` (usuário, senha e banco `funeraria`) |
 | S3 (SeaweedFS) | http://localhost:8333, access key `funeraria`, secret `funeraria123`, bucket `funeraria-documentos` |
 | E-mails (Mailpit) | http://localhost:8025 |
+| Painel de jobs (Hangfire) | http://localhost:5080/hangfire?access_token=`<token do ADMIN>`. A API troca o token por um cookie e abre o painel |
 | pgAdmin (opcional) | `docker compose --profile tools up -d pgadmin` → http://localhost:5050 |
 
 Depois de mudar o código da API, rode `docker compose up -d --build api`.
@@ -86,6 +87,15 @@ Sem a chave JWT a API não sobe. Sem a senha do ADMIN ele não é criado (aparec
 Se quem for indicado como gestor já tiver conta na plataforma, recebe só um aviso de acesso e entra com a
 senha que já usa (DEC-02).
 
+### Confirmação de e-mail e senha esquecida (AUT-05)
+
+- O cliente que se cadastra recebe o link `.../confirmar-email?token=...`; o frontend chama
+  `POST /api/v1/auth/confirmar-email` com `{ "token" }`. Quem já tinha o e-mail confirmado recebe só as boas-vindas.
+- `POST /api/v1/auth/esqueci-senha` com `{ "email" }` responde 204 sempre. O link vai para quem tem vínculo ativo
+  com a funerária do X-Tenant; sem X-Tenant, só para o ADMIN (link no subdomínio `admin`).
+- `POST /api/v1/auth/redefinir-senha` com `{ "token", "senha" }`. O link vale 30 minutos e uma vez; a troca
+  encerra as sessões abertas. Validades e links em `Identidade` no appsettings.
+
 ## Testes
 
 ```bash
@@ -94,7 +104,7 @@ dotnet test --solution Funeraria.slnx
 
 - **Unitários** (`tests/Modules/*.UnitTests`): domínio e validadores.
 - **Integração** (`tests/Modules/*.IntegrationTests`): a API inteira contra um PostgreSQL real em container
-  (Testcontainers). Precisam do Docker rodando.
+  (Testcontainers). Precisam do Docker rodando. Os testes do Tenants sobem também um SeaweedFS, para o logo.
 - **Arquitetura** (`tests/Funeraria.ArchitectureTests`): garantem as fronteiras entre módulos e camadas.
 
 O runner é o Microsoft.Testing.Platform (configurado no `global.json`).
@@ -136,7 +146,7 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 
 | Módulo | Schema | Estado |
 |---|---|---|
-| Identidade | `identidade` | Login, refresh token com rotação, logout, minhas funerárias, convite e definição de senha (AUT-01 a AUT-04) |
+| Identidade | `identidade` | Login, refresh token com rotação, logout, minhas funerárias, convite, definição e recuperação de senha, confirmação de e-mail (AUT-01 a AUT-05) |
 | Tenants | `tenants` | Auto-cadastro e cadastro pelo ADMIN, aprovação/suspensão, configurações da funerária (TEN-01 a TEN-03) |
 | Clientes | `clientes` | Cadastro do cliente (conta + vínculo CLIENTE), meus dados, dependentes e busca pela equipe (Criar Cliente, Criar Dependente, CLI-01 a CLI-03) |
 | Planos | `planos` | Gestão de planos, configurações em jsonb e planos modelo copiados para cada funerária nova (PLA-01, PLA-03) |
@@ -162,6 +172,40 @@ Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
   as sessões do usuário.
 - **Banco**: tabelas e colunas em snake_case, `timestamptz`, concorrência otimista pela coluna `xmin`,
   auditoria (`created_at`, `updated_at`, `created_by`) preenchida por interceptor.
+
+## Decisões técnicas
+
+| Card | Decisão | Por quê |
+|---|---|---|
+| INF-05 | **Mediator** (source generator) para commands e queries | Registro gerado no build, sem reflexão em tempo de execução; behaviors de validação e log em um lugar só |
+| INF-10 | **Mapeamento manual**, sem Mapster | Os DTOs são `record` com um método `De(entidade)`. Fica explícito o que sai na API (nunca vaza senha ou campo interno), o compilador acusa campo esquecido e não há configuração de mapeamento para testar |
+| INF-04 | EF Core para escrita, **Dapper** para listagens e buscas | Consultas Dapper filtram `id_tenant` à mão e só leem o schema do próprio módulo |
+| INF-08 | Serilog: console e arquivo JSON (`logs/`), Seq opcional em desenvolvimento | Correlation id por requisição (`X-Correlation-Id`); senha, tokens e CPF mascarados nos logs |
+| INF-18 | Armazenamento compatível com S3: **SeaweedFS** em desenvolvimento | A MinIO deixou de publicar imagens públicas |
+
+## E-mails
+
+Os módulos pedem o envio por `IEnvioEmail` informando o modelo (`ModelosEmail`) e os dados. O módulo Notificacoes monta o
+e-mail com o nome, o logo e a cor da funerária e entrega pela fila `emails` do Hangfire, com retry.
+
+- Modelos: `src/Modules/Notificacoes/Funeraria.Modules.Notificacoes.Application/Email/Modelos/` (`.html` e `.txt`).
+  `{{campo}}` é escapado; campo sem valor faz a renderização falhar (e o teste do renderizador pega).
+- Desenvolvimento: tudo cai no Mailpit (http://localhost:8025).
+- Produção: configure `Email:Smtp` com o SMTP do provider. Resend: `smtp.resend.com`, porta 587, usuário `resend`,
+  senha = API key. SendGrid: `smtp.sendgrid.net`, porta 587, usuário `apikey`, senha = API key. A senha vai em secret.
+
+## Arquivos
+
+Os módulos gravam arquivos por `IArmazenamentoArquivos` (INF-18), sempre na pasta da funerária
+(`tenants/{id_tenant}/...`). O tipo é conferido pelos primeiros bytes do arquivo, não pela extensão, e cada uso tem a sua
+política em `PoliticaArquivo` (logo: PNG/JPEG/WEBP até 2 MB; documento: PDF/PNG/JPEG até 10 MB). SVG não é aceito.
+
+- O bucket é privado. O navegador baixa por link temporário (`GerarLinkTemporarioAsync`) ou pela API.
+- O logo da funerária é a exceção pública: `POST /api/v1/gestao/configuracoes/logo` (campo `arquivo`) grava e devolve
+  o endereço `GET /api/v1/funerarias/{slug}/logo?v=...`, que aparece nas telas e nos e-mails. Configure `Api:UrlPublica`.
+- Desenvolvimento: SeaweedFS do docker-compose. Produção: `Armazenamento:S3` com o bucket da AWS (deixe `ServiceUrl`
+  vazio e use a credencial da instância ou `AccessKey`/`SecretKey` em secret) ou outro serviço compatível com S3.
+  `UrlPublica` só é necessária quando o navegador não alcança o `ServiceUrl` (caso do Docker local).
 
 ## Migrations
 

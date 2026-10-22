@@ -46,6 +46,9 @@ public sealed class Funeraria : AggregateRoot<Guid>, IAuditableEntity
     /// <summary>Parâmetros do negócio, com os padrões do DEC-01 (TEN-03).</summary>
     public ParametrosFuneraria Parametros { get; private set; } = new();
 
+    /// <summary>Chave do logo no armazenamento de arquivos (INF-18). O endereço público fica em <see cref="IdentidadeVisual"/>.</summary>
+    public string? LogoChave { get; private set; }
+
     /// <summary>
     /// Cadastro de uma funerária nova (TEN-02). Começa PENDENTE e convida o gestor: os outros módulos
     /// reagem ao <see cref="FunerariaCriadaDomainEvent"/>.
@@ -134,8 +137,28 @@ public sealed class Funeraria : AggregateRoot<Guid>, IAuditableEntity
     /// </summary>
     public void AtualizarConfiguracoes(IdentidadeVisual identidadeVisual, ParametrosFuneraria parametros)
     {
-        IdentidadeVisual = identidadeVisual;
+        // O logo só muda pelo upload: um endereço digitado poderia apontar para fora da plataforma.
+        IdentidadeVisual = identidadeVisual with { LogoUrl = IdentidadeVisual.LogoUrl };
         Parametros = parametros;
+    }
+
+    /// <summary>Troca o logo (TEN-03).</summary>
+    /// <returns>Chave do logo anterior, para remover do armazenamento.</returns>
+    public string? DefinirLogo(string chave, string url)
+    {
+        string? anterior = LogoChave;
+        LogoChave = chave;
+        IdentidadeVisual = IdentidadeVisual with { LogoUrl = url };
+        return anterior;
+    }
+
+    /// <returns>Chave do logo removido, para remover do armazenamento.</returns>
+    public string? RemoverLogo()
+    {
+        string? anterior = LogoChave;
+        LogoChave = null;
+        IdentidadeVisual = IdentidadeVisual with { LogoUrl = null };
+        return anterior;
     }
 }
 

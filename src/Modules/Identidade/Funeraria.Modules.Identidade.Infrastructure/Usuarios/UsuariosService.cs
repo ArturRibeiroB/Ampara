@@ -143,13 +143,25 @@ internal sealed class UsuariosService(UserManager<Usuario> userManager, TimeProv
         return Result.Success();
     }
 
+    public async Task ConfirmarEmailAsync(Guid idUsuario, CancellationToken cancellationToken = default)
+    {
+        Usuario usuario = await userManager.FindByIdAsync(idUsuario.ToString())
+            ?? throw new InvalidOperationException($"Usuário {idUsuario} não encontrado.");
+        if (!usuario.EmailConfirmed)
+        {
+            usuario.EmailConfirmed = true;
+            Garantir(await userManager.UpdateAsync(usuario));
+        }
+    }
+
     private async Task<UsuarioInfo> MapearAsync(Usuario usuario) => new(
         usuario.Id,
         usuario.Nome,
         usuario.Email!,
         usuario.Ativo,
         await userManager.IsLockedOutAsync(usuario),
-        await userManager.IsInRoleAsync(usuario, Perfis.Admin));
+        await userManager.IsInRoleAsync(usuario, Perfis.Admin),
+        usuario.EmailConfirmed);
 
     private static void Garantir(IdentityResult result)
     {

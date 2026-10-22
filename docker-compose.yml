@@ -35,12 +35,17 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_started
+      seaweedfs-init:
+        condition: service_completed_successfully
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Database: "Host=postgres;Port=5432;Database=funeraria;Username=funeraria;Password=funeraria"
       # Convites e avisos chegam no Mailpit: http://localhost:8025
       Email__Smtp__Host: mailpit
       Email__Smtp__Porta: "1025"
+      # Arquivos no SeaweedFS; os links temporários usam o endereço que o navegador alcança.
+      Armazenamento__S3__ServiceUrl: http://seaweedfs:8333
+      Armazenamento__S3__UrlPublica: http://localhost:${S3_PORTA:-8333}
       Jwt__ChaveAssinatura: ${JWT_CHAVE_ASSINATURA:?Copie .env.example para .env antes de subir a API}
       Seed__AdminSenha: ${SEED_ADMIN_SENHA:-}
       Seed__SenhaDemo: ${SEED_SENHA_DEMO:-}
@@ -89,6 +94,17 @@ services:
     ports:
       - "${SMTP_PORTA:-1025}:1025"
       - "${MAILPIT_PORTA:-8025}:8025"
+
+  # Logs estruturados em desenvolvimento (INF-08, opcional). Interface em http://localhost:5341
+  # Suba com: docker compose --profile tools up -d seq
+  seq:
+    image: datalust/seq:2025.2
+    profiles: ["tools"]
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    ports:
+      - "${SEQ_PORTA:-5341}:80"
 
   pgadmin:
     image: dpage/pgadmin4:9

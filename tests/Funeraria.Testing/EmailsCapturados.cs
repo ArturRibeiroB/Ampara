@@ -1,11 +1,14 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using Funeraria.Modules.Notificacoes.Contracts;
+using Funeraria.Modules.Notificacoes.Application.Email;
 
 namespace Funeraria.Testing;
 
-/// <summary>Substitui o envio real de e-mail nos testes e guarda as mensagens para conferência.</summary>
-public sealed partial class EmailsCapturados : IEmailSender
+/// <summary>
+/// Substitui a entrega por SMTP nos testes e guarda as mensagens já renderizadas pelos modelos.
+/// O e-mail passa pela fila do Hangfire, como em produção.
+/// </summary>
+public sealed partial class EmailsCapturados : IEmailTransporte
 {
     private readonly ConcurrentQueue<EmailMensagem> _emails = new();
 

@@ -14,6 +14,7 @@ internal static class RateLimitingExtensions
         {
             PorIp(options, configuration, PoliticasLimite.Onboarding, new LimiteOptions { Limite = 5 });
             PorIp(options, configuration, PoliticasLimite.CadastroCliente, new LimiteOptions { Limite = 10 });
+            PorIp(options, configuration, PoliticasLimite.Autenticacao, new LimiteOptions { Limite = 20, Janela = TimeSpan.FromMinutes(1) });
 
             options.OnRejected = async (context, cancellationToken) =>
             {

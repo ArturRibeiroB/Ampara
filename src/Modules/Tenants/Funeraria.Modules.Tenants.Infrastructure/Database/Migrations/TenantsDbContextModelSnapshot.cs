@@ -111,6 +111,11 @@ namespace Funeraria.Modules.Tenants.Infrastructure.Database.Migrations
                         .HasColumnName("identidade_visual")
                         .HasDefaultValueSql("'{}'::jsonb");
 
+                    b.Property<string>("LogoChave")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("logo_chave");
+
                     b.Property<string>("NomeFantasia")
                         .IsRequired()
                         .HasMaxLength(150)

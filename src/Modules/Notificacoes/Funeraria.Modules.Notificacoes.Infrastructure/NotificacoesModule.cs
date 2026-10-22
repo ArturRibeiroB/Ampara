@@ -1,4 +1,5 @@
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
+using Funeraria.Modules.Notificacoes.Application.Email;
 using Funeraria.Modules.Notificacoes.Contracts;
 using Funeraria.Modules.Notificacoes.Infrastructure.Email;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,10 @@ public static class NotificacoesModule
         services.AddModuleApplication(Application.AssemblyReference.Assembly);
 
         services.AddOptions<EmailOptions>().Bind(configuration.GetSection(EmailOptions.Section));
-        services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<RenderizadorEmail>();
+        services.AddScoped<IEnvioEmail, EnvioEmail>();
+        services.AddScoped<IEmailTransporte, SmtpEmailTransporte>();
+        services.AddScoped<EntregaEmailJob>();
 
         return services;
     }
