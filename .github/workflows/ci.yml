@@ -1,0 +1,119 @@
+# Pipeline de CI (INF-15).
+# - Todo push e pull request: build, testes (unitários, integração com Testcontainers e arquitetura) e openapi.json.
+#   O teste MigrationsTests falha se algum módulo tiver mudança no modelo sem migration.
+# - Push na main ou na developer: publica a imagem da API no GitHub Container Registry.
+# - Tag vX.Y.Z: publica a imagem com a versão e cria a release com o openapi.json da mesma versão (INF-21).
+# Para bloquear o merge com testes falhando, exija o check "Build e testes" na proteção das branches (README).
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build-e-testes:
+    name: Build e testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Cache dos pacotes NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore Funeraria.slnx
+
+      - name: Build (gera o openapi.json)
+        run: dotnet build Funeraria.slnx -c Release --no-restore -p:OpenApiGenerateDocumentsOnBuild=true
+
+      - name: Testes
+        run: dotnet test --solution Funeraria.slnx -c Release --no-build
+
+      - name: Publica o openapi.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi
+          path: artifacts/openapi/openapi.json
+          if-no-files-found: error
+
+  imagem-docker:
+    name: Imagem Docker
+    needs: build-e-testes
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/developer' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # ghcr.io/<dono>/<repositorio>-api, em minúsculas.
+          images: ghcr.io/${{ github.repository }}-api
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  release:
+    name: Release
+    needs: [build-e-testes, imagem-docker]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: openapi
+
+      - name: Cria a release com o openapi.json
+        uses: softprops/action-gh-release@v2
+        with:
+          files: openapi.json
+          generate_release_notes: true

@@ -14,6 +14,15 @@ using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+if (OpenApiExtensions.GerandoDocumentoNoBuild)
+{
+    // Só para o host montar ao gerar o openapi.json no build: a API não atende requisições nesse modo.
+    builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+    {
+        ["Jwt:ChaveAssinatura"] = Convert.ToBase64String(new byte[64])
+    });
+}
+
 builder.Services.AddSerilog((services, logger) => logger
     .ReadFrom.Configuration(builder.Configuration)
     .ReadFrom.Services(services)
@@ -63,17 +72,20 @@ app.MapModuleEndpoints();
 app.MapPainelJobs();
 app.MapVerificacoesDeSaude();
 
-if (app.Configuration.GetValue<bool>("Database:AplicarMigrations"))
+if (!OpenApiExtensions.GerandoDocumentoNoBuild)
 {
-    await app.Services.ApplyModuleMigrationsAsync();
-}
+    if (app.Configuration.GetValue<bool>("Database:AplicarMigrations"))
+    {
+        await app.Services.ApplyModuleMigrationsAsync();
+    }
 
-if (app.Configuration.GetValue<bool>("Seed:Executar"))
-{
-    await app.Services.SeedModulesAsync();
-}
+    if (app.Configuration.GetValue<bool>("Seed:Executar"))
+    {
+        await app.Services.SeedModulesAsync();
+    }
 
-await app.Services.AgendarJobsRecorrentesAsync();
+    await app.Services.AgendarJobsRecorrentesAsync();
+}
 
 await app.RunAsync();
 

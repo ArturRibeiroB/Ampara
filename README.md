@@ -109,6 +109,26 @@ dotnet test --solution Funeraria.slnx
 
 O runner é o Microsoft.Testing.Platform (configurado no `global.json`).
 
+O `MigrationsTests` falha quando algum módulo muda o modelo sem criar a migration.
+
+## CI (INF-15)
+
+`.github/workflows/ci.yml` roda em todo push e pull request:
+
+1. Build em Release, gerando o `artifacts/openapi/openapi.json` sem subir a API (publicado como artefato do run).
+2. Todos os testes (o runner do GitHub tem Docker para os Testcontainers).
+3. Push na `main` ou na `developer`: imagem da API em `ghcr.io/<dono>/<repositorio>-api`, com a tag da branch e do commit.
+4. Tag `vX.Y.Z`: imagem com a versão e release no GitHub com o `openapi.json` da mesma versão.
+
+Para **bloquear o merge com testes falhando**: Settings → Branches → regra para `main` e `developer` →
+*Require status checks to pass* → marque **Build e testes**.
+
+Gerar o openapi.json localmente:
+
+```bash
+dotnet build src/Funeraria.Api -p:OpenApiGenerateDocumentsOnBuild=true
+```
+
 ## Estrutura
 
 ```

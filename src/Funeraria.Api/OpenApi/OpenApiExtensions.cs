@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json.Nodes;
 using Funeraria.Api.Middlewares;
 using Microsoft.AspNetCore.OpenApi;
@@ -9,6 +10,13 @@ namespace Funeraria.Api.OpenApi;
 /// <summary>Documento OpenAPI v1 com JWT Bearer (INF-09). É o contrato com o repositório do frontend (INF-21).</summary>
 internal static class OpenApiExtensions
 {
+    /// <summary>
+    /// A API foi carregada só para gerar o openapi.json no build (dotnet-getdocument, INF-21). Nesse caso não há banco:
+    /// migrations, seed e agendamento de jobs ficam de fora.
+    /// </summary>
+    public static bool GerandoDocumentoNoBuild =>
+        string.Equals(Assembly.GetEntryAssembly()?.GetName().Name, "GetDocument.Insider", StringComparison.Ordinal);
+
     private const string Titulo = "Funerária Online API";
 
     public static IServiceCollection AddDocumentacaoApi(this IServiceCollection services)
