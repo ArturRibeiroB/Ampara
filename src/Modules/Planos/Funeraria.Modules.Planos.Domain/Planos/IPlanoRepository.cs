@@ -6,5 +6,8 @@ public interface IPlanoRepository
 
     Task<bool> ExisteComNomeAsync(string nome, Guid? exceto = null, CancellationToken cancellationToken = default);
 
+    /// <summary>Se a funerária atual já tem algum plano, ativo ou não.</summary>
+    Task<bool> ExisteAlgumAsync(CancellationToken cancellationToken = default);
+
     void Adicionar(Plano plano);
 }

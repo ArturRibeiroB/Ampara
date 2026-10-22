@@ -52,14 +52,14 @@ internal sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider
         return new AccessToken(token, expiraEm);
     }
 
-    public RefreshTokenGerado GerarRefreshToken()
+    public TokenOpaco GerarTokenOpaco()
     {
         string valor = Base64Url.EncodeToString(RandomNumberGenerator.GetBytes(64));
-        return new RefreshTokenGerado(valor, Hash(valor));
+        return new TokenOpaco(valor, Hash(valor));
     }
 
-    public string Hash(string refreshToken) =>
-        Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)));
+    public string Hash(string token) =>
+        Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
     private static void AdicionarSePreenchido(Dictionary<string, object> claims, string nome, string? valor)
     {

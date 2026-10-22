@@ -2,9 +2,11 @@ using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Funeraria.Modules.Identidade.Application.Abstractions;
 using Funeraria.Modules.Identidade.Application.Sessoes;
+using Funeraria.Modules.Identidade.Domain.Senhas;
 using Funeraria.Modules.Identidade.Domain.Sessoes;
 using Funeraria.Modules.Identidade.Domain.Vinculos;
 using Funeraria.Modules.Identidade.Infrastructure.Database;
+using Funeraria.Modules.Identidade.Infrastructure.Senhas;
 using Funeraria.Modules.Identidade.Infrastructure.Sessoes;
 using Funeraria.Modules.Identidade.Infrastructure.Tokens;
 using Funeraria.Modules.Identidade.Infrastructure.Usuarios;
@@ -41,6 +43,7 @@ public static class IdentidadeModule
                 options.User.RequireUniqueEmail = true;
             })
             .AddRoles<IdentityRole<Guid>>()
+            .AddErrorDescriber<IdentityErrosPtBr>()
             .AddEntityFrameworkStores<IdentidadeDbContext>();
 
         services.AddAutenticacaoJwt(configuration);
@@ -51,6 +54,9 @@ public static class IdentidadeModule
         services.AddScoped<IUsuarios, UsuariosService>();
         services.AddSingleton<ITokenService, JwtTokenService>();
         services.AddScoped<EmissorSessao>();
+        services.AddScoped<ITokenSenhaRepository, TokenSenhaRepository>();
+        services.AddOptions<ConviteOptions>().Bind(configuration.GetSection(ConviteOptions.Section));
+        services.AddSingleton<IConfiguracaoConvite, ConfiguracaoConvite>();
         services.AddScoped<IModuleSeeder, IdentidadeSeed>();
 
         return services;

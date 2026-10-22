@@ -1,3 +1,5 @@
+using Funeraria.BuildingBlocks.Domain.Results;
+
 namespace Funeraria.Modules.Identidade.Application.Abstractions;
 
 /// <summary>
@@ -12,6 +14,19 @@ public interface IUsuarios
     Task<VerificacaoCredenciais> VerificarCredenciaisAsync(string email, string senha, CancellationToken cancellationToken = default);
 
     Task<UsuarioInfo?> ObterAsync(Guid idUsuario, CancellationToken cancellationToken = default);
+
+    Task<UsuarioInfo?> ObterPorEmailAsync(string email, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Cria uma conta convidada: sem senha e com o e-mail ainda não confirmado. A pessoa define a senha
+    /// pelo link do convite, o que também confirma o e-mail.
+    /// </summary>
+    Task<UsuarioInfo> CriarConvidadoAsync(string email, string nome, CancellationToken cancellationToken = default);
+
+    Task<bool> PossuiSenhaAsync(Guid idUsuario, CancellationToken cancellationToken = default);
+
+    /// <summary>Define a senha pela política de senha forte e confirma o e-mail. Senha fraca vira erro de validação.</summary>
+    Task<Result> DefinirSenhaAsync(Guid idUsuario, string senha, CancellationToken cancellationToken = default);
 }
 
 public sealed record UsuarioInfo(Guid Id, string Nome, string Email, bool Ativo, bool Bloqueado, bool Admin);

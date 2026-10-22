@@ -101,6 +101,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Funeraria.ArchitectureTests/Funeraria.ArchitectureTests.csproj" />
+    <Project Path="tests/Funeraria.BuildingBlocks.UnitTests/Funeraria.BuildingBlocks.UnitTests.csproj" />
     <Project Path="tests/Funeraria.Testing/Funeraria.Testing.csproj" />
   </Folder>
   <Folder Name="/tests/Modules/">
@@ -108,5 +109,7 @@
     <Project Path="tests/Modules/Funeraria.Modules.Identidade.UnitTests/Funeraria.Modules.Identidade.UnitTests.csproj" />
     <Project Path="tests/Modules/Funeraria.Modules.Planos.IntegrationTests/Funeraria.Modules.Planos.IntegrationTests.csproj" />
     <Project Path="tests/Modules/Funeraria.Modules.Planos.UnitTests/Funeraria.Modules.Planos.UnitTests.csproj" />
+    <Project Path="tests/Modules/Funeraria.Modules.Tenants.IntegrationTests/Funeraria.Modules.Tenants.IntegrationTests.csproj" />
+    <Project Path="tests/Modules/Funeraria.Modules.Tenants.UnitTests/Funeraria.Modules.Tenants.UnitTests.csproj" />
   </Folder>
 </Solution>

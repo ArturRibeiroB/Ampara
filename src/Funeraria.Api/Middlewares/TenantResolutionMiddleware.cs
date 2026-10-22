@@ -60,6 +60,24 @@ internal sealed class TenantResolutionMiddleware(RequestDelegate next, IOptions<
             return;
         }
 
+        // Chamada só com o token (sem subdomínio nem X-Tenant): ainda assim recusa funerária suspensa.
+        if (tenantDoToken is Guid idTenant && tenantDoSlug is null)
+        {
+            FunerariaResumoDto? funeraria = await tenants.ObterPorIdAsync(idTenant, context.RequestAborted);
+            Error? erro = funeraria switch
+            {
+                null => AcessoNegado,
+                { Suspensa: true } => Suspensa,
+                _ => null
+            };
+
+            if (erro is not null)
+            {
+                await ApiResults.Problem(Result.Failure(erro)).ExecuteAsync(context);
+                return;
+            }
+        }
+
         tenantContext.Set(tenantDoToken ?? tenantDoSlug);
 
         await next(context);
@@ -70,7 +88,8 @@ internal sealed class TenantResolutionMiddleware(RequestDelegate next, IOptions<
         string? header = context.Request.Headers[TenantHeader];
         if (!string.IsNullOrWhiteSpace(header))
         {
-            return header.Trim().ToLowerInvariant();
+            string slug = header.Trim().ToLowerInvariant();
+            return SubdominiosReservados.Contem(slug) ? null : slug;
         }
 
         string host = context.Request.Host.Host.ToLowerInvariant();
@@ -81,7 +100,7 @@ internal sealed class TenantResolutionMiddleware(RequestDelegate next, IOptions<
         }
 
         string subdominio = host[..^sufixo.Length];
-        if (subdominio.Contains('.', StringComparison.Ordinal) || options.Value.SubdominiosReservados.Contains(subdominio))
+        if (subdominio.Contains('.', StringComparison.Ordinal) || SubdominiosReservados.Contem(subdominio))
         {
             return null;
         }
@@ -96,7 +115,4 @@ internal sealed class TenancyOptions
 
     /// <summary>Domínio da plataforma. Em desenvolvimento, "localhost" (ex.: demo.localhost).</summary>
     public string DominioBase { get; set; } = "localhost";
-
-    /// <summary>Subdomínios da plataforma que não são funerárias (TEN-02).</summary>
-    public HashSet<string> SubdominiosReservados { get; set; } = ["www", "api", "admin", "app"];
 }

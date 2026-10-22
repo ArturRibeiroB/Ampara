@@ -1,4 +1,6 @@
 using Funeraria.BuildingBlocks.Domain.Entities;
+using Funeraria.BuildingBlocks.Domain.Results;
+using Funeraria.Modules.Tenants.Domain.Funerarias.Events;
 
 namespace Funeraria.Modules.Tenants.Domain.Funerarias;
 
@@ -21,6 +23,7 @@ public sealed class Funeraria : AggregateRoot<Guid>, IAuditableEntity
 
     public string RazaoSocial { get; private set; } = null!;
 
+    /// <summary>Só letras e números, sem pontuação. Pode ser alfanumérico (IN RFB 2.229/2024).</summary>
     public string Cnpj { get; private set; } = null!;
 
     /// <summary>Subdomínio da funerária: letras minúsculas, números e hífen.</summary>
@@ -34,11 +37,36 @@ public sealed class Funeraria : AggregateRoot<Guid>, IAuditableEntity
 
     public OrigemCadastro OrigemCadastro { get; private set; }
 
+    /// <summary>Conta conectada no Stripe. Preenchida no onboarding de pagamentos (DEC-09).</summary>
     public string? IdStripeAccount { get; private set; }
 
+    /// <summary>Como a funerária aparece para os clientes (TEN-03).</summary>
+    public IdentidadeVisual IdentidadeVisual { get; private set; } = new();
+
+    /// <summary>Parâmetros do negócio, com os padrões do DEC-01 (TEN-03).</summary>
+    public ParametrosFuneraria Parametros { get; private set; } = new();
+
     /// <summary>
-    /// Cria a funerária. As validações de CNPJ, slug e nomes reservados ficam no caso de uso de cadastro (TEN-02).
+    /// Cadastro de uma funerária nova (TEN-02). Começa PENDENTE e convida o gestor: os outros módulos
+    /// reagem ao <see cref="FunerariaCriadaDomainEvent"/>.
     /// </summary>
+    public static Funeraria Cadastrar(
+        string nomeFantasia,
+        string razaoSocial,
+        string cnpj,
+        string slug,
+        string emailContato,
+        string? telefone,
+        OrigemCadastro origem,
+        string gestorNome,
+        string gestorEmail)
+    {
+        Funeraria funeraria = Criar(nomeFantasia, razaoSocial, cnpj, slug, emailContato, telefone, origem);
+        funeraria.Raise(new FunerariaCriadaDomainEvent(funeraria.Id, gestorNome.Trim(), gestorEmail.Trim()));
+        return funeraria;
+    }
+
+    /// <summary>Cria a funerária sem convidar ninguém. Usado pelo seed e pelos testes.</summary>
     public static Funeraria Criar(
         string nomeFantasia,
         string razaoSocial,
@@ -47,18 +75,68 @@ public sealed class Funeraria : AggregateRoot<Guid>, IAuditableEntity
         string emailContato,
         string? telefone,
         OrigemCadastro origem,
-        StatusFuneraria status = StatusFuneraria.Pendente) =>
-        new(Guid.CreateVersion7())
+        StatusFuneraria status = StatusFuneraria.Pendente)
+    {
+        var funeraria = new Funeraria(Guid.CreateVersion7())
         {
-            NomeFantasia = nomeFantasia,
-            RazaoSocial = razaoSocial,
+            NomeFantasia = nomeFantasia.Trim(),
+            RazaoSocial = razaoSocial.Trim(),
             Cnpj = cnpj,
-            Slug = slug.ToLowerInvariant(),
-            EmailContato = emailContato,
-            Telefone = telefone,
+            Slug = slug.Trim().ToLowerInvariant(),
+            EmailContato = emailContato.Trim(),
+            Telefone = string.IsNullOrWhiteSpace(telefone) ? null : telefone.Trim(),
             OrigemCadastro = origem,
             Status = status
         };
+
+        funeraria.IdentidadeVisual = new IdentidadeVisual
+        {
+            NomeExibicao = funeraria.NomeFantasia,
+            Email = funeraria.EmailContato,
+            Telefone = funeraria.Telefone
+        };
+
+        return funeraria;
+    }
+
+    /// <summary>
+    /// Transições permitidas: PENDENTE → ATIVA ou SUSPENSA; ATIVA ↔ SUSPENSA.
+    /// Funerária suspensa não permite login dos seus usuários nem novas contratações (TEN-02).
+    /// </summary>
+    public Result AlterarStatus(StatusFuneraria novo)
+    {
+        if (novo == Status)
+        {
+            return Result.Success();
+        }
+
+        bool permitida = (Status, novo) switch
+        {
+            (StatusFuneraria.Pendente, StatusFuneraria.Ativa) => true,
+            (StatusFuneraria.Pendente, StatusFuneraria.Suspensa) => true,
+            (StatusFuneraria.Ativa, StatusFuneraria.Suspensa) => true,
+            (StatusFuneraria.Suspensa, StatusFuneraria.Ativa) => true,
+            _ => false
+        };
+
+        if (!permitida)
+        {
+            return FunerariaErros.TransicaoInvalida(Status, novo);
+        }
+
+        Status = novo;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Mudanças nos parâmetros de cobrança valem para novos contratos e para as próximas faturas.
+    /// Faturas já emitidas não mudam (TEN-03).
+    /// </summary>
+    public void AtualizarConfiguracoes(IdentidadeVisual identidadeVisual, ParametrosFuneraria parametros)
+    {
+        IdentidadeVisual = identidadeVisual;
+        Parametros = parametros;
+    }
 }
 
 public enum StatusFuneraria

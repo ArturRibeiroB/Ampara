@@ -72,6 +72,60 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
                     b.ToTable("outbox_messages", "identidade");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Senhas.TokenSenha", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_token_senha");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<DateTime>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expira_em");
+
+                    b.Property<string>("Finalidade")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("finalidade");
+
+                    b.Property<Guid>("IdUsuario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("token_hash")
+                        .IsFixedLength();
+
+                    b.Property<DateTime?>("UsadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("usado_em");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tokens_senha");
+
+                    b.HasIndex("IdUsuario")
+                        .HasDatabaseName("ix_tokens_senha_id_usuario");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tokens_senha_token_hash");
+
+                    b.ToTable("tokens_senha", "identidade");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Sessoes.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -453,6 +507,16 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
                         .HasName("pk_usuario_tokens");
 
                     b.ToTable("usuario_tokens", "identidade");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Senhas.TokenSenha", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Identidade.Infrastructure.Usuarios.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_tokens_senha_usuarios_id_usuario");
                 });
 
             modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Sessoes.RefreshToken", b =>

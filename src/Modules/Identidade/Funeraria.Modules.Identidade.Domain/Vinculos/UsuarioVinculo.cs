@@ -57,7 +57,7 @@ public sealed class UsuarioVinculo : AggregateRoot<Guid>, IAuditableEntity
             throw new ArgumentException("Vínculo de terceiro precisa do id e do tipo do terceiro.", nameof(idTerceiro));
         }
 
-        return new UsuarioVinculo(Guid.CreateVersion7())
+        var vinculo = new UsuarioVinculo(Guid.CreateVersion7())
         {
             IdUsuario = idUsuario,
             IdTenant = idTenant,
@@ -67,6 +67,9 @@ public sealed class UsuarioVinculo : AggregateRoot<Guid>, IAuditableEntity
             IdTerceiro = perfil == PerfilVinculo.Terceiro ? idTerceiro : null,
             TipoTerceiro = perfil == PerfilVinculo.Terceiro ? tipoTerceiro : null
         };
+
+        vinculo.Raise(new VinculoCriadoDomainEvent(vinculo.Id, idUsuario, idTenant, perfil));
+        return vinculo;
     }
 
     /// <summary>Desativar remove o acesso só a esta funerária: a conta continua valendo para os outros vínculos (AUT-08).</summary>

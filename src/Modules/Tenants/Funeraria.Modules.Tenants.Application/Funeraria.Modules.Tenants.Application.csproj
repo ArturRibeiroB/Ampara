@@ -10,4 +10,8 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\Funeraria.BuildingBlocks.Application\Funeraria.BuildingBlocks.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Funeraria.Modules.Tenants.UnitTests" />
+  </ItemGroup>
+
 </Project>

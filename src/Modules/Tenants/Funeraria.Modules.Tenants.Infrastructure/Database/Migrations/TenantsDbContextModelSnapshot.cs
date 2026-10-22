@@ -104,6 +104,13 @@ namespace Funeraria.Modules.Tenants.Infrastructure.Database.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("id_stripe_account");
 
+                    b.Property<string>("IdentidadeVisual")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("identidade_visual")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
                     b.Property<string>("NomeFantasia")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -115,6 +122,13 @@ namespace Funeraria.Modules.Tenants.Infrastructure.Database.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("origem_cadastro");
+
+                    b.Property<string>("Parametros")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("parametros")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.Property<string>("RazaoSocial")
                         .IsRequired()

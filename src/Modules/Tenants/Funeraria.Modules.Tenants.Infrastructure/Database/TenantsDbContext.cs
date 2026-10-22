@@ -1,12 +1,13 @@
 using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
+using Funeraria.Modules.Tenants.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using FunerariaEntity = Funeraria.Modules.Tenants.Domain.Funerarias.Funeraria;
 
 namespace Funeraria.Modules.Tenants.Infrastructure.Database;
 
 public sealed class TenantsDbContext(DbContextOptions<TenantsDbContext> options, ITenantContext tenantContext)
-    : ModuleDbContext(options, tenantContext)
+    : ModuleDbContext(options, tenantContext), ITenantsUnitOfWork
 {
     public const string SchemaName = "tenants";
 
