@@ -1,5 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -34,8 +36,37 @@ internal static class JwtAuthenticationExtensions
                     RoleClaimType = AppClaims.Perfil,
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
+
+                // 401 e 403 com ProblemDetails e mensagem, no mesmo formato dos outros erros (INF-07).
+                bearer.Events = new JwtBearerEvents
+                {
+                    OnChallenge = async context =>
+                    {
+                        context.HandleResponse();
+                        await EscreverAsync(context.HttpContext, StatusCodes.Status401Unauthorized,
+                            "Auth.NaoAutenticado", "Não autorizado", "Usuário não autenticado. Faça login para continuar.");
+                    },
+                    OnForbidden = context => EscreverAsync(context.HttpContext, StatusCodes.Status403Forbidden,
+                        "Auth.AcessoNegado", "Proibido", "Acesso negado. Seu perfil não tem permissão para esta operação.")
+                };
             });
 
         return services;
+    }
+
+    private static async Task EscreverAsync(HttpContext http, int status, string code, string title, string detail)
+    {
+        http.Response.StatusCode = status;
+        await http.RequestServices.GetRequiredService<IProblemDetailsService>().WriteAsync(new ProblemDetailsContext
+        {
+            HttpContext = http,
+            ProblemDetails = new ProblemDetails
+            {
+                Status = status,
+                Title = title,
+                Detail = detail,
+                Extensions = { ["code"] = code, ["errors"] = new Dictionary<string, string[]>() }
+            }
+        });
     }
 }

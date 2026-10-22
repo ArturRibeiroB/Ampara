@@ -112,6 +112,20 @@ public sealed class PlanosEndpointsTests(PlanosApiFactory factory)
     }
 
     [Fact]
+    public async Task Criar_o_mesmo_plano_em_paralelo_tem_um_vencedor_e_nenhum_erro_500()
+    {
+        (Guid tenant, _) = await factory.CriarFunerariaAsync();
+
+        HttpResponseMessage[] respostas = await Task.WhenAll(Enumerable.Range(0, 10)
+            .Select(_ => Gestor(tenant).PostAsJsonAsync("/api/v1/gestao/planos", NovoPlano("Concorrido"), Json, Ct)));
+
+        // Quem perde a corrida recebe 409: pela checagem do handler ou pelo índice único no banco.
+        Assert.Single(respostas, r => r.StatusCode == HttpStatusCode.Created);
+        Assert.All(respostas.Where(r => r.StatusCode != HttpStatusCode.Created),
+            r => Assert.Equal(HttpStatusCode.Conflict, r.StatusCode));
+    }
+
+    [Fact]
     public async Task Funeraria_nao_enxerga_nem_altera_planos_de_outra()
     {
         (Guid tenantA, _) = await factory.CriarFunerariaAsync();

@@ -1,3 +1,4 @@
+using Funeraria.BuildingBlocks.Application.Abstractions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,13 @@ internal sealed partial class GlobalExceptionHandler(
                 Title = "Requisição inválida",
                 Detail = "O corpo ou os parâmetros da requisição estão em formato inválido.",
                 Extensions = { ["code"] = "Requisicao.Invalida", ["errors"] = new Dictionary<string, string[]>() }
+            },
+            ViolacaoDeUnicidadeException => new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "Conflito",
+                Detail = "Já existe um registro com esses dados. Recarregue e confira antes de tentar de novo.",
+                Extensions = { ["code"] = "Registro.Duplicado", ["errors"] = new Dictionary<string, string[]>() }
             },
             DbUpdateConcurrencyException => new ProblemDetails
             {

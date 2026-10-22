@@ -79,8 +79,8 @@ internal sealed partial class IdentidadeSeed(
             return;
         }
 
-        // Cliente e terceiro de demonstração entram quando os módulos Clientes e Terceiros existirem,
-        // porque o vínculo deles aponta para o cadastro nesses módulos.
+        // O cliente de demonstração é criado pelo módulo Clientes (ClientesSeed); o terceiro, quando o módulo
+        // Terceiros existir, porque o vínculo deles aponta para o cadastro nesses módulos.
         await VincularAsync(EmailGestorDemo, "Gestor Demonstração", PerfilVinculo.Funeraria, demo.IdTenant, cancellationToken);
         await VincularAsync(EmailFuncionarioDemo, "Funcionário Demonstração", PerfilVinculo.Funcionario, demo.IdTenant, cancellationToken);
     }

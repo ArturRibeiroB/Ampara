@@ -62,6 +62,7 @@ Em Development a API aplica as migrations de todos os módulos e roda o seed ao 
 | ADMIN da plataforma | `admin@funeraria.localhost` + `SEED_ADMIN_SENHA` (ou `Seed:AdminSenha`), **sem** X-Tenant |
 | Gestor da demo (FUNERARIA) | `gestor@demo.localhost` + `SEED_SENHA_DEMO` (ou `Seed:SenhaDemo`), X-Tenant `demo` |
 | Funcionário da demo | `funcionario@demo.localhost` + a mesma senha da demo, X-Tenant `demo` |
+| Cliente da demo (CLIENTE) | `cliente@demo.localhost` + a mesma senha da demo, X-Tenant `demo` |
 
 **Testando pelo Swagger:** preencha o campo `X-Tenant` com `demo`, chame `POST /api/v1/auth/login`, copie o
 `access_token`, clique em **Authorize** e cole o token. No navegador, a funerária também pode vir do
@@ -137,9 +138,11 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 |---|---|---|
 | Identidade | `identidade` | Login, refresh token com rotação, logout, minhas funerárias, convite e definição de senha (AUT-01 a AUT-04) |
 | Tenants | `tenants` | Auto-cadastro e cadastro pelo ADMIN, aprovação/suspensão, configurações da funerária (TEN-01 a TEN-03) |
+| Clientes | `clientes` | Cadastro do cliente (conta + vínculo CLIENTE), meus dados, dependentes e busca pela equipe (Criar Cliente, Criar Dependente, CLI-01 a CLI-03) |
 | Planos | `planos` | Gestão de planos, configurações em jsonb e planos modelo copiados para cada funerária nova (PLA-01, PLA-03) |
 | Notificacoes | — | Envio de e-mail por SMTP (Mailpit em desenvolvimento). Templates e provider de produção pendentes (NOT-01) |
-| Clientes, Catalogo, Contratos, Financeiro, Funeral, Documentos, Translado, Terceiros, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso |
+| Contratos | — | Só o contrato `IContratosApi`, com implementação provisória (ninguém tem contrato ativo) até o CON-01/02 |
+| Catalogo, Financeiro, Funeral, Documentos, Translado, Terceiros, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 
@@ -173,7 +176,7 @@ dotnet ef migrations add <Nome> \
   --output-dir Database/Migrations
 ```
 
-Troque `Planos` pelo módulo. Contextos existentes: `IdentidadeDbContext`, `TenantsDbContext`, `PlanosDbContext`.
+Troque `Planos` pelo módulo. Contextos existentes: `IdentidadeDbContext`, `TenantsDbContext`, `PlanosDbContext`, `ClientesDbContext`.
 
 ## Criando um módulo novo ou um caso de uso
 

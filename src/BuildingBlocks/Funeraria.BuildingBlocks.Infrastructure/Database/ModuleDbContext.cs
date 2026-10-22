@@ -32,6 +32,10 @@ public abstract class ModuleDbContext(DbContextOptions options, ITenantContext t
         modelBuilder.ApplyAuditProperties();
     }
 
+    /// <summary>Violação de índice único vira <see cref="ViolacaoDeUnicidadeException"/>.</summary>
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default) =>
+        ErrosDeBanco.SalvarAsync(ct => base.SaveChangesAsync(acceptAllChangesOnSuccess, ct), cancellationToken);
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<decimal>().HavePrecision(12, 2);

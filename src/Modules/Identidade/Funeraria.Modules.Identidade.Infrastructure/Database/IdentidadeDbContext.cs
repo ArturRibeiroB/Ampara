@@ -36,6 +36,10 @@ public sealed class IdentidadeDbContext(DbContextOptions<IdentidadeDbContext> op
         modelBuilder.ApplyAuditProperties();
     }
 
+    /// <summary>Violação de índice único vira <c>ViolacaoDeUnicidadeException</c>, como nos outros módulos.</summary>
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default) =>
+        ErrosDeBanco.SalvarAsync(ct => base.SaveChangesAsync(acceptAllChangesOnSuccess, ct), cancellationToken);
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);

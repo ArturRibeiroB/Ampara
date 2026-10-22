@@ -19,12 +19,6 @@ internal sealed class AtualizarConfiguracoesCommandValidator : AbstractValidator
 
 internal sealed partial class IdentidadeVisualValidator : AbstractValidator<IdentidadeVisual>
 {
-    private static readonly HashSet<string> Ufs =
-    [
-        "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA",
-        "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
-    ];
-
     public IdentidadeVisualValidator()
     {
         RuleFor(v => v.NomeExibicao)
@@ -43,14 +37,7 @@ internal sealed partial class IdentidadeVisualValidator : AbstractValidator<Iden
         RuleFor(v => v.LogoUrl).MaximumLength(500).WithMessage("Endereço do logo deve ter no máximo 500 caracteres.");
         RuleFor(v => v.HorarioAtendimento).MaximumLength(200).WithMessage("Horário de atendimento deve ter no máximo 200 caracteres.");
 
-        RuleFor(v => v.Endereco).NotNull().WithMessage("Endereço é obrigatório.");
-        RuleFor(v => v.Endereco.Uf)
-            .Must(uf => uf is null || Ufs.Contains(uf.ToUpperInvariant())).WithMessage("UF inválida.")
-            .When(v => v.Endereco is not null);
-        RuleFor(v => v.Endereco.Cep)
-            .Must(cep => cep is null || DocumentosBrasileiros.Normalizar(cep) is { Length: 8 } d && d.All(char.IsAsciiDigit))
-            .WithMessage("CEP inválido.")
-            .When(v => v.Endereco is not null);
+        RuleFor(v => v.Endereco).NotNull().WithMessage("Endereço é obrigatório.").SetValidator(new EnderecoValidator());
     }
 
     private static bool Cor(string? cor) => cor is not null && CorHex().IsMatch(cor);
