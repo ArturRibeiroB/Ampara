@@ -2,11 +2,20 @@
 
   <PropertyGroup>
     <UserSecretsId>funeraria-api</UserSecretsId>
+
+    <!--
+      openapi.json gerado no build, sem subir a API (INF-15, INF-21). Desligado no build do dia a dia;
+      o CI liga com -p:OpenApiGenerateDocumentsOnBuild=true e publica o arquivo de artifacts/openapi.
+    -->
+    <OpenApiGenerateDocumentsOnBuild>false</OpenApiGenerateDocumentsOnBuild>
+    <OpenApiDocumentsDirectory>$(MSBuildThisFileDirectory)../../artifacts/openapi</OpenApiDocumentsDirectory>
+    <OpenApiGenerateDocumentsOptions>--file-name openapi</OpenApiGenerateDocumentsOptions>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" PrivateAssets="all" />
     <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
     <PackageReference Include="Serilog.AspNetCore" />
