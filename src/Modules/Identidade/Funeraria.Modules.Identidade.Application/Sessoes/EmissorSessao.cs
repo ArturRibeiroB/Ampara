@@ -64,6 +64,7 @@ public static class PerfilVinculoExtensions
     {
         PerfilVinculo.Funeraria => Perfis.Funeraria,
         PerfilVinculo.Funcionario => Perfis.Funcionario,
+        PerfilVinculo.Consultor => Perfis.Consultor,
         PerfilVinculo.Cliente => Perfis.Cliente,
         PerfilVinculo.Terceiro => Perfis.Terceiro,
         _ => throw new ArgumentOutOfRangeException(nameof(perfil), perfil, null)

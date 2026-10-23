@@ -4,6 +4,8 @@ using System.Text.Json.Nodes;
 using Funeraria.BuildingBlocks.Application.Authorization;
 using Funeraria.Modules.Contratos.Contracts.IntegrationEvents;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
+using Funeraria.Testing;
+using Microsoft.IdentityModel.JsonWebTokens;
 using static Funeraria.Modules.Contratos.IntegrationTests.ContratosApiFactory;
 
 namespace Funeraria.Modules.Contratos.IntegrationTests;
@@ -270,6 +272,26 @@ public sealed class CriarContratoTests(ContratosApiFactory factory)
     }
 
     [Fact]
+    public async Task Consultor_contrata_para_a_familia_e_fica_registrado_no_contrato()
+    {
+        FunerariaDeTeste funeraria = await factory.CriarFunerariaContratavelAsync();
+        Guid plano = await funeraria.CriarPlanoAsync();
+        ClienteDeTeste cliente = await funeraria.CriarClienteAsync();
+        string token = TokenDeTeste.Gerar(Perfis.Consultor, funeraria.Tenant);
+
+        HttpResponseMessage response = await factory.Http(funeraria.Slug, token).PostAsJsonAsync("/api/v1/gestao/contratos",
+            new { id_cliente = cliente.IdCliente, id_plano = plano, tipo_cobertura = "TITULAR", periodicidade = "MENSAL" }, Json, Ct);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        JsonObject contrato = (await response.Content.ReadFromJsonAsync<JsonObject>(Json, Ct))!;
+        Assert.Equal(Guid.Parse(new JsonWebToken(token).Subject), contrato["id_consultor"]!.GetValue<Guid>());
+
+        // Contratado pelo próprio cliente: sem consultor.
+        JsonObject proprio = await CriarAsync(cliente.Http, new { id_plano = await funeraria.CriarPlanoAsync(), tipo_cobertura = "TITULAR", periodicidade = "MENSAL" });
+        Assert.Null(proprio["id_consultor"]);
+    }
+
+    [Fact]
     public async Task Titular_inexistente_ou_de_outra_funeraria_nao_e_encontrado()
     {
         FunerariaDeTeste funeraria = await factory.CriarFunerariaContratavelAsync();
@@ -298,6 +320,23 @@ public sealed class CriarContratoTests(ContratosApiFactory factory)
             new { id_plano = plano, tipo_cobertura = "TITULAR", periodicidade = "MENSAL" }, Json, Ct), HttpStatusCode.Conflict);
 
         Assert.Equal("Contrato.ContratacaoIndisponivel", problem["code"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Funeraria_nova_ja_contrata_com_os_padroes_do_DEC_12()
+    {
+        (Guid tenant, string slug) = await factory.CriarFunerariaAsync();
+        var funeraria = new FunerariaDeTeste(factory, tenant, slug);
+        Guid plano = await funeraria.CriarPlanoAsync();
+        ClienteDeTeste cliente = await funeraria.CriarClienteAsync();
+
+        await CriarAsync(cliente.Http, new { id_plano = plano, tipo_cobertura = "TITULAR", periodicidade = "MENSAL" });
+
+        JsonObject configuracoes = (await funeraria.Equipe().GetFromJsonAsync<JsonObject>("/api/v1/gestao/configuracoes", Json, Ct))!;
+        JsonNode cobranca = configuracoes["parametros"]!["cobranca"]!;
+        Assert.Equal(2, cobranca["multa_percentual"]!.GetValue<decimal>());
+        Assert.Equal(1, cobranca["juros_mensal_percentual"]!.GetValue<decimal>());
+        Assert.Equal(10, cobranca["desconto_anual_percentual"]!.GetValue<decimal>());
     }
 
     [Fact]

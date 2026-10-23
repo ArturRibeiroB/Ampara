@@ -17,5 +17,14 @@ internal sealed class RefreshTokenRepository(IdentidadeDbContext context) : IRef
             .Where(t => t.IdUsuario == idUsuario && t.RevogadoEm == null && t.ExpiraEm > agora)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<RefreshToken>> ListarAtivosDoUsuarioNaFunerariaAsync(
+        Guid idUsuario,
+        Guid idTenant,
+        DateTime agora,
+        CancellationToken cancellationToken = default) =>
+        await context.RefreshTokens
+            .Where(t => t.IdUsuario == idUsuario && t.IdTenant == idTenant && t.RevogadoEm == null && t.ExpiraEm > agora)
+            .ToListAsync(cancellationToken);
+
     public void Adicionar(RefreshToken refreshToken) => context.RefreshTokens.Add(refreshToken);
 }

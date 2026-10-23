@@ -34,6 +34,12 @@ public interface IUsuarios
     /// <summary>Define a senha pela política de senha forte e confirma o e-mail. Senha fraca vira erro de validação.</summary>
     Task<Result> DefinirSenhaAsync(Guid idUsuario, string senha, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Troca a senha conferindo a atual (AUT-06). Senha atual errada conta tentativa para o bloqueio, como no login;
+    /// nova senha fora da política vira erro de validação.
+    /// </summary>
+    Task<Result> AlterarSenhaAsync(Guid idUsuario, string senhaAtual, string novaSenha, CancellationToken cancellationToken = default);
+
     /// <summary>Marca o e-mail como confirmado (link do AUT-05).</summary>
     Task ConfirmarEmailAsync(Guid idUsuario, CancellationToken cancellationToken = default);
 }

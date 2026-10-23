@@ -1,5 +1,6 @@
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.BuildingBlocks.Infrastructure.Endpoints;
+using Funeraria.Modules.Identidade.Application.Commands.AlterarSenha;
 using Funeraria.Modules.Identidade.Application.Commands.ConfirmarEmail;
 using Funeraria.Modules.Identidade.Application.Commands.DefinirSenha;
 using Funeraria.Modules.Identidade.Application.Commands.EncerrarSessao;
@@ -105,6 +106,28 @@ internal sealed class AuthEndpoints : IEndpoint
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
+        group.MapPut("senha", async (AlterarSenhaRequest request, ISender sender, HttpContext http, CancellationToken ct) =>
+            {
+                Result result = await sender.Send(new AlterarSenhaCommand(request.SenhaAtual ?? string.Empty, request.NovaSenha ?? string.Empty), ct);
+
+                // As sessões foram encerradas: o frontend leva o usuário para entrar de novo com a senha nova.
+                if (result.IsSuccess)
+                {
+                    RefreshTokenCookie.Remover(http);
+                }
+
+                return result.Match(Results.NoContent);
+            })
+            .RequireAuthorization()
+            .RequireRateLimiting(PoliticasLimite.Autenticacao)
+            .WithName("AlterarSenha")
+            .WithSummary("O usuário logado troca a própria senha")
+            .WithDescription("Confere a senha atual e encerra todas as sessões da conta (AUT-06).")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status423Locked);
+
         group.MapGet("minhas-funerarias", async (ISender sender, CancellationToken ct) =>
                 (await sender.Send(new MinhasFunerariasQuery(), ct)).Match(Results.Ok))
             .RequireAuthorization()
@@ -134,6 +157,9 @@ public sealed record LoginRequest(string? Email, string? Senha);
 
 /// <summary>Corpo de POST /auth/definir-senha e de POST /auth/redefinir-senha.</summary>
 public sealed record DefinirSenhaRequest(string? Token, string? Senha);
+
+/// <summary>Corpo de PUT /auth/senha.</summary>
+public sealed record AlterarSenhaRequest(string? SenhaAtual, string? NovaSenha);
 
 /// <summary>Corpo de POST /auth/esqueci-senha.</summary>
 public sealed record EsqueciSenhaRequest(string? Email);

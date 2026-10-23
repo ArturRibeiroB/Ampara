@@ -17,6 +17,7 @@ public sealed record ContratoResponse(
     decimal ValorPlano,
     decimal ValorPorDependente,
     decimal ValorTotal,
+    Guid? IdConsultor,
     IReadOnlyList<PessoaCobertaResponse> PessoasCobertas)
 {
     public static ContratoResponse De(Contrato c) => new(
@@ -33,6 +34,7 @@ public sealed record ContratoResponse(
         c.ValorPlano,
         c.ValorPorDependente,
         c.ValorTotal,
+        c.IdConsultor,
         [.. c.PessoasCobertas.Where(p => p.DataRemocao is null).Select(p => new PessoaCobertaResponse(p.Id, p.Tipo, p.IdDependente, p.DataInclusao))]);
 }
 

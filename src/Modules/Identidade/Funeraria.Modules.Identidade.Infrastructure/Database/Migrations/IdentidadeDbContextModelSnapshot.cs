@@ -72,6 +72,78 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
                     b.ToTable("outbox_messages", "identidade");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Equipe.Funcionario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_funcionario");
+
+                    b.Property<string>("Cargo")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("cargo");
+
+                    b.Property<string>("Cpf")
+                        .IsRequired()
+                        .HasMaxLength(11)
+                        .HasColumnType("character(11)")
+                        .HasColumnName("cpf")
+                        .IsFixedLength();
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_tenant");
+
+                    b.Property<Guid>("IdUsuario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nome");
+
+                    b.Property<string>("Telefone")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("telefone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_funcionarios");
+
+                    b.HasIndex("IdUsuario")
+                        .HasDatabaseName("ix_funcionarios_id_usuario");
+
+                    b.HasIndex("IdTenant", "Cpf")
+                        .IsUnique()
+                        .HasDatabaseName("ix_funcionarios_id_tenant_cpf");
+
+                    b.HasIndex("IdTenant", "IdUsuario")
+                        .IsUnique()
+                        .HasDatabaseName("ix_funcionarios_id_tenant_id_usuario");
+
+                    b.ToTable("funcionarios", "identidade");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Senhas.TokenSenha", b =>
                 {
                     b.Property<Guid>("Id")
@@ -507,6 +579,16 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
                         .HasName("pk_usuario_tokens");
 
                     b.ToTable("usuario_tokens", "identidade");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Equipe.Funcionario", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Identidade.Infrastructure.Usuarios.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_funcionarios_usuarios_id_usuario");
                 });
 
             modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Senhas.TokenSenha", b =>

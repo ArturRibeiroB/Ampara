@@ -44,6 +44,7 @@ public sealed record ContratoDetalheResponse(
     decimal ValorPorDependente,
     decimal ValorTotal,
     int CarenciaDias,
+    Guid? IdConsultor,
     IReadOnlyList<PessoaCobertaDetalheResponse> PessoasCobertas);
 
 public sealed record TitularResponse(Guid IdCliente, string Nome, string Cpf);
@@ -129,6 +130,7 @@ public sealed class ObterContratoQueryHandler(IContratoRepository contratos, ICl
             contrato.ValorPorDependente,
             contrato.ValorTotal,
             contrato.CarenciaDias,
+            contrato.IdConsultor,
             [.. cobertas.OrderBy(p => p.Tipo).ThenBy(p => p.DataInclusao).Select(Pessoa)]);
     }
 }

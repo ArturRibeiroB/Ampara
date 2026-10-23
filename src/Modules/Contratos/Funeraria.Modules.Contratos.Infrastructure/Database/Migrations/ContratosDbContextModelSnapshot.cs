@@ -106,6 +106,10 @@ namespace Funeraria.Modules.Contratos.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id_cliente");
 
+                    b.Property<Guid?>("IdConsultor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_consultor");
+
                     b.Property<Guid>("IdPlano")
                         .HasColumnType("uuid")
                         .HasColumnName("id_plano");

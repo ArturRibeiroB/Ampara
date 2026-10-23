@@ -71,7 +71,7 @@ internal sealed class ParametrosFunerariaValidator : AbstractValidator<Parametro
             RuleFor(p => p.Cobranca.ToleranciaDias)
                 .InclusiveBetween(0, 30).WithMessage("Tolerância deve estar entre 0 e 30 dias.");
 
-            // Limite de 2% do Código de Defesa do Consumidor (art. 52, § 1º). Confirmar no DEC-12.
+            // Limite de 2% do Código de Defesa do Consumidor (art. 52, § 1º), confirmado no DEC-12.
             RuleFor(p => p.Cobranca.MultaPercentual)
                 .InclusiveBetween(0, 2).WithMessage("Multa deve estar entre 0% e 2% (limite do CDC).");
 

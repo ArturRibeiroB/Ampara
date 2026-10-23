@@ -21,17 +21,17 @@ public sealed record ParametrosCobranca
     /// <summary>Dias que o cliente pode escolher quando o modo é ESCOLHA_CLIENTE.</summary>
     public IReadOnlyList<int> DiasVencimentoPermitidos { get; init; } = [5, 10, 15, 20, 25];
 
-    /// <summary>Dias de atraso antes de suspender o plano (DEC-01; ver os pontos de atenção do DEC-12).</summary>
+    /// <summary>Dias úteis de atraso antes de suspender o plano (DEC-01, DEC-12). Pagamento em processamento não conta.</summary>
     public int ToleranciaDias { get; init; } = 1;
 
-    /// <summary>A definir pelo grupo (DEC-12). Enquanto for nulo, a contratação fica bloqueada.</summary>
-    public decimal? MultaPercentual { get; init; }
+    /// <summary>Multa por atraso: 2%, o limite do CDC (DEC-12). Enquanto for nulo, a contratação fica bloqueada.</summary>
+    public decimal? MultaPercentual { get; init; } = 2;
 
-    /// <summary>A definir pelo grupo (DEC-12). Enquanto for nulo, a contratação fica bloqueada.</summary>
-    public decimal? JurosMensalPercentual { get; init; }
+    /// <summary>Juros de mora: 1% ao mês, proporcional aos dias (DEC-12). Enquanto for nulo, a contratação fica bloqueada.</summary>
+    public decimal? JurosMensalPercentual { get; init; } = 1;
 
-    /// <summary>A definir pelo grupo (DEC-12). Enquanto for nulo, a contratação fica bloqueada.</summary>
-    public decimal? DescontoAnualPercentual { get; init; }
+    /// <summary>Desconto do plano anual: 10% (DEC-12). Enquanto for nulo, a contratação fica bloqueada.</summary>
+    public decimal? DescontoAnualPercentual { get; init; } = 10;
 
     /// <summary>Reajuste no aniversário do contrato (DEC-01, COB-08).</summary>
     public decimal ReajusteAnualPercentual { get; init; } = 5;

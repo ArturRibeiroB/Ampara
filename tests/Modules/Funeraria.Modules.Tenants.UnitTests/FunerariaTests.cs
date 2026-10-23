@@ -8,7 +8,7 @@ namespace Funeraria.Modules.Tenants.UnitTests;
 public sealed class FunerariaTests
 {
     [Fact]
-    public void Cadastro_nasce_pendente_com_os_padroes_do_DEC01_e_convida_o_gestor()
+    public void Cadastro_nasce_pendente_com_os_padroes_do_DEC01_e_DEC12_e_convida_o_gestor()
     {
         FunerariaEntity f = Cadastrar();
 
@@ -19,7 +19,10 @@ public sealed class FunerariaTests
         Assert.Equal(10, f.Parametros.Cobranca.DiaVencimentoFixo);
         Assert.Equal(1, f.Parametros.Cobranca.ToleranciaDias);
         Assert.Equal(5, f.Parametros.Cobranca.ReajusteAnualPercentual);
-        Assert.False(f.Parametros.Cobranca.EstaCompleta());
+        Assert.Equal(2, f.Parametros.Cobranca.MultaPercentual);
+        Assert.Equal(1, f.Parametros.Cobranca.JurosMensalPercentual);
+        Assert.Equal(10, f.Parametros.Cobranca.DescontoAnualPercentual);
+        Assert.True(f.Parametros.Cobranca.EstaCompleta());
 
         FunerariaCriadaDomainEvent evento = Assert.IsType<FunerariaCriadaDomainEvent>(Assert.Single(f.DomainEvents));
         Assert.Equal(f.Id, evento.IdTenant);
@@ -57,7 +60,7 @@ public sealed class FunerariaTests
     [Fact]
     public void Cobranca_so_fica_completa_com_multa_juros_e_desconto()
     {
-        var parcial = new ParametrosCobranca { MultaPercentual = 2, JurosMensalPercentual = 1 };
+        var parcial = new ParametrosCobranca { DescontoAnualPercentual = null };
 
         Assert.False(parcial.EstaCompleta());
         Assert.True((parcial with { DescontoAnualPercentual = 10 }).EstaCompleta());

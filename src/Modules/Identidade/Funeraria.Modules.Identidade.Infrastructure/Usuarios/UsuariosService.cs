@@ -143,6 +143,44 @@ internal sealed class UsuariosService(UserManager<Usuario> userManager, TimeProv
         return Result.Success();
     }
 
+    public async Task<Result> AlterarSenhaAsync(
+        Guid idUsuario,
+        string senhaAtual,
+        string novaSenha,
+        CancellationToken cancellationToken = default)
+    {
+        Usuario? usuario = await userManager.FindByIdAsync(idUsuario.ToString());
+        if (usuario is null)
+        {
+            return IdentidadeErros.SessaoInvalida;
+        }
+
+        if (await userManager.IsLockedOutAsync(usuario))
+        {
+            return IdentidadeErros.ContaBloqueada;
+        }
+
+        if (!await userManager.CheckPasswordAsync(usuario, senhaAtual))
+        {
+            await userManager.AccessFailedAsync(usuario);
+            return await userManager.IsLockedOutAsync(usuario)
+                ? IdentidadeErros.ContaBloqueada
+                : new ValidationError(new Dictionary<string, string[]> { ["senha_atual"] = ["Senha atual incorreta."] });
+        }
+
+        IdentityResult result = await userManager.ChangePasswordAsync(usuario, senhaAtual, novaSenha);
+        if (!result.Succeeded)
+        {
+            return new ValidationError(new Dictionary<string, string[]>
+            {
+                ["nova_senha"] = [.. result.Errors.Select(e => e.Description).Distinct()]
+            });
+        }
+
+        await userManager.ResetAccessFailedCountAsync(usuario);
+        return Result.Success();
+    }
+
     public async Task ConfirmarEmailAsync(Guid idUsuario, CancellationToken cancellationToken = default)
     {
         Usuario usuario = await userManager.FindByIdAsync(idUsuario.ToString())

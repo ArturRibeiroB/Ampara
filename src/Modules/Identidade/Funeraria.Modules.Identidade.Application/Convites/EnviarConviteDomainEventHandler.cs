@@ -9,7 +9,7 @@ using Funeraria.Modules.Tenants.Contracts;
 namespace Funeraria.Modules.Identidade.Application.Convites;
 
 /// <summary>
-/// Novo vínculo de equipe (gestor ou funcionário): quem ainda não tem senha recebe o convite com o link para
+/// Novo vínculo de equipe (gestor, funcionário ou consultor): quem ainda não tem senha recebe o convite com o link para
 /// definir a senha; quem já tem conta na plataforma recebe só o aviso de acesso (DEC-02).
 /// </summary>
 /// <remarks>
@@ -30,7 +30,7 @@ internal sealed class EnviarConviteDomainEventHandler(
     public async Task Handle(VinculoCriadoDomainEvent evento, CancellationToken cancellationToken)
     {
         // Cliente e terceiro têm o próprio fluxo de cadastro (CLI e TER).
-        if (evento.Perfil is not (PerfilVinculo.Funeraria or PerfilVinculo.Funcionario))
+        if (!PerfisEquipe.Contem(evento.Perfil))
         {
             return;
         }
@@ -73,6 +73,7 @@ internal sealed class EnviarConviteDomainEventHandler(
     {
         PerfilVinculo.Funeraria => "gestor(a)",
         PerfilVinculo.Funcionario => "funcionário(a)",
+        PerfilVinculo.Consultor => "consultor(a)",
         PerfilVinculo.Cliente => "cliente",
         _ => "parceiro(a)"
     };

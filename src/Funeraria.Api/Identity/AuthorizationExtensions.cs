@@ -22,16 +22,21 @@ internal static class AuthorizationExtensions
             .AddPolicy(Politicas.EquipeFuneraria, p => p
                 .RequireRole(Perfis.Funeraria, Perfis.Funcionario)
                 .RequireClaim(Claims.IdTenant))
+            .AddPolicy(Politicas.Atendimento, p => p
+                .RequireRole(Perfis.Funeraria, Perfis.Funcionario, Perfis.Consultor)
+                .RequireClaim(Claims.IdTenant))
             .AddPolicy(Politicas.Cliente, p => p
                 .RequireRole(Perfis.Cliente)
                 .RequireClaim(Claims.IdTenant)
                 .RequireClaim(Claims.IdCliente))
             .AddPolicy(Politicas.ClienteOuEquipe, p => p
-                .RequireRole(Perfis.Funeraria, Perfis.Funcionario, Perfis.Cliente)
+                .RequireRole(Perfis.Funeraria, Perfis.Funcionario, Perfis.Consultor, Perfis.Cliente)
                 .RequireClaim(Claims.IdTenant))
             .AddPolicy(Politicas.TerceiroFrota, p => Terceiro(p, TiposTerceiro.Frota))
             .AddPolicy(Politicas.TerceiroDespachante, p => Terceiro(p, TiposTerceiro.CartorioDespachante))
             .AddPolicy(Politicas.TerceiroFornecedor, p => Terceiro(p, TiposTerceiro.Fornecedor));
+
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, RespostaAcessoNegado>();
 
         return services;
     }
