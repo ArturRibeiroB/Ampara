@@ -34,6 +34,24 @@ internal sealed class PlanoConfiguration : IEntityTypeConfiguration<Plano>
                 v => JsonSerializer.Serialize(v, JsonbOptions.Default),
                 v => JsonSerializer.Deserialize<PlanoConfiguracoes>(v, JsonbOptions.Default) ?? PlanoConfiguracoes.Padrao);
 
+        builder.HasMany(p => p.Coberturas).WithOne().HasForeignKey("IdPlano").OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(p => p.Coberturas).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+
         builder.HasIndex(p => new { p.TenantId, p.Nome }).IsUnique();
+    }
+}
+
+internal sealed class PlanoCoberturaConfiguration : IEntityTypeConfiguration<PlanoCobertura>
+{
+    public void Configure(EntityTypeBuilder<PlanoCobertura> builder)
+    {
+        builder.ToTable("coberturas");
+
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Id).HasColumnName("id_plano_cobertura").ValueGeneratedNever();
+        builder.Property<Guid>("IdPlano").HasColumnName("id_plano");
+
+        // Um item aparece uma vez por plano; a quantidade diz quantos estão cobertos.
+        builder.HasIndex("IdPlano", nameof(PlanoCobertura.IdItemCatalogo)).IsUnique();
     }
 }

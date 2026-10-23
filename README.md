@@ -170,7 +170,7 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Identidade | `identidade` | Login, refresh token com rotação, logout, minhas funerárias, convite, definição, recuperação e troca de senha, confirmação de e-mail, equipe da funerária com funcionários e consultores (AUT-01 a AUT-08) |
 | Tenants | `tenants` | Auto-cadastro e cadastro pelo ADMIN, aprovação/suspensão, configurações da funerária (TEN-01 a TEN-03) |
 | Clientes | `clientes` | Cadastro do cliente (conta + vínculo CLIENTE), meus dados, dependentes e busca pela equipe (Criar Cliente, Criar Dependente, CLI-01 a CLI-03) |
-| Planos | `planos` | Gestão de planos, configurações em jsonb e planos modelo copiados para cada funerária nova (PLA-01, PLA-03) |
+| Planos | `planos` | Gestão de planos, configurações em jsonb, coberturas com itens do catálogo e planos modelo copiados para cada funerária nova (PLA-01, PLA-02, PLA-03) |
 | Notificacoes | — | Envio de e-mail por SMTP (Mailpit em desenvolvimento). Templates e provider de produção pendentes (NOT-01) |
 | Contratos | `contratos` | Contratação pelo cliente (`POST /contratos`) e pela equipe (`POST /gestao/contratos`), com pessoas cobertas, valor e periodicidade da contratação; consulta pelo cliente e busca pela equipe (Criar Contrato, CON-01) |
 | Catalogo | `catalogo` | Categorias, itens, variações e imagens; catálogo modelo copiado para cada funerária nova; `ICatalogoConsultas` para os outros módulos (FUN-01) |

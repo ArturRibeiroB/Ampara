@@ -5,6 +5,7 @@ using Funeraria.Modules.Planos.Application.Commands.AtualizarPlano;
 using Funeraria.Modules.Planos.Application.Commands.CriarPlano;
 using Funeraria.Modules.Planos.Application.Queries.ListarPlanos;
 using Funeraria.Modules.Planos.Application.Queries.ObterPlano;
+using Funeraria.Modules.Planos.Application.Commands.DefinirCoberturas;
 using Mediator;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -88,6 +89,15 @@ internal sealed class GestaoPlanosEndpoints : IEndpoint
             .WithName("AlterarStatusPlano")
             .WithSummary("Ativa ou desativa um plano")
             .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPut("{id:guid}/coberturas", async (Guid id, DefinirCoberturasRequest request, ISender sender, CancellationToken ct) =>
+                (await sender.Send(new DefinirCoberturasCommand(id, request.Coberturas), ct)).Match(Results.NoContent))
+            .WithName("DefinirCoberturasPlano")
+            .WithSummary("Define os itens do catálogo que o plano cobre, trocando a lista inteira")
+            .WithDescription("Cada item precisa estar ativo no catálogo. Lista vazia remove as coberturas (PLA-02).")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
 }

@@ -175,6 +175,53 @@ namespace Funeraria.Modules.Planos.Infrastructure.Database.Migrations
 
                     b.ToTable("planos", "planos");
                 });
+
+            modelBuilder.Entity("Funeraria.Modules.Planos.Domain.Planos.PlanoCobertura", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_plano_cobertura");
+
+                    b.Property<Guid>("IdItemCatalogo")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_item_catalogo");
+
+                    b.Property<Guid>("IdPlano")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_plano");
+
+                    b.Property<int?>("KmTransladoIncluso")
+                        .HasColumnType("integer")
+                        .HasColumnName("km_translado_incluso");
+
+                    b.Property<int>("Quantidade")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantidade");
+
+                    b.HasKey("Id")
+                        .HasName("pk_coberturas");
+
+                    b.HasIndex("IdPlano", "IdItemCatalogo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_coberturas_id_plano_id_item_catalogo");
+
+                    b.ToTable("coberturas", "planos");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Planos.Domain.Planos.PlanoCobertura", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Planos.Domain.Planos.Plano", null)
+                        .WithMany("Coberturas")
+                        .HasForeignKey("IdPlano")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_coberturas_planos_id_plano");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Planos.Domain.Planos.Plano", b =>
+                {
+                    b.Navigation("Coberturas");
+                });
 #pragma warning restore 612, 618
         }
     }
