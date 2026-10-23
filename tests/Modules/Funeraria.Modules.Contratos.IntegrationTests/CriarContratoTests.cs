@@ -301,6 +301,23 @@ public sealed class CriarContratoTests(ContratosApiFactory factory)
     }
 
     [Fact]
+    public async Task Funeraria_nova_ja_contrata_com_os_padroes_do_DEC_12()
+    {
+        (Guid tenant, string slug) = await factory.CriarFunerariaAsync();
+        var funeraria = new FunerariaDeTeste(factory, tenant, slug);
+        Guid plano = await funeraria.CriarPlanoAsync();
+        ClienteDeTeste cliente = await funeraria.CriarClienteAsync();
+
+        await CriarAsync(cliente.Http, new { id_plano = plano, tipo_cobertura = "TITULAR", periodicidade = "MENSAL" });
+
+        JsonObject configuracoes = (await funeraria.Equipe().GetFromJsonAsync<JsonObject>("/api/v1/gestao/configuracoes", Json, Ct))!;
+        JsonNode cobranca = configuracoes["parametros"]!["cobranca"]!;
+        Assert.Equal(2, cobranca["multa_percentual"]!.GetValue<decimal>());
+        Assert.Equal(1, cobranca["juros_mensal_percentual"]!.GetValue<decimal>());
+        Assert.Equal(10, cobranca["desconto_anual_percentual"]!.GetValue<decimal>());
+    }
+
+    [Fact]
     public async Task Cliente_escolhe_o_vencimento_entre_os_dias_permitidos()
     {
         FunerariaDeTeste funeraria = await factory.CriarFunerariaContratavelAsync(ModoVencimento.EscolhaCliente);

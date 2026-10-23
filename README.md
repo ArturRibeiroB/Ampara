@@ -195,6 +195,9 @@ Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 
 ## Decisões técnicas
 
+As decisões de negócio do grupo (certidão, Stripe Connect, translado, consultor, multa e juros) estão em
+[docs/decisoes.md](docs/decisoes.md).
+
 | Card | Decisão | Por quê |
 |---|---|---|
 | INF-05 | **Mediator** (source generator) para commands e queries | Registro gerado no build, sem reflexão em tempo de execução; behaviors de validação e log em um lugar só |

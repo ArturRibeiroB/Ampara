@@ -53,7 +53,7 @@ public sealed class OnboardingTests(TenantsApiFactory factory)
 
         JsonObject configuracoes = (await gestor.GetFromJsonAsync<JsonObject>("/api/v1/gestao/configuracoes", Json, Ct))!;
         Assert.Equal("Funerária Teste", configuracoes["identidade_visual"]!["nome_exibicao"]!.GetValue<string>());
-        Assert.False(configuracoes["cobranca_configurada"]!.GetValue<bool>());
+        Assert.True(configuracoes["cobranca_configurada"]!.GetValue<bool>()); // Padrões do DEC-12
     }
 
     [Fact]
