@@ -72,6 +72,85 @@ namespace Funeraria.Modules.Terceiros.Infrastructure.Database.Migrations
                     b.ToTable("outbox_messages", "terceiros");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Terceiros.Domain.Atribuicoes.Atribuicao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_atribuicao");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("IdOrigem")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_origem");
+
+                    b.Property<Guid>("IdTerceiro")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_terceiro");
+
+                    b.Property<string>("MotivoRecusa")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("motivo_recusa");
+
+                    b.Property<DateTime>("PrazoAceite")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("prazo_aceite");
+
+                    b.Property<DateTime?>("RespondidaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("respondida_em");
+
+                    b.Property<string>("Resumo")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("resumo");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_tenant");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("tipo");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_atribuicoes");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_atribuicoes_id_tenant");
+
+                    b.HasIndex("IdTerceiro", "Tipo", "IdOrigem")
+                        .IsUnique()
+                        .HasDatabaseName("ix_atribuicoes_id_terceiro_tipo_id_origem");
+
+                    b.ToTable("atribuicoes", "terceiros");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Terceiros.Domain.Terceiros.Terceiro", b =>
                 {
                     b.Property<Guid>("Id")
@@ -171,6 +250,16 @@ namespace Funeraria.Modules.Terceiros.Infrastructure.Database.Migrations
                         .HasDatabaseName("ix_terceiros_tenant_id_email");
 
                     b.ToTable("terceiros", "terceiros");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Terceiros.Domain.Atribuicoes.Atribuicao", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Terceiros.Domain.Terceiros.Terceiro", null)
+                        .WithMany()
+                        .HasForeignKey("IdTerceiro")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_atribuicoes_terceiros_id_terceiro");
                 });
 #pragma warning restore 612, 618
         }

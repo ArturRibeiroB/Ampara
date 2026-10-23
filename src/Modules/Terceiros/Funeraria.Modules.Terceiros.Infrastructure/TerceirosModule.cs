@@ -1,5 +1,8 @@
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.Modules.Terceiros.Application.Abstractions;
+using Funeraria.Modules.Terceiros.Application.Atribuicoes;
+using Funeraria.Modules.Terceiros.Contracts;
+using Funeraria.Modules.Terceiros.Domain.Atribuicoes;
 using Funeraria.Modules.Terceiros.Domain.Terceiros;
 using Funeraria.Modules.Terceiros.Infrastructure.Database;
 using Microsoft.Extensions.Configuration;
@@ -18,6 +21,8 @@ public static class TerceirosModule
         services.AddScoped<TerceiroRepository>();
         services.AddScoped<ITerceiroRepository>(sp => sp.GetRequiredService<TerceiroRepository>());
         services.AddScoped<ITerceirosLeitura>(sp => sp.GetRequiredService<TerceiroRepository>());
+        services.AddScoped<IAtribuicaoRepository, AtribuicaoRepository>();
+        services.AddScoped<ITerceirosAtribuicoes, AtribuicoesTerceiros>();
 
         return services;
     }

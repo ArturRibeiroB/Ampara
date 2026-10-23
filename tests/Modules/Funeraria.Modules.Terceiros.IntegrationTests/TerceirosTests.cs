@@ -4,6 +4,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Funeraria.BuildingBlocks.Application.Authorization;
+using Funeraria.BuildingBlocks.Application.Events;
+using Funeraria.Modules.Terceiros.Contracts.IntegrationEvents;
+using Microsoft.Extensions.DependencyInjection;
 using Funeraria.Modules.Notificacoes.Application.Email;
 using Funeraria.Testing;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -13,6 +16,12 @@ namespace Funeraria.Modules.Terceiros.IntegrationTests;
 public sealed class TerceirosApiFactory : FunerariaApiFactory, IAsyncLifetime
 {
     public ValueTask InitializeAsync() => IniciarAsync();
+
+    protected override void ConfigurarServicos(IServiceCollection services)
+    {
+        services.AddScoped<IIntegrationEventHandler<AtribuicaoAceitaIntegrationEvent>, CapturarEvento<AtribuicaoAceitaIntegrationEvent>>();
+        services.AddScoped<IIntegrationEventHandler<AtribuicaoRecusadaIntegrationEvent>, CapturarEvento<AtribuicaoRecusadaIntegrationEvent>>();
+    }
 }
 
 [CollectionDefinition(Nome)]

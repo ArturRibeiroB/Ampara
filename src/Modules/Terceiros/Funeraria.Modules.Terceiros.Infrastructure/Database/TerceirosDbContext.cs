@@ -4,6 +4,7 @@ using Funeraria.BuildingBlocks.Application.Paginacao;
 using Funeraria.BuildingBlocks.Application.Serialization;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
 using Funeraria.Modules.Terceiros.Application.Abstractions;
+using Funeraria.Modules.Terceiros.Domain.Atribuicoes;
 using Funeraria.Modules.Terceiros.Domain.Terceiros;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -19,6 +20,8 @@ public sealed class TerceirosDbContext(DbContextOptions<TerceirosDbContext> opti
     public override string Schema => SchemaName;
 
     internal DbSet<Terceiro> Terceiros => Set<Terceiro>();
+
+    internal DbSet<Atribuicao> Atribuicoes => Set<Atribuicao>();
 
     protected override void ConfigureModel(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TerceirosDbContext).Assembly);
@@ -56,6 +59,43 @@ internal sealed class TerceiroConfiguration : IEntityTypeConfiguration<Terceiro>
         builder.HasIndex(t => new { t.TenantId, t.Email }).IsUnique();
         builder.HasIndex(t => t.IdUsuario);
     }
+}
+
+internal sealed class AtribuicaoConfiguration : IEntityTypeConfiguration<Atribuicao>
+{
+    public void Configure(EntityTypeBuilder<Atribuicao> builder)
+    {
+        builder.ToTable("atribuicoes");
+
+        builder.HasKey(a => a.Id);
+        builder.Property(a => a.Id).HasColumnName("id_atribuicao").ValueGeneratedNever();
+        builder.Property(a => a.Tipo).HasConversion<string>().HasMaxLength(20);
+        builder.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(a => a.Resumo).HasColumnType("jsonb");
+        builder.Property(a => a.MotivoRecusa).HasMaxLength(500);
+
+        builder.HasOne<Terceiro>().WithMany().HasForeignKey(a => a.IdTerceiro).OnDelete(DeleteBehavior.Restrict);
+
+        // Uma atribuição por serviço de origem e terceiro: o módulo de origem pode repetir a chamada sem duplicar.
+        builder.HasIndex(a => new { a.IdTerceiro, a.Tipo, a.IdOrigem }).IsUnique();
+    }
+}
+
+internal sealed class AtribuicaoRepository(TerceirosDbContext context) : IAtribuicaoRepository
+{
+    public Task<Atribuicao?> ObterAsync(Guid idAtribuicao, CancellationToken cancellationToken = default) =>
+        context.Atribuicoes.FirstOrDefaultAsync(a => a.Id == idAtribuicao, cancellationToken);
+
+    public Task<Atribuicao?> ObterPorOrigemAsync(Guid idTerceiro, TipoAtribuicao tipo, Guid idOrigem, CancellationToken cancellationToken = default) =>
+        context.Atribuicoes.FirstOrDefaultAsync(a => a.IdTerceiro == idTerceiro && a.Tipo == tipo && a.IdOrigem == idOrigem, cancellationToken);
+
+    public async Task<IReadOnlyList<Atribuicao>> ListarDoTerceiroAsync(Guid idTerceiro, CancellationToken cancellationToken = default) =>
+        await context.Atribuicoes.AsNoTracking()
+            .Where(a => a.IdTerceiro == idTerceiro)
+            .OrderByDescending(a => a.Id)
+            .ToListAsync(cancellationToken);
+
+    public void Adicionar(Atribuicao atribuicao) => context.Atribuicoes.Add(atribuicao);
 }
 
 internal sealed class TerceiroRepository(TerceirosDbContext context) : ITerceiroRepository, ITerceirosLeitura
