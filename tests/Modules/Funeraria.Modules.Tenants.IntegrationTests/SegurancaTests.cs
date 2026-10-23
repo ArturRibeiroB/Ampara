@@ -18,6 +18,10 @@ public sealed class SegurancaTests(TenantsApiFactory factory)
     /// </summary>
     private static readonly string[] RotasPublicasAprovadas =
     [
+        "GET /api/v1/catalogo",
+        "GET /api/v1/catalogo/categorias",
+        "GET /api/v1/catalogo/{id:guid}",
+        "GET /api/v1/funerarias/{slug}/catalogo/{id:guid}/imagem",
         "GET /api/v1/funerarias/{slug}/logo",
         "GET /api/v1/planos",
         "GET /api/v1/planos/{id:guid}",

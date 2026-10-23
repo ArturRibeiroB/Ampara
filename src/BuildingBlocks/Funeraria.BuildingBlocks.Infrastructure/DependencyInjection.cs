@@ -3,6 +3,7 @@ using Funeraria.BuildingBlocks.Application.Events;
 using Funeraria.BuildingBlocks.Infrastructure.Arquivos;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
 using Funeraria.BuildingBlocks.Infrastructure.Database.Interceptors;
+using Funeraria.BuildingBlocks.Infrastructure.Endpoints;
 using Funeraria.BuildingBlocks.Infrastructure.Events;
 using Funeraria.BuildingBlocks.Infrastructure.Identity;
 using Funeraria.BuildingBlocks.Infrastructure.Outbox;
@@ -46,6 +47,8 @@ public static class DependencyInjection
         services.AddScoped<IEventBus, InMemoryEventBus>();
 
         services.AddArmazenamentoArquivos(configuration);
+        services.AddOptions<ApiPublicaOptions>().Bind(configuration.GetSection(ApiPublicaOptions.Section));
+        services.AddSingleton<IUrlPublicaApi, UrlPublicaApi>();
 
         return services;
     }

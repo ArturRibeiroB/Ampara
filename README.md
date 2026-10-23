@@ -244,7 +244,7 @@ dotnet ef migrations add <Nome> \
   --output-dir Database/Migrations
 ```
 
-Troque `Planos` pelo módulo. Contextos existentes: `IdentidadeDbContext`, `TenantsDbContext`, `PlanosDbContext`, `ClientesDbContext`, `ContratosDbContext`.
+Troque `Planos` pelo módulo. Contextos existentes: `IdentidadeDbContext`, `TenantsDbContext`, `PlanosDbContext`, `ClientesDbContext`, `ContratosDbContext`, `CatalogoDbContext`.
 
 ## Criando um módulo novo ou um caso de uso
 
