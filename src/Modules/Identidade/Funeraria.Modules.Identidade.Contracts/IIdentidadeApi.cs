@@ -15,6 +15,9 @@ public interface IIdentidadeApi
     /// <returns>Id da conta. Falhas: senha fraca (400), senha errada da conta existente (401), conta bloqueada (423).</returns>
     Task<Result<Guid>> ObterOuCriarContaAsync(string email, string nome, string senha, CancellationToken cancellationToken = default);
 
+    /// <summary>Perfil (ex.: CLIENTE, FUNCIONARIO) que o e-mail já tem nesta funerária; nulo se não tiver acesso.</summary>
+    Task<string?> PerfilNaFunerariaAsync(string email, Guid idTenant, CancellationToken cancellationToken = default);
+
     /// <summary>A conta já tem algum vínculo (de qualquer perfil) com a funerária.</summary>
     Task<bool> PossuiVinculoAsync(Guid idUsuario, Guid idTenant, CancellationToken cancellationToken = default);
 

@@ -1,3 +1,4 @@
+using Funeraria.Modules.Planos.Application.Commands.DefinirCoberturas;
 using Funeraria.Modules.Planos.Domain.Planos;
 
 namespace Funeraria.Modules.Planos.Endpoints.Gestao;
@@ -17,5 +18,8 @@ public sealed record PlanoRequest(
 
 /// <summary>Corpo de PATCH /gestao/planos/{id}/status.</summary>
 public sealed record AlterarStatusPlanoRequest(bool Ativo);
+
+/// <summary>Corpo de PUT /gestao/planos/{id}/coberturas.</summary>
+public sealed record DefinirCoberturasRequest(IReadOnlyList<CoberturaRequest>? Coberturas);
 
 public sealed record PlanoCriadoResponse(Guid IdPlano);

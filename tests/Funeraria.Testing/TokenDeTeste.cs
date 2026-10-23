@@ -13,7 +13,15 @@ public static class TokenDeTeste
     public const string Issuer = "funeraria-api";
     public const string Audience = "funeraria-web";
 
-    public static string Gerar(string perfil, Guid? idTenant)
+    /// <summary>Token de terceiro, com as claims que o portal (TER-02) exige.</summary>
+    public static string GerarTerceiro(Guid idTenant, Guid idTerceiro, string tipo) =>
+        Gerar(Perfis.Terceiro, idTenant, new Dictionary<string, string>
+        {
+            [Claims.IdTerceiro] = idTerceiro.ToString(),
+            [Claims.TipoTerceiro] = tipo
+        });
+
+    public static string Gerar(string perfil, Guid? idTenant, IReadOnlyDictionary<string, string>? extras = null)
     {
         var claims = new List<Claim>
         {
@@ -25,6 +33,11 @@ public static class TokenDeTeste
         if (idTenant is not null)
         {
             claims.Add(new Claim(Claims.IdTenant, idTenant.Value.ToString()));
+        }
+
+        foreach ((string tipo, string valor) in extras ?? new Dictionary<string, string>())
+        {
+            claims.Add(new Claim(tipo, valor));
         }
 
         var token = new JwtSecurityToken(

@@ -10,6 +10,8 @@ namespace Funeraria.Modules.Planos.Domain.Planos;
 /// </summary>
 public sealed class Plano : AggregateRoot<Guid>, ITenantEntity, IAuditableEntity
 {
+    private readonly List<PlanoCobertura> _coberturas = [];
+
     private Plano(Guid id, Guid tenantId)
         : base(id)
     {
@@ -42,6 +44,9 @@ public sealed class Plano : AggregateRoot<Guid>, ITenantEntity, IAuditableEntity
     public string? IdStripeProduct { get; private set; }
 
     public bool Ativo { get; private set; }
+
+    /// <summary>Itens do catálogo que o plano cobre e em que quantidade (PLA-02).</summary>
+    public IReadOnlyList<PlanoCobertura> Coberturas => _coberturas;
 
     public static Plano Criar(
         Guid tenantId,
@@ -84,6 +89,13 @@ public sealed class Plano : AggregateRoot<Guid>, ITenantEntity, IAuditableEntity
 
     /// <summary>Plano com contratos não pode ser excluído, só desativado. Desativado não aparece em GET /planos.</summary>
     public void AlterarStatus(bool ativo) => Ativo = ativo;
+
+    /// <summary>Troca a lista inteira de coberturas (PLA-02). Os itens já foram conferidos no catálogo.</summary>
+    public void DefinirCoberturas(IEnumerable<CoberturaDefinida> coberturas)
+    {
+        _coberturas.Clear();
+        _coberturas.AddRange(coberturas.Select(c => PlanoCobertura.Criar(c.IdItemCatalogo, c.Quantidade, c.KmTransladoIncluso)));
+    }
 
     public void VincularProdutoStripe(string idStripeProduct) => IdStripeProduct = idStripeProduct;
 

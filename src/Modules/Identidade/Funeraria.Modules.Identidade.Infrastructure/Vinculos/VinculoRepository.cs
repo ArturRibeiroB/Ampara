@@ -18,5 +18,8 @@ internal sealed class VinculoRepository(IdentidadeDbContext context) : IVinculoR
     public Task<int> ContarGestoresAtivosAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
         context.Vinculos.CountAsync(v => v.IdTenant == idTenant && v.Perfil == PerfilVinculo.Funeraria && v.Ativo, cancellationToken);
 
+    public Task<UsuarioVinculo?> ObterPorTerceiroAsync(Guid idTenant, Guid idTerceiro, CancellationToken cancellationToken = default) =>
+        context.Vinculos.FirstOrDefaultAsync(v => v.IdTenant == idTenant && v.IdTerceiro == idTerceiro, cancellationToken);
+
     public void Adicionar(UsuarioVinculo vinculo) => context.Vinculos.Add(vinculo);
 }

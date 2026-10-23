@@ -8,6 +8,8 @@
     <ProjectReference Include="..\Funeraria.Modules.Terceiros.Domain\Funeraria.Modules.Terceiros.Domain.csproj" />
     <ProjectReference Include="..\Funeraria.Modules.Terceiros.Contracts\Funeraria.Modules.Terceiros.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Funeraria.BuildingBlocks.Application\Funeraria.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\Identidade\Funeraria.Modules.Identidade.Contracts\Funeraria.Modules.Identidade.Contracts.csproj" />
+    <ProjectReference Include="..\..\Catalogo\Funeraria.Modules.Catalogo.Contracts\Funeraria.Modules.Catalogo.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

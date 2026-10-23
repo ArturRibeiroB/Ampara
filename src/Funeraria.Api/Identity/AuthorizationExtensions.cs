@@ -32,6 +32,10 @@ internal static class AuthorizationExtensions
             .AddPolicy(Politicas.ClienteOuEquipe, p => p
                 .RequireRole(Perfis.Funeraria, Perfis.Funcionario, Perfis.Consultor, Perfis.Cliente)
                 .RequireClaim(Claims.IdTenant))
+            .AddPolicy(Politicas.Terceiro, p => p
+                .RequireRole(Perfis.Terceiro)
+                .RequireClaim(Claims.IdTenant)
+                .RequireClaim(Claims.IdTerceiro))
             .AddPolicy(Politicas.TerceiroFrota, p => Terceiro(p, TiposTerceiro.Frota))
             .AddPolicy(Politicas.TerceiroDespachante, p => Terceiro(p, TiposTerceiro.CartorioDespachante))
             .AddPolicy(Politicas.TerceiroFornecedor, p => Terceiro(p, TiposTerceiro.Fornecedor));

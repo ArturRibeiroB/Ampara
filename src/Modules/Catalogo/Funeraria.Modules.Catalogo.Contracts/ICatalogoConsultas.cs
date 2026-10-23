@@ -8,7 +8,12 @@ public interface ICatalogoConsultas
 {
     /// <summary>Itens com os ids informados, ativos ou não (quem chama decide se aceita item inativo). Ids sem item ficam de fora.</summary>
     Task<IReadOnlyList<ItemCatalogoDto>> ObterItensAsync(IReadOnlyCollection<Guid> idsItens, CancellationToken cancellationToken = default);
+
+    /// <summary>Categorias com os ids informados (ex.: categorias atendidas por um fornecedor, TER-01). Ids sem categoria ficam de fora.</summary>
+    Task<IReadOnlyList<CategoriaCatalogoDto>> ObterCategoriasAsync(IReadOnlyCollection<Guid> idsCategorias, CancellationToken cancellationToken = default);
 }
+
+public sealed record CategoriaCatalogoDto(Guid IdCategoria, string Nome, bool Ativo);
 
 /// <param name="IdItem">Item do catálogo.</param>
 /// <param name="IdCategoria">Categoria do item.</param>

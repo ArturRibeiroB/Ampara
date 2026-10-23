@@ -53,6 +53,17 @@ internal sealed class CatalogoLeitura(CatalogoDbContext context) : ICatalogoLeit
     public Task<bool> CategoriaAtivaAsync(Guid idCategoria, CancellationToken cancellationToken = default) =>
         context.Categorias.AnyAsync(c => c.Id == idCategoria && c.Ativo, cancellationToken);
 
+    public async Task<IReadOnlyList<CategoriaCatalogoDto>> ObterCategoriasAsync(
+        IReadOnlyCollection<Guid> idsCategorias,
+        CancellationToken cancellationToken = default) =>
+        idsCategorias.Count == 0
+            ? []
+            : await context.Categorias
+                .AsNoTracking()
+                .Where(c => idsCategorias.Contains(c.Id))
+                .Select(c => new CategoriaCatalogoDto(c.Id, c.Nome, c.Ativo))
+                .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<ItemCatalogoDto>> ObterItensAsync(
         IReadOnlyCollection<Guid> idsItens,
         CancellationToken cancellationToken = default)

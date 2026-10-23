@@ -1,4 +1,5 @@
 using Funeraria.BuildingBlocks.Domain.Entities;
+using Funeraria.BuildingBlocks.Domain.Events;
 
 namespace Funeraria.Modules.Identidade.Domain.Senhas;
 
@@ -49,6 +50,7 @@ public sealed class TokenSenha : AggregateRoot<Guid>
         }
 
         UsadoEm = agora;
+        Raise(new TokenSenhaUsadoDomainEvent(IdUsuario, Finalidade));
     }
 }
 
@@ -63,6 +65,9 @@ public enum FinalidadeTokenSenha
     /// <summary>Confirmação do e-mail de quem se cadastrou com senha (AUT-05).</summary>
     ConfirmarEmail = 3
 }
+
+/// <summary>Link usado: a Identidade avisa os outros módulos quando a conta passa a ter senha (TER-01).</summary>
+public sealed record TokenSenhaUsadoDomainEvent(Guid IdUsuario, FinalidadeTokenSenha Finalidade) : DomainEvent;
 
 public interface ITokenSenhaRepository
 {
