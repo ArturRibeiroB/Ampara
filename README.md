@@ -174,7 +174,8 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Notificacoes | — | Envio de e-mail por SMTP (Mailpit em desenvolvimento). Templates e provider de produção pendentes (NOT-01) |
 | Contratos | `contratos` | Contratação pelo cliente (`POST /contratos`) e pela equipe (`POST /gestao/contratos`), com pessoas cobertas, valor e periodicidade da contratação; consulta pelo cliente e busca pela equipe (Criar Contrato, CON-01) |
 | Catalogo | `catalogo` | Categorias, itens, variações e imagens; catálogo modelo copiado para cada funerária nova; `ICatalogoConsultas` para os outros módulos (FUN-01) |
-| Financeiro, Funeral, Documentos, Translado, Terceiros, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso |
+| Terceiros | `terceiros` | Cadastro de parceiros (frota, despachante/cartório, fornecedor) com convite e acesso pela Identidade (TER-01) |
+| Financeiro, Funeral, Documentos, Translado, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 
@@ -245,7 +246,7 @@ dotnet ef migrations add <Nome> \
   --output-dir Database/Migrations
 ```
 
-Troque `Planos` pelo módulo. Contextos existentes: `IdentidadeDbContext`, `TenantsDbContext`, `PlanosDbContext`, `ClientesDbContext`, `ContratosDbContext`, `CatalogoDbContext`.
+Troque `Planos` pelo módulo. Contextos existentes: `IdentidadeDbContext`, `TenantsDbContext`, `PlanosDbContext`, `ClientesDbContext`, `ContratosDbContext`, `CatalogoDbContext`, `TerceirosDbContext`.
 
 ## Criando um módulo novo ou um caso de uso
 

@@ -1,6 +1,7 @@
 using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Identidade.Application.Abstractions;
+using Funeraria.Modules.Identidade.Application.Sessoes;
 using Funeraria.Modules.Identidade.Contracts;
 using Funeraria.Modules.Identidade.Domain;
 using Funeraria.Modules.Identidade.Domain.Vinculos;
@@ -26,6 +27,13 @@ public sealed class IdentidadeApi(IUsuarios usuarios, IVinculoRepository vinculo
             ResultadoCredenciais.Bloqueado => IdentidadeErros.ContaBloqueada,
             _ => IdentidadeErros.SenhaContaExistente
         };
+    }
+
+    public async Task<string?> PerfilNaFunerariaAsync(string email, Guid idTenant, CancellationToken cancellationToken = default)
+    {
+        UsuarioInfo? usuario = await usuarios.ObterPorEmailAsync(email, cancellationToken);
+        UsuarioVinculo? vinculo = usuario is null ? null : await vinculos.ObterAsync(usuario.Id, idTenant, cancellationToken);
+        return vinculo?.Perfil.ParaClaim();
     }
 
     public async Task<bool> PossuiVinculoAsync(Guid idUsuario, Guid idTenant, CancellationToken cancellationToken = default) =>
