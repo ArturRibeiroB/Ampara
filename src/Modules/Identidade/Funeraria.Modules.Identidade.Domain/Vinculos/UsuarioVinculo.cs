@@ -74,6 +74,17 @@ public sealed class UsuarioVinculo : AggregateRoot<Guid>, IAuditableEntity
 
     /// <summary>Desativar remove o acesso só a esta funerária: a conta continua valendo para os outros vínculos (AUT-08).</summary>
     public void AlterarStatus(bool ativo) => Ativo = ativo;
+
+    /// <summary>Troca o perfil dentro da equipe (AUT-08). Cliente e terceiro não viram equipe por aqui.</summary>
+    public void AlterarPerfil(PerfilVinculo perfil)
+    {
+        if (!PerfisEquipe.Contem(Perfil) || !PerfisEquipe.Contem(perfil))
+        {
+            throw new InvalidOperationException("Só é possível trocar o perfil entre os perfis da equipe.");
+        }
+
+        Perfil = perfil;
+    }
 }
 
 /// <summary>Perfis que existem dentro de uma funerária (DEC-06). O ADMIN é global e não tem vínculo.</summary>
@@ -82,5 +93,15 @@ public enum PerfilVinculo
     Funeraria = 1,
     Funcionario = 2,
     Cliente = 3,
-    Terceiro = 4
+    Terceiro = 4,
+
+    /// <summary>Atendimento e vendas da funerária (DEC-11).</summary>
+    Consultor = 5
+}
+
+public static class PerfisEquipe
+{
+    /// <summary>Perfis da equipe da funerária, que o gestor gerencia (AUT-07, AUT-08).</summary>
+    public static bool Contem(PerfilVinculo perfil) =>
+        perfil is PerfilVinculo.Funeraria or PerfilVinculo.Funcionario or PerfilVinculo.Consultor;
 }

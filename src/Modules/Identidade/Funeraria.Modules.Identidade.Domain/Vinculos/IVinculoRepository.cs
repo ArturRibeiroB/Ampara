@@ -6,5 +6,8 @@ public interface IVinculoRepository
 
     Task<IReadOnlyList<UsuarioVinculo>> ListarAtivosDoUsuarioAsync(Guid idUsuario, CancellationToken cancellationToken = default);
 
+    /// <summary>Gestores (FUNERARIA) com vínculo ativo na funerária (AUT-08: o último não sai).</summary>
+    Task<int> ContarGestoresAtivosAsync(Guid idTenant, CancellationToken cancellationToken = default);
+
     void Adicionar(UsuarioVinculo vinculo);
 }

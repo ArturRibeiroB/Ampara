@@ -72,7 +72,7 @@ internal sealed class ClientesEndpoints : IEndpoint
             .ProducesValidationProblem();
 
         RouteGroupBuilder gestao = app.MapGroup("gestao/clientes")
-            .RequireAuthorization(Politicas.EquipeFuneraria)
+            .RequireAuthorization(Politicas.Atendimento)
             .WithTags(Tag)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden);

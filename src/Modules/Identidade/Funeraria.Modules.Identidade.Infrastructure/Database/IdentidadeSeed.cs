@@ -30,6 +30,7 @@ internal sealed partial class IdentidadeSeed(
 {
     public const string EmailGestorDemo = "gestor@demo.localhost";
     public const string EmailFuncionarioDemo = "funcionario@demo.localhost";
+    public const string EmailConsultorDemo = "consultor@demo.localhost";
 
     private readonly SeedOptions _options = options.Value;
 
@@ -83,6 +84,7 @@ internal sealed partial class IdentidadeSeed(
         // Terceiros existir, porque o vínculo deles aponta para o cadastro nesses módulos.
         await VincularAsync(EmailGestorDemo, "Gestor Demonstração", PerfilVinculo.Funeraria, demo.IdTenant, cancellationToken);
         await VincularAsync(EmailFuncionarioDemo, "Funcionário Demonstração", PerfilVinculo.Funcionario, demo.IdTenant, cancellationToken);
+        await VincularAsync(EmailConsultorDemo, "Consultor Demonstração", PerfilVinculo.Consultor, demo.IdTenant, cancellationToken);
     }
 
     private async Task VincularAsync(string email, string nome, PerfilVinculo perfil, Guid idTenant, CancellationToken cancellationToken)

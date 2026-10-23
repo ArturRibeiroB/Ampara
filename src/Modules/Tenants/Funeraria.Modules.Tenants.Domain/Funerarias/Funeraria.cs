@@ -172,6 +172,7 @@ public enum StatusFuneraria
 public enum OrigemCadastro
 {
     Auto = 1,
+    /// <summary>Não é mais usado: pelo DEC-11, o consultor atende famílias e não cadastra funerárias. Mantido pelos registros antigos.</summary>
     Consultor = 2,
     Admin = 3
 }

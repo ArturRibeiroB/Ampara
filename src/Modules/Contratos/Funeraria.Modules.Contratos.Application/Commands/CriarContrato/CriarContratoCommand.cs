@@ -1,5 +1,6 @@
 using FluentValidation;
 using Funeraria.BuildingBlocks.Application.Abstractions;
+using Funeraria.BuildingBlocks.Application.Authorization;
 using Funeraria.BuildingBlocks.Application.Messaging;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Clientes.Contracts;
@@ -58,6 +59,7 @@ public sealed class CriarContratoCommandHandler(
     IPlanosApi planos,
     ITenantsApi tenants,
     ITenantContext tenantContext,
+    ICurrentUser usuario,
     TimeProvider timeProvider)
     : ICommandHandler<CriarContratoCommand, ContratoResponse>
 {
@@ -122,7 +124,8 @@ public sealed class CriarContratoCommandHandler(
             periodicidade,
             diaVencimento.Value,
             idsDependentes,
-            DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime));
+            DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime),
+            idConsultor: usuario.Perfil == Perfis.Consultor ? usuario.IdUsuario : null);
 
         contratos.Adicionar(contrato);
         try

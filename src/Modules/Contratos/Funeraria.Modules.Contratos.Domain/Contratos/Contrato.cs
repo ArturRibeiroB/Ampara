@@ -57,6 +57,9 @@ public sealed class Contrato : AggregateRoot<Guid>, ITenantEntity, IAuditableEnt
     /// <summary>Carência do plano na contratação, em dias (CON-04).</summary>
     public int CarenciaDias { get; private set; }
 
+    /// <summary>Conta do consultor que fez a contratação com a família, para acompanhamento e comissão (DEC-11).</summary>
+    public Guid? IdConsultor { get; private set; }
+
     public IReadOnlyList<PessoaCoberta> PessoasCobertas => _pessoasCobertas;
 
     /// <summary>
@@ -71,7 +74,8 @@ public sealed class Contrato : AggregateRoot<Guid>, ITenantEntity, IAuditableEnt
         Periodicidade periodicidade,
         int diaVencimento,
         IReadOnlyCollection<Guid> idsDependentes,
-        DateOnly hoje)
+        DateOnly hoje,
+        Guid? idConsultor = null)
     {
         if (tipoCobertura == TipoCobertura.Titular ? idsDependentes.Count > 0 : idsDependentes.Count == 0)
         {
@@ -91,7 +95,8 @@ public sealed class Contrato : AggregateRoot<Guid>, ITenantEntity, IAuditableEnt
             ValorPlano = plano.Valor,
             ValorPorDependente = plano.ValorPorDependente,
             ValorTotal = plano.Valor + (plano.ValorPorDependente * idsDependentes.Count),
-            CarenciaDias = plano.CarenciaDias
+            CarenciaDias = plano.CarenciaDias,
+            IdConsultor = idConsultor
         };
 
         if (tipoCobertura != TipoCobertura.SomenteDependentes)

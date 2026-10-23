@@ -63,6 +63,7 @@ Em Development a API aplica as migrations de todos os módulos e roda o seed ao 
 | ADMIN da plataforma | `admin@funeraria.localhost` + `SEED_ADMIN_SENHA` (ou `Seed:AdminSenha`), **sem** X-Tenant |
 | Gestor da demo (FUNERARIA) | `gestor@demo.localhost` + `SEED_SENHA_DEMO` (ou `Seed:SenhaDemo`), X-Tenant `demo` |
 | Funcionário da demo | `funcionario@demo.localhost` + a mesma senha da demo, X-Tenant `demo` |
+| Consultor da demo | `consultor@demo.localhost` + a mesma senha da demo, X-Tenant `demo` |
 | Cliente da demo (CLIENTE) | `cliente@demo.localhost` + a mesma senha da demo, X-Tenant `demo` |
 
 **Testando pelo Swagger:** preencha o campo `X-Tenant` com `demo`, chame `POST /api/v1/auth/login`, copie o
@@ -166,7 +167,7 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 
 | Módulo | Schema | Estado |
 |---|---|---|
-| Identidade | `identidade` | Login, refresh token com rotação, logout, minhas funerárias, convite, definição e recuperação de senha, confirmação de e-mail (AUT-01 a AUT-05) |
+| Identidade | `identidade` | Login, refresh token com rotação, logout, minhas funerárias, convite, definição, recuperação e troca de senha, confirmação de e-mail, equipe da funerária com funcionários e consultores (AUT-01 a AUT-08) |
 | Tenants | `tenants` | Auto-cadastro e cadastro pelo ADMIN, aprovação/suspensão, configurações da funerária (TEN-01 a TEN-03) |
 | Clientes | `clientes` | Cadastro do cliente (conta + vínculo CLIENTE), meus dados, dependentes e busca pela equipe (Criar Cliente, Criar Dependente, CLI-01 a CLI-03) |
 | Planos | `planos` | Gestão de planos, configurações em jsonb e planos modelo copiados para cada funerária nova (PLA-01, PLA-03) |

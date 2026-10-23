@@ -6,6 +6,9 @@ public static class Perfis
     public const string Admin = "ADMIN";
     public const string Funeraria = "FUNERARIA";
     public const string Funcionario = "FUNCIONARIO";
+
+    /// <summary>Atendimento e vendas da funerária: guia a família nas escolhas (DEC-11).</summary>
+    public const string Consultor = "CONSULTOR";
     public const string Cliente = "CLIENTE";
     public const string Terceiro = "TERCEIRO";
 }
@@ -24,9 +27,15 @@ public static class Politicas
     public const string Plataforma = nameof(Plataforma);
     public const string GestaoFuneraria = nameof(GestaoFuneraria);
     public const string EquipeFuneraria = nameof(EquipeFuneraria);
+
+    /// <summary>
+    /// Quem atende a família: gestor, funcionário e consultor (DEC-11). Clientes e contratação.
+    /// Operação interna (baixa manual, por exemplo) continua em <see cref="EquipeFuneraria"/>.
+    /// </summary>
+    public const string Atendimento = nameof(Atendimento);
     public const string Cliente = nameof(Cliente);
 
-    /// <summary>Cliente ou equipe da funerária. O caso de uso limita o cliente aos próprios registros (DEC-06).</summary>
+    /// <summary>Cliente ou quem o atende na funerária. O caso de uso limita o cliente aos próprios registros (DEC-06).</summary>
     public const string ClienteOuEquipe = nameof(ClienteOuEquipe);
     public const string TerceiroFrota = nameof(TerceiroFrota);
     public const string TerceiroDespachante = nameof(TerceiroDespachante);

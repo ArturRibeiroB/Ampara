@@ -16,8 +16,8 @@ using Microsoft.AspNetCore.Routing;
 namespace Funeraria.Modules.Contratos.Endpoints;
 
 /// <summary>
-/// Contratação (card Criar Contrato) e consulta (CON-01). O cliente contrata para si, com o titular vindo do token; a equipe da funerária
-/// (FUNERARIA e FUNCIONARIO, DEC-06) contrata para um cliente informado.
+/// Contratação (card Criar Contrato) e consulta (CON-01). O cliente contrata para si, com o titular vindo do token; quem atende
+/// na funerária (FUNERARIA, FUNCIONARIO e CONSULTOR, DEC-06 e DEC-11) contrata para um cliente informado.
 /// </summary>
 internal sealed class ContratosEndpoints : IEndpoint
 {
@@ -44,7 +44,7 @@ internal sealed class ContratosEndpoints : IEndpoint
         app.MapPost("gestao/contratos", async (ContratarParaClienteRequest r, ISender sender, CancellationToken ct) =>
                 Criado(await sender.Send(
                     new CriarContratoCommand(r.IdCliente, r.IdPlano, r.TipoCobertura, r.Dependentes, r.Periodicidade, r.DiaVencimento), ct)))
-            .RequireAuthorization(Politicas.EquipeFuneraria)
+            .RequireAuthorization(Politicas.Atendimento)
             .WithTags(Tag)
             .WithName("ContratarParaCliente")
             .WithSummary("A equipe da funerária cria o contrato de um cliente")
@@ -94,7 +94,7 @@ internal sealed class ContratosEndpoints : IEndpoint
                 string? direcao = null) =>
                 (await sender.Send(new BuscarContratosQuery(
                     new PaginaRequest(pagina, tamanho), status, idPlano, cpf, new OrdenacaoRequest(ordenarPor, direcao)), ct)).Match(Results.Ok))
-            .RequireAuthorization(Politicas.EquipeFuneraria)
+            .RequireAuthorization(Politicas.Atendimento)
             .WithTags(Tag)
             .WithName("BuscarContratos")
             .WithSummary("Busca contratos da funerária por status, plano e CPF do titular")

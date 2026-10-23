@@ -4,6 +4,8 @@ using System.Text.Json.Nodes;
 using Funeraria.BuildingBlocks.Application.Authorization;
 using Funeraria.Modules.Contratos.Contracts.IntegrationEvents;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
+using Funeraria.Testing;
+using Microsoft.IdentityModel.JsonWebTokens;
 using static Funeraria.Modules.Contratos.IntegrationTests.ContratosApiFactory;
 
 namespace Funeraria.Modules.Contratos.IntegrationTests;
@@ -267,6 +269,26 @@ public sealed class CriarContratoTests(ContratosApiFactory factory)
         Assert.Equal(HttpStatusCode.Created, pelaEquipe.StatusCode);
         Assert.Equal(cliente.IdCliente, (await pelaEquipe.Content.ReadFromJsonAsync<JsonObject>(Json, Ct))!["id_cliente"]!.GetValue<Guid>());
         Assert.Equal(HttpStatusCode.Forbidden, peloCliente.StatusCode);
+    }
+
+    [Fact]
+    public async Task Consultor_contrata_para_a_familia_e_fica_registrado_no_contrato()
+    {
+        FunerariaDeTeste funeraria = await factory.CriarFunerariaContratavelAsync();
+        Guid plano = await funeraria.CriarPlanoAsync();
+        ClienteDeTeste cliente = await funeraria.CriarClienteAsync();
+        string token = TokenDeTeste.Gerar(Perfis.Consultor, funeraria.Tenant);
+
+        HttpResponseMessage response = await factory.Http(funeraria.Slug, token).PostAsJsonAsync("/api/v1/gestao/contratos",
+            new { id_cliente = cliente.IdCliente, id_plano = plano, tipo_cobertura = "TITULAR", periodicidade = "MENSAL" }, Json, Ct);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        JsonObject contrato = (await response.Content.ReadFromJsonAsync<JsonObject>(Json, Ct))!;
+        Assert.Equal(Guid.Parse(new JsonWebToken(token).Subject), contrato["id_consultor"]!.GetValue<Guid>());
+
+        // Contratado pelo próprio cliente: sem consultor.
+        JsonObject proprio = await CriarAsync(cliente.Http, new { id_plano = await funeraria.CriarPlanoAsync(), tipo_cobertura = "TITULAR", periodicidade = "MENSAL" });
+        Assert.Null(proprio["id_consultor"]);
     }
 
     [Fact]
