@@ -7,7 +7,11 @@ using FunerariaEntity = Funeraria.Modules.Tenants.Domain.Funerarias.Funeraria;
 
 namespace Funeraria.Modules.Tenants.Infrastructure.Database;
 
-/// <summary>Funerária de demonstração, só para desenvolvimento e testes (INF-16). Idempotente.</summary>
+/// <summary>
+/// Funerária de demonstração, só para desenvolvimento e testes (INF-16). Idempotente.
+/// Nasce pelo mesmo cadastro das outras: o evento FunerariaCriada copia os planos e o catálogo modelo (já ativos na demo).
+/// Os seeds rodam antes do outbox: quando o evento chega, a Identidade já criou o gestor com senha e o vínculo.
+/// </summary>
 internal sealed class TenantsSeed(TenantsDbContext context, IOptions<SeedOptions> options) : IModuleSeeder
 {
     public int Ordem => 10;
@@ -19,7 +23,7 @@ internal sealed class TenantsSeed(TenantsDbContext context, IOptions<SeedOptions
             return;
         }
 
-        context.Funerarias.Add(FunerariaEntity.Criar(
+        var demo = FunerariaEntity.Cadastrar(
             nomeFantasia: "Funerária Demonstração",
             razaoSocial: "Funerária Demonstração Ltda",
             cnpj: "11222333000181",
@@ -27,7 +31,10 @@ internal sealed class TenantsSeed(TenantsDbContext context, IOptions<SeedOptions
             emailContato: "contato@demo.localhost",
             telefone: null,
             origem: OrigemCadastro.Admin,
-            status: StatusFuneraria.Ativa));
+            gestorNome: "Gestor Demonstração",
+            gestorEmail: FunerariaDemonstracao.EmailGestor);
+        demo.AlterarStatus(StatusFuneraria.Ativa);
+        context.Funerarias.Add(demo);
 
         await context.SaveChangesAsync(cancellationToken);
     }

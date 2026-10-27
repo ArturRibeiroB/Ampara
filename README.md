@@ -65,6 +65,11 @@ Em Development a API aplica as migrations de todos os módulos e roda o seed ao 
 | Funcionário da demo | `funcionario@demo.localhost` + a mesma senha da demo, X-Tenant `demo` |
 | Consultor da demo | `consultor@demo.localhost` + a mesma senha da demo, X-Tenant `demo` |
 | Cliente da demo (CLIENTE) | `cliente@demo.localhost` + a mesma senha da demo, X-Tenant `demo` |
+| Terceiros da demo (TERCEIRO) | `frota@demo.localhost`, `despachante@demo.localhost` e `fornecedor@demo.localhost` + a mesma senha, X-Tenant `demo` |
+
+A demo já começa com os planos e o catálogo modelo **ativos** (as funerárias novas recebem tudo inativo) e com as
+regras de cobrança padrão, então o cliente da demo já consegue contratar. Banco criado antes desta versão do seed
+não recebe os planos e o catálogo: recrie o volume do Postgres (`docker compose down -v`) para gerar a demo de novo.
 
 **Testando pelo Swagger:** preencha o campo `X-Tenant` com `demo`, chame `POST /api/v1/auth/login`, copie o
 `access_token`, clique em **Authorize** e cole o token. No navegador, a funerária também pode vir do

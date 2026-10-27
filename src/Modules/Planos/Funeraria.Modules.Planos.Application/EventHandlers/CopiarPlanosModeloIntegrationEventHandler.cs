@@ -2,6 +2,7 @@ using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Application.Events;
 using Funeraria.Modules.Planos.Application.Abstractions;
 using Funeraria.Modules.Planos.Domain.Planos;
+using Funeraria.Modules.Tenants.Contracts;
 using Funeraria.Modules.Tenants.Contracts.IntegrationEvents;
 
 namespace Funeraria.Modules.Planos.Application.EventHandlers;
@@ -36,7 +37,7 @@ internal sealed class CopiarPlanosModeloIntegrationEventHandler(
                 permiteSomenteDependente: false,
                 modelo.Configuracoes);
 
-            plano.AlterarStatus(false);
+            plano.AlterarStatus(FunerariaDemonstracao.E(evento.Slug));
             planos.Adicionar(plano);
         }
 

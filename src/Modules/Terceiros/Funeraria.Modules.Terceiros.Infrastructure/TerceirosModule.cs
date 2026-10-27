@@ -1,4 +1,5 @@
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
+using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Funeraria.Modules.Terceiros.Application.Abstractions;
 using Funeraria.Modules.Terceiros.Application.Atribuicoes;
 using Funeraria.Modules.Terceiros.Application.Cadastro;
@@ -25,6 +26,7 @@ public static class TerceirosModule
         services.AddScoped<IAtribuicaoRepository, AtribuicaoRepository>();
         services.AddScoped<ITerceirosAtribuicoes, AtribuicoesTerceiros>();
         services.AddScoped<ITerceirosConsultas, ConsultasTerceiros>();
+        services.AddScoped<IModuleSeeder, TerceirosSeed>();
 
         return services;
     }

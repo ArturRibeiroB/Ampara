@@ -15,7 +15,8 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database;
 /// <list type="bullet">
 /// <item>Role global ADMIN.</item>
 /// <item>ADMIN da plataforma, com e-mail e senha vindos de configuração ou secret.</item>
-/// <item>Em demonstração: gestor e funcionário da funerária "demo", com a senha de <c>Seed:SenhaDemo</c>.</item>
+/// <item>Em demonstração: gestor, funcionário e consultor da funerária "demo", com a senha de <c>Seed:SenhaDemo</c>,
+/// e as contas dos terceiros (o vínculo TERCEIRO nasce do cadastro no módulo Terceiros, TerceirosSeed).</item>
 /// </list>
 /// </summary>
 internal sealed partial class IdentidadeSeed(
@@ -28,7 +29,7 @@ internal sealed partial class IdentidadeSeed(
     ILogger<IdentidadeSeed> logger)
     : IModuleSeeder
 {
-    public const string EmailGestorDemo = "gestor@demo.localhost";
+    public const string EmailGestorDemo = FunerariaDemonstracao.EmailGestor;
     public const string EmailFuncionarioDemo = "funcionario@demo.localhost";
     public const string EmailConsultorDemo = "consultor@demo.localhost";
 
@@ -80,11 +81,14 @@ internal sealed partial class IdentidadeSeed(
             return;
         }
 
-        // O cliente de demonstração é criado pelo módulo Clientes (ClientesSeed); o terceiro, quando o módulo
-        // Terceiros existir, porque o vínculo deles aponta para o cadastro nesses módulos.
+        // O cliente de demonstração é criado pelo módulo Clientes (ClientesSeed) e os terceiros pelo Terceiros
+        // (TerceirosSeed), porque o vínculo deles aponta para o cadastro nesses módulos. Aqui só ficam as contas com senha.
         await VincularAsync(EmailGestorDemo, "Gestor Demonstração", PerfilVinculo.Funeraria, demo.IdTenant, cancellationToken);
         await VincularAsync(EmailFuncionarioDemo, "Funcionário Demonstração", PerfilVinculo.Funcionario, demo.IdTenant, cancellationToken);
         await VincularAsync(EmailConsultorDemo, "Consultor Demonstração", PerfilVinculo.Consultor, demo.IdTenant, cancellationToken);
+        await ObterOuCriarAsync(FunerariaDemonstracao.EmailFrota, "Translados Demonstração", _options.SenhaDemo);
+        await ObterOuCriarAsync(FunerariaDemonstracao.EmailDespachante, "Despachante Demonstração", _options.SenhaDemo);
+        await ObterOuCriarAsync(FunerariaDemonstracao.EmailFornecedor, "Fornecedor Demonstração", _options.SenhaDemo);
     }
 
     private async Task VincularAsync(string email, string nome, PerfilVinculo perfil, Guid idTenant, CancellationToken cancellationToken)
