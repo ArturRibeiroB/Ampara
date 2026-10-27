@@ -9,6 +9,8 @@ public sealed record ParametrosFuneraria
     public ParametrosCobranca Cobranca { get; init; } = new();
 
     public ParametrosLembretes Lembretes { get; init; } = new();
+
+    public ParametrosTerceiros Terceiros { get; init; } = new();
 }
 
 public sealed record ParametrosCobranca
@@ -67,6 +69,12 @@ public sealed record ParametrosLembretes
         other is not null && DiasAntes.SequenceEqual(other.DiasAntes) && DiasDepois.SequenceEqual(other.DiasDepois);
 
     public override int GetHashCode() => HashCode.Combine(DiasAntes.Count, DiasDepois.Count);
+}
+
+public sealed record ParametrosTerceiros
+{
+    /// <summary>Horas que o terceiro tem para aceitar ou recusar um serviço (TER-02).</summary>
+    public int PrazoAceiteHoras { get; init; } = 24;
 }
 
 public enum ModoVencimento

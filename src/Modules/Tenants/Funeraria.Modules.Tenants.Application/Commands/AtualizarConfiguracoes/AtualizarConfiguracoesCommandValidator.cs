@@ -54,6 +54,7 @@ internal sealed class ParametrosFunerariaValidator : AbstractValidator<Parametro
     {
         RuleFor(p => p.Cobranca).NotNull().WithMessage("Parâmetros de cobrança são obrigatórios.");
         RuleFor(p => p.Lembretes).NotNull().WithMessage("Parâmetros de lembretes são obrigatórios.");
+        RuleFor(p => p.Terceiros).NotNull().WithMessage("Parâmetros dos terceiros são obrigatórios.");
 
         When(p => p.Cobranca is not null, () =>
         {
@@ -92,5 +93,9 @@ internal sealed class ParametrosFunerariaValidator : AbstractValidator<Parametro
             RuleFor(p => p.Lembretes.DiasDepois)
                 .Must(d => d.All(dia => dia is >= 1 and <= 30)).WithMessage("Lembretes depois do vencimento: de 1 a 30 dias.");
         });
+
+        When(p => p.Terceiros is not null, () =>
+            RuleFor(p => p.Terceiros.PrazoAceiteHoras)
+                .InclusiveBetween(1, 168).WithMessage("Prazo para o terceiro responder: de 1 a 168 horas (7 dias)."));
     }
 }

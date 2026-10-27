@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 using Funeraria.BuildingBlocks.Application.Authorization;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.BuildingBlocks.Infrastructure.Tenancy;
+using Funeraria.Modules.Tenants.Domain.Funerarias;
 using Funeraria.Modules.Terceiros.Contracts;
 using Funeraria.Modules.Terceiros.Contracts.IntegrationEvents;
 using Funeraria.Testing;
@@ -67,6 +68,22 @@ public sealed class AtribuicoesTests(TerceirosApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, recusa.StatusCode);
         AtribuicaoRecusadaIntegrationEvent evento = await factory.Eventos.AguardarAsync<AtribuicaoRecusadaIntegrationEvent>(e => e.IdAtribuicao == id);
         Assert.Equal("Sem estoque de coroas.", evento.Motivo);
+    }
+
+    [Fact]
+    public async Task Prazo_de_aceite_vem_da_configuracao_da_funeraria()
+    {
+        (Guid tenant, string slug) = await factory.CriarFunerariaAsync();
+        await factory.AlterarParametrosAsync(tenant, p => p with { Terceiros = new ParametrosTerceiros { PrazoAceiteHoras = 48 } });
+        Guid frota = await CadastrarAsync(tenant, slug, "FROTA");
+        DateTime antes = DateTime.UtcNow;
+
+        await AtribuirAsync(tenant, new NovaAtribuicao(frota, Guid.NewGuid(), Translado()));
+
+        JsonNode item = Assert.Single((await Terceiro(tenant, slug, frota, TiposTerceiro.Frota)
+            .GetFromJsonAsync<JsonArray>("/api/v1/terceiros/atribuicoes", Json, Ct))!)!;
+        DateTime prazo = item["prazo_aceite"]!.GetValue<DateTime>().ToUniversalTime();
+        Assert.InRange(prazo, antes.AddHours(48).AddMinutes(-1), DateTime.UtcNow.AddHours(48).AddMinutes(1));
     }
 
     [Fact]
