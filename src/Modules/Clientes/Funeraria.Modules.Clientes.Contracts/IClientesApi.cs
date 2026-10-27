@@ -14,6 +14,9 @@ public interface IClientesApi
     /// <summary>Titular pelo CPF (só dígitos), dentro da funerária atual.</summary>
     Task<TitularDto?> ObterTitularPorCpfAsync(string cpf, CancellationToken cancellationToken = default);
 
+    /// <summary>Dependentes ativos do titular, por nome.</summary>
+    Task<IReadOnlyList<DependenteDto>> ListarDependentesDoTitularAsync(Guid idCliente, CancellationToken cancellationToken = default);
+
     /// <summary>Dependentes com os ids informados, de qualquer titular da funerária. Ids sem dependente ficam de fora.</summary>
     Task<IReadOnlyList<DependenteDto>> ObterDependentesAsync(IReadOnlyCollection<Guid> idsDependente, CancellationToken cancellationToken = default);
 }

@@ -12,6 +12,12 @@ public interface IContratosApi
     /// </summary>
     Task<ElegibilidadeDto?> VerificarElegibilidadeAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Plano do contrato que cobre a pessoa hoje (titular, ou o dependente informado), para mostrar o que está coberto
+    /// (FUN-02). Com mais de um contrato, vale o ativo mais recente. Nulo se ninguém cobre a pessoa.
+    /// </summary>
+    Task<Guid?> PlanoQueCobreAsync(Guid idCliente, Guid? idDependente, CancellationToken cancellationToken = default);
+
     /// <summary>Contratos do cliente, para a exportação dos dados pelo titular (SEG-01).</summary>
     Task<IReadOnlyList<ContratoDoClienteDto>> ListarDoClienteAsync(Guid idCliente, CancellationToken cancellationToken = default);
 }

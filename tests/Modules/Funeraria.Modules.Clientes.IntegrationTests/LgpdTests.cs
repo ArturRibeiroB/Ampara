@@ -64,6 +64,7 @@ public sealed class LgpdTests(ClientesApiFactory factory)
         Assert.Equal((string)corpo["cpf"]!, exportacao["titular"]!["cpf"]!.GetValue<string>());
         Assert.Equal("Pedro", Assert.Single(exportacao["dependentes"]!.AsArray())!["nome"]!.GetValue<string>());
         Assert.Empty(exportacao["contratos"]!.AsArray());
+        Assert.Empty(exportacao["preferencias_funeral"]!.AsArray());
         Assert.Equal(["POLITICA_DE_PRIVACIDADE", "TERMOS_DE_USO"],
             exportacao["aceites_termos"]!.AsArray().Select(a => a!["documento"]!.GetValue<string>()).Order());
     }

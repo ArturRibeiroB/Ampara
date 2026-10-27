@@ -5,13 +5,14 @@ using Funeraria.Modules.Clientes.Domain;
 using Funeraria.Modules.Clientes.Domain.Clientes;
 using Funeraria.Modules.Clientes.Domain.Dependentes;
 using Funeraria.Modules.Contratos.Contracts;
+using Funeraria.Modules.Funeral.Contracts;
 using Funeraria.Modules.Identidade.Contracts;
 
 namespace Funeraria.Modules.Clientes.Application.Queries.ExportarMeusDados;
 
 /// <summary>
-/// O titular baixa os próprios dados guardados nesta funerária (SEG-01, LGPD art. 18): cadastro, dependentes, contratos e
-/// aceites de termos. Cada módulo entrega a sua parte pela própria API.
+/// O titular baixa os próprios dados guardados nesta funerária (SEG-01, LGPD art. 18): cadastro, dependentes, contratos,
+/// aceites de termos e preferências de funeral. Cada módulo entrega a sua parte pela própria API.
 /// </summary>
 public sealed record ExportarMeusDadosQuery : IQuery<ExportacaoDadosResponse>;
 
@@ -20,18 +21,21 @@ public sealed record ExportarMeusDadosQuery : IQuery<ExportacaoDadosResponse>;
 /// <param name="Dependentes">Dependentes cadastrados pelo titular.</param>
 /// <param name="Contratos">Contratos do titular nesta funerária.</param>
 /// <param name="AceitesTermos">Histórico de aceite dos termos de uso e da política de privacidade.</param>
+/// <param name="PreferenciasFuneral">Preferências de funeral registradas em vida (FUN-02).</param>
 public sealed record ExportacaoDadosResponse(
     DateTime GeradoEm,
     ClienteResponse Titular,
     IReadOnlyList<DependenteResponse> Dependentes,
     IReadOnlyList<ContratoDoClienteDto> Contratos,
-    IReadOnlyList<AceiteTermosDto> AceitesTermos);
+    IReadOnlyList<AceiteTermosDto> AceitesTermos,
+    IReadOnlyList<PreferenciaExportadaDto> PreferenciasFuneral);
 
 public sealed class ExportarMeusDadosQueryHandler(
     IClienteRepository clientes,
     IDependenteRepository dependentes,
     IContratosApi contratos,
     IIdentidadeApi identidade,
+    IFuneralApi funeral,
     ICurrentUser usuario,
     TimeProvider timeProvider)
     : IQueryHandler<ExportarMeusDadosQuery, ExportacaoDadosResponse>
@@ -50,6 +54,7 @@ public sealed class ExportarMeusDadosQueryHandler(
             ClienteResponse.De(cliente),
             [.. doTitular.Select(DependenteResponse.De)],
             await contratos.ListarDoClienteAsync(cliente.Id, cancellationToken),
-            await identidade.ListarAceitesTermosAsync(cliente.IdUsuario, cancellationToken));
+            await identidade.ListarAceitesTermosAsync(cliente.IdUsuario, cancellationToken),
+            await funeral.ListarPreferenciasDoTitularAsync(cliente.Id, cancellationToken));
     }
 }

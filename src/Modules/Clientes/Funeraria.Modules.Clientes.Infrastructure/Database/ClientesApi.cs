@@ -33,6 +33,14 @@ internal sealed class ClientesApi(ClientesDbContext context) : IClientesApi
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<DependenteDto>> ListarDependentesDoTitularAsync(Guid idCliente, CancellationToken cancellationToken = default) =>
+        await context.Dependentes
+            .AsNoTracking()
+            .Where(d => d.IdCliente == idCliente && d.RemovidoEm == null)
+            .OrderBy(d => d.Nome)
+            .Select(d => new DependenteDto(d.Id, d.IdCliente, d.Nome, d.Cpf))
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<DependenteDto>> ObterDependentesAsync(
         IReadOnlyCollection<Guid> idsDependente,
         CancellationToken cancellationToken = default) =>

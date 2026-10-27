@@ -6,6 +6,17 @@ namespace Funeraria.Modules.Contratos.Application;
 
 public sealed class ContratosApi(IContratoRepository contratos, TimeProvider timeProvider) : IContratosApi
 {
+    public async Task<Guid?> PlanoQueCobreAsync(Guid idCliente, Guid? idDependente, CancellationToken cancellationToken = default) =>
+        (await contratos.ListarDoClienteAsync(idCliente, cancellationToken))
+            .Where(c => c.Status != StatusContrato.Cancelado)
+            .Where(c => c.PessoasCobertas.Any(p => p.DataRemocao is null && (idDependente is null
+                ? p.Tipo == TipoPessoaCoberta.Titular
+                : p.IdDependente == idDependente)))
+            .OrderByDescending(c => c.Status == StatusContrato.Ativo)
+            .ThenByDescending(c => c.DataContratacao)
+            .Select(c => (Guid?)c.IdPlano)
+            .FirstOrDefault();
+
     public async Task<IReadOnlyList<ContratoDoClienteDto>> ListarDoClienteAsync(Guid idCliente, CancellationToken cancellationToken = default) =>
         (await contratos.ListarDoClienteAsync(idCliente, cancellationToken))
             .Select(c => new ContratoDoClienteDto(

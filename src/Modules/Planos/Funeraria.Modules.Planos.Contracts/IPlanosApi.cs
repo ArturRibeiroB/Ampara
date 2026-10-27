@@ -7,7 +7,12 @@ namespace Funeraria.Modules.Planos.Contracts;
 public interface IPlanosApi
 {
     Task<PlanoDto?> ObterPlanoAsync(Guid idPlano, CancellationToken cancellationToken = default);
+
+    /// <summary>Itens do catálogo cobertos pelo plano (PLA-02). Vazio se o plano não existir.</summary>
+    Task<IReadOnlyList<CoberturaPlanoDto>> ObterCoberturasAsync(Guid idPlano, CancellationToken cancellationToken = default);
 }
+
+public sealed record CoberturaPlanoDto(Guid IdItemCatalogo, int Quantidade, int? KmTransladoIncluso);
 
 public sealed record PlanoDto(
     Guid IdPlano,
