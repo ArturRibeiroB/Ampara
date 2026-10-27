@@ -125,6 +125,8 @@ O `MigrationsTests` falha quando algum módulo muda o modelo sem criar a migrati
 2. Todos os testes (o runner do GitHub tem Docker para os Testcontainers).
 3. Push na `main` ou na `developer`: imagem da API em `ghcr.io/<dono>/<repositorio>-api`, com a tag da branch e do commit.
 4. Tag `vX.Y.Z`: imagem com a versão e release no GitHub com o `openapi.json` da mesma versão.
+5. Contrato (oasdiff): compara o `openapi.json` novo com o da última release e escreve as mudanças no resumo do run.
+   Quebra de contrato só gera aviso no dia a dia; na tag, falha se a versão maior não subiu (ver abaixo).
 
 Para **bloquear o merge com testes falhando**: Settings → Branches → regra para `main` e `developer` →
 *Require status checks to pass* → marque **Build e testes**.
@@ -133,6 +135,27 @@ Gerar o openapi.json localmente:
 
 ```bash
 dotnet build src/Funeraria.Api -p:OpenApiGenerateDocumentsOnBuild=true
+```
+
+## Contrato da API e versões (INF-21)
+
+O `openapi.json` é o contrato com o frontend. Cada release publica o arquivo e a imagem Docker com a mesma versão,
+e o `info.version` do documento é essa versão (fora de release, `X.Y.Z-dev`).
+
+- **Versionamento semântico:** quebra de contrato (remover ou renomear campo/endpoint, mudar tipo, tornar campo
+  obrigatório) = versão maior; endpoint ou campo novo = versão menor; correção sem mudar o contrato = patch.
+  Enquanto estivermos em `0.x`, quebra de contrato sobe a versão menor.
+- **Obsoleto antes de remover:** endpoint com `.MarcarObsoleto("GET /api/v1/novo")`; campo de request/response com
+  `[property: Obsolete("Use novo_campo.")]`. Os dois saem como `deprecated` no OpenAPI. A remoção vem numa versão maior.
+- **CHANGELOG:** toda mudança que o frontend precisa saber entra em [`CHANGELOG.md`](CHANGELOG.md), na seção
+  "Não publicado". No release, a seção vira a versão.
+- **Release:** suba a seção do CHANGELOG, crie a tag (`git tag v0.2.0 && git push origin v0.2.0`) e depois suba o
+  `VersionPrefix` do `Directory.Build.props` para a próxima versão planejada.
+
+Ver a comparação localmente (com Docker):
+
+```bash
+docker run --rm -v "$PWD:/specs" tufin/oasdiff:v1.34.1 changelog /specs/base.json /specs/artifacts/openapi/openapi.json
 ```
 
 ## Estrutura

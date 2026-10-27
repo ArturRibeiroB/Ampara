@@ -19,6 +19,14 @@ internal static class OpenApiExtensions
 
     private const string Titulo = "Funerária Online API";
 
+    /// <summary>
+    /// Versão do contrato no <c>info.version</c>: a da tag do release (vX.Y.Z → X.Y.Z), passada no build pelo CI.
+    /// Fora de um release fica <c>X.Y.Z-dev</c> (INF-21). O metadado de build (+commit) fica de fora.
+    /// </summary>
+    public static string VersaoContrato { get; } =
+        typeof(OpenApiExtensions).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]
+        ?? "0.0.0";
+
     public static IServiceCollection AddDocumentacaoApi(this IServiceCollection services)
     {
         services.AddOpenApi("v1", options =>
@@ -26,7 +34,7 @@ internal static class OpenApiExtensions
             options.AddDocumentTransformer((document, _, _) =>
             {
                 document.Info.Title = Titulo;
-                document.Info.Version = "v1";
+                document.Info.Version = VersaoContrato;
                 document.Info.Description =
                     "Para testar pelo Swagger: informe o X-Tenant (ex.: demo), faça POST /api/v1/auth/login " +
                     "e cole o access_token em Authorize.";
@@ -34,6 +42,8 @@ internal static class OpenApiExtensions
             });
             options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
             options.AddOperationTransformer<TenantHeaderTransformer>();
+            options.AddOperationTransformer<ObsoletoTransformer>();
+            options.AddSchemaTransformer<ObsoletoTransformer>();
         });
 
         return services;
@@ -87,6 +97,33 @@ internal static class OpenApiExtensions
             {
                 [new OpenApiSecuritySchemeReference(Scheme, document)] = []
             });
+
+            return Task.CompletedTask;
+        }
+    }
+
+    /// <summary>
+    /// Marca como <c>deprecated</c> o que tem <see cref="ObsoleteAttribute"/>: endpoint com <c>.MarcarObsoleto()</c> e
+    /// propriedade de request/response com <c>[property: Obsolete]</c>. Obsoleto antes de remover (INF-21).
+    /// </summary>
+    private sealed class ObsoletoTransformer : IOpenApiOperationTransformer, IOpenApiSchemaTransformer
+    {
+        public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
+        {
+            if (context.Description.ActionDescriptor.EndpointMetadata.OfType<ObsoleteAttribute>().Any())
+            {
+                operation.Deprecated = true;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
+        {
+            if (context.JsonPropertyInfo?.AttributeProvider?.IsDefined(typeof(ObsoleteAttribute), inherit: true) == true)
+            {
+                schema.Deprecated = true;
+            }
 
             return Task.CompletedTask;
         }

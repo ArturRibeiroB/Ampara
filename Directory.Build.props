@@ -10,5 +10,11 @@
     <!-- CS1591: comentário XML ausente em membro público. A documentação é exigida só nos endpoints (INF-09). -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!--
+      Versão da API e do contrato OpenAPI (INF-21). Na tag vX.Y.Z o CI passa -p:Version=X.Y.Z; fora dela fica
+      <próxima versão>-dev. Depois de cada release, suba o VersionPrefix para a próxima versão planejada.
+    -->
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionSuffix>dev</VersionSuffix>
   </PropertyGroup>
 </Project>
