@@ -3,8 +3,21 @@ using Funeraria.Modules.Contratos.Domain.Contratos;
 
 namespace Funeraria.Modules.Contratos.Application;
 
-public sealed class ContratosApi(IContratoRepository contratos) : IContratosApi
+public sealed class ContratosApi(IContratoRepository contratos, TimeProvider timeProvider) : IContratosApi
 {
+    public async Task<ElegibilidadeDto?> VerificarElegibilidadeAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default)
+    {
+        Contrato? contrato = await contratos.ObterPorPessoaCobertaAsync(idPessoaCoberta, cancellationToken);
+        PessoaCoberta? pessoa = contrato?.PessoasCobertas.FirstOrDefault(p => p.Id == idPessoaCoberta);
+        if (contrato is null || pessoa is null)
+        {
+            return null;
+        }
+
+        Elegibilidade e = contrato.AvaliarElegibilidade(pessoa, DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime));
+        return new ElegibilidadeDto(pessoa.Id, contrato.Id, contrato.IdCliente, pessoa.IdDependente, e.Elegivel, e.Motivo, e.CarenciaCumpridaEm);
+    }
+
     public async Task<bool> DependentePossuiContratoAtivoAsync(Guid idDependente, CancellationToken cancellationToken = default) =>
         (await contratos.DependentesCobertosAsync([idDependente], cancellationToken)).Count > 0;
 }

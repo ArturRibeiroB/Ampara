@@ -60,5 +60,8 @@ public interface IContratoRepository
     /// <summary>Dos dependentes informados, os que já estão cobertos por um contrato não cancelado.</summary>
     Task<IReadOnlyList<Guid>> DependentesCobertosAsync(IReadOnlyCollection<Guid> idsDependentes, CancellationToken cancellationToken = default);
 
+    /// <summary>Contrato que tem a pessoa coberta informada.</summary>
+    Task<Contrato?> ObterPorPessoaCobertaAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default);
+
     void Adicionar(Contrato contrato);
 }
