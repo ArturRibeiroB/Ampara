@@ -24,6 +24,9 @@ public interface IIdentidadeApi
     /// <summary>Histórico de aceites da conta, para a exportação dos dados pelo titular (SEG-01).</summary>
     Task<IReadOnlyList<AceiteTermosDto>> ListarAceitesTermosAsync(Guid idUsuario, CancellationToken cancellationToken = default);
 
+    /// <summary>Contas dos gestores (FUNERARIA) ativos da funerária, para avisos à funerária (NOT-02).</summary>
+    Task<IReadOnlyList<Guid>> ListarGestoresAtivosAsync(Guid idTenant, CancellationToken cancellationToken = default);
+
     /// <summary>A conta já tem algum vínculo (de qualquer perfil) com a funerária.</summary>
     Task<bool> PossuiVinculoAsync(Guid idUsuario, Guid idTenant, CancellationToken cancellationToken = default);
 

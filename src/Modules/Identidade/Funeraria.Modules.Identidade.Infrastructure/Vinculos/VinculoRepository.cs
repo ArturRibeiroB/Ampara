@@ -15,6 +15,12 @@ internal sealed class VinculoRepository(IdentidadeDbContext context) : IVinculoR
             .Where(v => v.IdUsuario == idUsuario && v.Ativo)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Guid>> ListarGestoresAtivosAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
+        await context.Vinculos
+            .Where(v => v.IdTenant == idTenant && v.Perfil == PerfilVinculo.Funeraria && v.Ativo)
+            .Select(v => v.IdUsuario)
+            .ToListAsync(cancellationToken);
+
     public Task<int> ContarGestoresAtivosAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
         context.Vinculos.CountAsync(v => v.IdTenant == idTenant && v.Perfil == PerfilVinculo.Funeraria && v.Ativo, cancellationToken);
 

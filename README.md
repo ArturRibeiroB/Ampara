@@ -171,7 +171,7 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Tenants | `tenants` | Auto-cadastro e cadastro pelo ADMIN, aprovação/suspensão, configurações da funerária (TEN-01 a TEN-03) |
 | Clientes | `clientes` | Cadastro do cliente (conta + vínculo CLIENTE), meus dados, dependentes e busca pela equipe (Criar Cliente, Criar Dependente, CLI-01 a CLI-03) |
 | Planos | `planos` | Gestão de planos, configurações em jsonb, coberturas com itens do catálogo e planos modelo copiados para cada funerária nova (PLA-01, PLA-02, PLA-03) |
-| Notificacoes | — | Envio de e-mail por SMTP (Mailpit em desenvolvimento). Templates e provider de produção pendentes (NOT-01) |
+| Notificacoes | `notificacoes` | Envio de e-mail por SMTP (Mailpit em desenvolvimento; provider de produção pendente, NOT-01); central de notificações e entrega em tempo real pelo SignalR em `/hubs/notificacoes` (NOT-02) |
 | Contratos | `contratos` | Contratação pelo cliente (`POST /contratos`) e pela equipe (`POST /gestao/contratos`), com pessoas cobertas, valor e periodicidade da contratação; consulta pelo cliente e busca pela equipe (Criar Contrato, CON-01) |
 | Catalogo | `catalogo` | Categorias, itens, variações e imagens; catálogo modelo copiado para cada funerária nova; `ICatalogoConsultas` para os outros módulos (FUN-01) |
 | Terceiros | `terceiros` | Cadastro de parceiros (frota, despachante/cartório, fornecedor) com convite e acesso pela Identidade; portal do terceiro com a lista única de atribuições, aceite e recusa (TER-01, TER-02) |
@@ -224,6 +224,16 @@ e-mail com o nome, o logo e a cor da funerária e entrega pela fila `emails` do 
 - Desenvolvimento: tudo cai no Mailpit (http://localhost:8025).
 - Produção: configure `Email:Smtp` com o SMTP do provider. Resend: `smtp.resend.com`, porta 587, usuário `resend`,
   senha = API key. SendGrid: `smtp.sendgrid.net`, porta 587, usuário `apikey`, senha = API key. A senha vai em secret.
+
+## Notificações dentro do sistema
+
+Os módulos chamam `INotificacoes.NotificarAsync` (ou reagem a um evento de integração no próprio módulo Notificacoes).
+Cada destinatário ganha uma linha em `notificacoes.notificacoes` e, se estiver conectado, recebe na hora.
+
+- Central: `GET /api/v1/notificacoes?nao_lidas=true`, `PATCH /api/v1/notificacoes/{id}/lida`, `PATCH /api/v1/notificacoes/lidas`.
+- Tempo real: conecte em `/hubs/notificacoes?access_token=<jwt>` e escute o evento `notificacao` (mesmo JSON da central).
+- Já avisam: terceiro ao receber um serviço; gestores da funerária no aceite e na recusa (TER-02).
+- Com mais de uma instância da API é preciso o backplane Redis do SignalR (INF-19).
 
 ## Arquivos
 

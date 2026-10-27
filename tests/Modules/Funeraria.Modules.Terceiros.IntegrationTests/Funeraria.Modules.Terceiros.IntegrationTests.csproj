@@ -7,6 +7,9 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+    <!-- O cliente SignalR corrigido (10.0.13) pede esta versão; vale só para este projeto de testes. -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" VersionOverride="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>

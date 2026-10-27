@@ -16,6 +16,9 @@ public sealed class IdentidadeApi(
     RegistroDeAceites aceites)
     : IIdentidadeApi
 {
+    public Task<IReadOnlyList<Guid>> ListarGestoresAtivosAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
+        vinculos.ListarGestoresAtivosAsync(idTenant, cancellationToken);
+
     public Task RegistrarAceiteTermosAsync(Guid idUsuario, CancellationToken cancellationToken = default) =>
         aceites.RegistrarVigentesAsync(idUsuario, cancellationToken);
 
