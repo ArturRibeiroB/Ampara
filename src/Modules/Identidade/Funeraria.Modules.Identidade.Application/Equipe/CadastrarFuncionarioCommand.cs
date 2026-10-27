@@ -45,7 +45,8 @@ public sealed class CadastrarFuncionarioCommandHandler(
     IVinculoRepository vinculos,
     IFuncionarioRepository funcionarios,
     IIdentidadeUnitOfWork unitOfWork,
-    ITenantContext tenantContext)
+    ITenantContext tenantContext,
+    IAuditoria auditoria)
     : ICommandHandler<CadastrarFuncionarioCommand, MembroEquipeResponse>
 {
     public async ValueTask<Result<MembroEquipeResponse>> Handle(CadastrarFuncionarioCommand command, CancellationToken cancellationToken)
@@ -88,6 +89,10 @@ public sealed class CadastrarFuncionarioCommandHandler(
                 ? EquipeErros.CpfDuplicado
                 : EquipeErros.JaEhDaEquipe;
         }
+
+        await auditoria.RegistrarAsync(new RegistroAuditoria(
+            AcoesAuditadas.FuncionarioCadastrado, "Usuario", usuario.Id,
+            ValoresNovos: new { perfil = perfil.ToString(), funcionario.Nome, funcionario.Cargo }), cancellationToken);
 
         return new MembroEquipeResponse(
             usuario.Id, funcionario.Id, funcionario.Nome, usuario.Email, perfil, Ativo: true, funcionario.Cpf, funcionario.Cargo, funcionario.Telefone);

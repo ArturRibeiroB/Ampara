@@ -72,6 +72,69 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
                     b.ToTable("outbox_messages", "identidade");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Auditoria.RegistroDeAuditoria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_auditoria");
+
+                    b.Property<string>("Acao")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("acao");
+
+                    b.Property<DateTime>("DataHora")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_hora");
+
+                    b.Property<string>("Entidade")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("entidade");
+
+                    b.Property<Guid?>("IdEntidade")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_entidade");
+
+                    b.Property<Guid?>("IdTenant")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_tenant");
+
+                    b.Property<Guid?>("IdUsuario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<string>("Ip")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip");
+
+                    b.Property<bool>("Plataforma")
+                        .HasColumnType("boolean")
+                        .HasColumnName("plataforma");
+
+                    b.Property<string>("ValoresAnteriores")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("valores_anteriores");
+
+                    b.Property<string>("ValoresNovos")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("valores_novos");
+
+                    b.HasKey("Id")
+                        .HasName("pk_auditoria");
+
+                    b.HasIndex("Entidade", "IdEntidade")
+                        .HasDatabaseName("ix_auditoria_entidade_id_entidade");
+
+                    b.HasIndex("IdTenant", "DataHora")
+                        .HasDatabaseName("ix_auditoria_id_tenant_data_hora");
+
+                    b.ToTable("auditoria", "identidade");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Equipe.Funcionario", b =>
                 {
                     b.Property<Guid>("Id")

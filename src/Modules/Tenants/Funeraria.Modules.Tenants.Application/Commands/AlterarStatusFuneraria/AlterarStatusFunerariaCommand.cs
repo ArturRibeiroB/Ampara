@@ -1,4 +1,5 @@
 using FluentValidation;
+using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Application.Messaging;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Tenants.Application.Abstractions;
@@ -24,7 +25,8 @@ internal sealed class AlterarStatusFunerariaCommandValidator : AbstractValidator
 public sealed class AlterarStatusFunerariaCommandHandler(
     IFunerariaRepository funerarias,
     ITenantsUnitOfWork unitOfWork,
-    ITenantCache cache)
+    ITenantCache cache,
+    IAuditoria auditoria)
     : ICommandHandler<AlterarStatusFunerariaCommand>
 {
     public async ValueTask<Result> Handle(AlterarStatusFunerariaCommand command, CancellationToken cancellationToken)
@@ -35,6 +37,7 @@ public sealed class AlterarStatusFunerariaCommandHandler(
             return FunerariaErros.NaoEncontrada;
         }
 
+        StatusFuneraria anterior = funeraria.Status;
         Result result = funeraria.AlterarStatus(command.Status!.Value);
         if (result.IsFailure)
         {
@@ -43,6 +46,9 @@ public sealed class AlterarStatusFunerariaCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
         cache.Invalidar(funeraria.Id, funeraria.Slug);
+        await auditoria.RegistrarAsync(new RegistroAuditoria(
+            AcoesAuditadas.FunerariaStatusAlterado, "Funeraria", funeraria.Id,
+            new { status = anterior.ToString() }, new { status = funeraria.Status.ToString() }, IdTenant: funeraria.Id), cancellationToken);
 
         return Result.Success();
     }

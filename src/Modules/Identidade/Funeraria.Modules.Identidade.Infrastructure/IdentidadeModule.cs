@@ -1,4 +1,6 @@
+using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Infrastructure.Jobs;
+using Funeraria.Modules.Identidade.Infrastructure.Auditoria;
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Funeraria.Modules.Identidade.Application;
@@ -62,6 +64,7 @@ public static class IdentidadeModule
         services.AddScoped<EmissorSessao>();
         services.AddScoped<ITokenSenhaRepository, TokenSenhaRepository>();
         services.AddScoped<IFuncionarioRepository, FuncionarioRepository>();
+        services.AddScoped<IAuditoria, AuditoriaService>();
         services.AddOptions<IdentidadeOptions>().Bind(configuration.GetSection(IdentidadeOptions.Section));
         services.AddSingleton<ILinksIdentidade, LinksIdentidade>();
         services.AddScoped<SenhaPorLink>();

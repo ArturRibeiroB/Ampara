@@ -167,7 +167,8 @@ public sealed class AceitarAtribuicaoCommandHandler(
     IAtribuicaoRepository atribuicoes,
     ITerceirosUnitOfWork unitOfWork,
     ICurrentUser usuario,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IAuditoria auditoria)
     : ICommandHandler<AceitarAtribuicaoCommand, AtribuicaoResponse>
 {
     public async ValueTask<Result<AtribuicaoResponse>> Handle(AceitarAtribuicaoCommand command, CancellationToken cancellationToken)
@@ -186,6 +187,9 @@ public sealed class AceitarAtribuicaoCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await auditoria.RegistrarAsync(new RegistroAuditoria(
+            AcoesAuditadas.AtribuicaoAceita, "Atribuicao", atribuicao.Id,
+            ValoresNovos: new { tipo = atribuicao.Tipo.ToString(), atribuicao.IdOrigem }), cancellationToken);
         return AtribuicaoResponse.De(atribuicao, agora);
     }
 }
@@ -194,7 +198,8 @@ public sealed class RecusarAtribuicaoCommandHandler(
     IAtribuicaoRepository atribuicoes,
     ITerceirosUnitOfWork unitOfWork,
     ICurrentUser usuario,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IAuditoria auditoria)
     : ICommandHandler<RecusarAtribuicaoCommand, AtribuicaoResponse>
 {
     public async ValueTask<Result<AtribuicaoResponse>> Handle(RecusarAtribuicaoCommand command, CancellationToken cancellationToken)
@@ -213,6 +218,9 @@ public sealed class RecusarAtribuicaoCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await auditoria.RegistrarAsync(new RegistroAuditoria(
+            AcoesAuditadas.AtribuicaoRecusada, "Atribuicao", atribuicao.Id,
+            ValoresNovos: new { tipo = atribuicao.Tipo.ToString(), atribuicao.IdOrigem, motivo = atribuicao.MotivoRecusa }), cancellationToken);
         return AtribuicaoResponse.De(atribuicao, agora);
     }
 }
