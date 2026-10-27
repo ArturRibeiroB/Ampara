@@ -98,7 +98,6 @@ public sealed class CatalogoTests(CatalogoApiFactory factory)
         // Item desativado e categoria desativada somem do catálogo do cliente.
         Assert.Equal(HttpStatusCode.NoContent, (await gestor.PatchAsJsonAsync($"/api/v1/gestao/catalogo/{idItem}/status", new { ativo = false }, Json, Ct)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await publico.GetAsync($"/api/v1/catalogo/{idItem}", Ct)).StatusCode);
-        await gestor.PatchAsJsonAsync($"/api/v1/gestao/catalogo/{idItem}/status", new { ativo = true }, Json, Ct);
         await gestor.PatchAsJsonAsync($"/api/v1/gestao/catalogo/categorias/{urnas}/status", new { ativo = false }, Json, Ct);
         Assert.Empty((await publico.GetFromJsonAsync<JsonArray>("/api/v1/catalogo", Json, Ct))!);
         Assert.Empty((await publico.GetFromJsonAsync<JsonArray>("/api/v1/catalogo/categorias", Json, Ct))!);
@@ -198,6 +197,48 @@ public sealed class CatalogoTests(CatalogoApiFactory factory)
     }
 
     [Fact]
+    public async Task Item_pode_ser_ligado_a_um_fornecedor_ativo_da_funeraria()
+    {
+        (Guid tenant, string slug) = await factory.CriarFunerariaAsync();
+        HttpClient gestor = Equipe(tenant, slug);
+        Guid categoria = await CriarCategoriaAsync(gestor, "Flores");
+        Guid fornecedor = await CadastrarTerceiroAsync(gestor, "FORNECEDOR");
+        Guid frota = await CadastrarTerceiroAsync(gestor, "FROTA");
+        (Guid outra, string slugOutra) = await factory.CriarFunerariaAsync();
+        Guid fornecedorDeOutra = await CadastrarTerceiroAsync(Equipe(outra, slugOutra), "FORNECEDOR");
+
+        HttpResponseMessage ligado = await gestor.PostAsJsonAsync("/api/v1/gestao/catalogo", new
+        {
+            id_categoria = categoria, nome = "Coroa de rosas", preco = 350m, id_terceiro_fornecedor = fornecedor
+        }, Json, Ct);
+        Assert.Equal(HttpStatusCode.Created, ligado.StatusCode);
+        JsonObject item = (await ligado.Content.ReadFromJsonAsync<JsonObject>(Json, Ct))!;
+        Guid idItem = item["id_item"]!.GetValue<Guid>();
+        Assert.Equal(fornecedor, item["id_terceiro_fornecedor"]!.GetValue<Guid>());
+
+        foreach (Guid invalido in new[] { frota, fornecedorDeOutra, Guid.NewGuid() })
+        {
+            HttpResponseMessage response = await gestor.PutAsJsonAsync($"/api/v1/gestao/catalogo/{idItem}", new
+            {
+                id_categoria = categoria, nome = "Coroa de rosas", preco = 350m, id_terceiro_fornecedor = invalido
+            }, Json, Ct);
+            Assert.Contains("FORNECEDOR", await DetalheAsync(response, HttpStatusCode.BadRequest), StringComparison.Ordinal);
+        }
+
+        // Fornecedor desativado depois não trava a edição do item que já aponta para ele.
+        await gestor.PatchAsJsonAsync($"/api/v1/gestao/terceiros/{fornecedor}/status", new { ativo = false }, Json, Ct);
+        HttpResponseMessage editado = await gestor.PutAsJsonAsync($"/api/v1/gestao/catalogo/{idItem}", new
+        {
+            id_categoria = categoria, nome = "Coroa de rosas", preco = 380m, id_terceiro_fornecedor = fornecedor
+        }, Json, Ct);
+        Assert.Equal(HttpStatusCode.OK, editado.StatusCode);
+
+        // O cliente não vê quem fornece o item.
+        JsonObject publico = (await Http(slug).GetFromJsonAsync<JsonObject>($"/api/v1/catalogo/{idItem}", Json, Ct))!;
+        Assert.Null(publico["id_terceiro_fornecedor"]);
+    }
+
+    [Fact]
     public async Task So_o_gestor_altera_o_catalogo()
     {
         (Guid tenant, string slug) = await factory.CriarFunerariaAsync();
@@ -249,6 +290,19 @@ public sealed class CatalogoTests(CatalogoApiFactory factory)
         }, Json, Ct);
         Assert.True(response.StatusCode == HttpStatusCode.Created, await response.Content.ReadAsStringAsync(Ct));
         return (await response.Content.ReadFromJsonAsync<JsonObject>(Json, Ct))!;
+    }
+
+    private static async Task<Guid> CadastrarTerceiroAsync(HttpClient gestor, string tipo)
+    {
+        HttpResponseMessage response = await gestor.PostAsJsonAsync("/api/v1/gestao/terceiros", new
+        {
+            tipo,
+            email = $"{Guid.NewGuid():N}@teste.localhost",
+            nome_razao_social = $"Parceiro {tipo}",
+            cpf_cnpj = DocumentosDeTeste.NovoCnpj()
+        }, Json, Ct);
+        Assert.True(response.StatusCode == HttpStatusCode.Created, await response.Content.ReadAsStringAsync(Ct));
+        return (await response.Content.ReadFromJsonAsync<JsonObject>(Json, Ct))!["id_terceiro"]!.GetValue<Guid>();
     }
 
     private static async Task<HttpResponseMessage> EnviarImagemAsync(HttpClient gestor, Guid idItem, byte[] conteudo)

@@ -22,6 +22,7 @@ public sealed record CategoriaCatalogoDto(Guid IdCategoria, string Nome, bool At
 /// <param name="Preco">Preço atual. Quem guarda um valor (orçamento, cobertura) copia no momento do uso.</param>
 /// <param name="Ativo">Item e categoria ativos.</param>
 /// <param name="Variacoes">Variações ativas do item.</param>
+/// <param name="IdTerceiroFornecedor">Fornecedor que recebe o pedido quando o item entra num funeral (FUN-09).</param>
 public sealed record ItemCatalogoDto(
     Guid IdItem,
     Guid IdCategoria,
@@ -29,6 +30,7 @@ public sealed record ItemCatalogoDto(
     string Nome,
     decimal Preco,
     bool Ativo,
-    IReadOnlyList<VariacaoDto> Variacoes);
+    IReadOnlyList<VariacaoDto> Variacoes,
+    Guid? IdTerceiroFornecedor = null);
 
 public sealed record VariacaoDto(Guid IdVariacao, string Nome, decimal AcrescimoPreco);

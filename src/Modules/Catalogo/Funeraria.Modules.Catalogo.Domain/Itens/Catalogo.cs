@@ -77,6 +77,9 @@ public sealed class ItemCatalogo : AggregateRoot<Guid>, ITenantEntity, IAuditabl
     /// <summary>Endereço público da imagem, servido pela API. Muda a cada upload.</summary>
     public string? ImagemUrl { get; private set; }
 
+    /// <summary>Terceiro FORNECEDOR que entrega o item: entrar num funeral gera um pedido para ele (FUN-09).</summary>
+    public Guid? IdTerceiroFornecedor { get; private set; }
+
     public bool Ativo { get; private set; }
 
     public IReadOnlyList<Variacao> Variacoes => _variacoes;
@@ -96,6 +99,7 @@ public sealed class ItemCatalogo : AggregateRoot<Guid>, ITenantEntity, IAuditabl
         Preco = dados.Preco;
         ControlaEstoque = dados.ControlaEstoque;
         QuantidadeEstoque = dados.ControlaEstoque ? dados.QuantidadeEstoque ?? 0 : null;
+        IdTerceiroFornecedor = dados.IdTerceiroFornecedor;
     }
 
     public void AlterarStatus(bool ativo) => Ativo = ativo;
@@ -165,7 +169,8 @@ public sealed class Variacao : Entity<Guid>
     internal void AlterarStatus(bool ativo) => Ativo = ativo;
 }
 
-public sealed record DadosItem(string Nome, string? Descricao, decimal Preco, bool ControlaEstoque, int? QuantidadeEstoque);
+public sealed record DadosItem(
+    string Nome, string? Descricao, decimal Preco, bool ControlaEstoque, int? QuantidadeEstoque, Guid? IdTerceiroFornecedor = null);
 
 public static class CatalogoErros
 {
@@ -189,6 +194,9 @@ public static class CatalogoErros
 
     public static readonly Error VariacaoComPrecoNegativo =
         Error.Validacao("Catalogo.VariacaoComPrecoNegativo", "O desconto da variação não pode deixar o preço abaixo de zero.");
+
+    public static readonly Error FornecedorInvalido =
+        Error.Validacao("Catalogo.FornecedorInvalido", "O fornecedor precisa ser um terceiro do tipo FORNECEDOR, ativo nesta funerária.");
 
     public static readonly Error SemImagem =
         Error.NaoEncontrado("Catalogo.SemImagem", "Este item não tem imagem.");

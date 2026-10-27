@@ -6,6 +6,7 @@ using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Catalogo.Application.Abstractions;
 using Funeraria.Modules.Catalogo.Domain.Itens;
 using Funeraria.Modules.Tenants.Contracts;
+using Funeraria.Modules.Terceiros.Contracts;
 using Microsoft.Extensions.Logging;
 
 namespace Funeraria.Modules.Catalogo.Application.Itens;
@@ -23,15 +24,20 @@ public interface IDadosItem
     bool ControlaEstoque { get; }
 
     int? QuantidadeEstoque { get; }
+
+    Guid? IdTerceiroFornecedor { get; }
 }
 
+/// <summary>O fornecedor (opcional) é um terceiro FORNECEDOR que entrega o item (FUN-09).</summary>
 public sealed record CriarItemCommand(
-    Guid? IdCategoria, string Nome, string? Descricao, decimal? Preco, bool ControlaEstoque, int? QuantidadeEstoque)
+    Guid? IdCategoria, string Nome, string? Descricao, decimal? Preco, bool ControlaEstoque, int? QuantidadeEstoque,
+    Guid? IdTerceiroFornecedor = null)
     : ICommand<ItemResponse>, IDadosItem;
 
 /// <summary>Alterar o preço não muda funerais e orçamentos já aprovados: eles guardam o valor do momento (FUN-01).</summary>
 public sealed record AtualizarItemCommand(
-    Guid IdItem, Guid? IdCategoria, string Nome, string? Descricao, decimal? Preco, bool ControlaEstoque, int? QuantidadeEstoque)
+    Guid IdItem, Guid? IdCategoria, string Nome, string? Descricao, decimal? Preco, bool ControlaEstoque, int? QuantidadeEstoque,
+    Guid? IdTerceiroFornecedor = null)
     : ICommand<ItemResponse>, IDadosItem;
 
 /// <summary>Item não é excluído, só desativado (FUN-01).</summary>
@@ -62,9 +68,10 @@ public sealed record ItemResponse(
     int? QuantidadeEstoque,
     string? ImagemUrl,
     bool Ativo,
-    IReadOnlyList<VariacaoResponse> Variacoes)
+    IReadOnlyList<VariacaoResponse> Variacoes,
+    Guid? IdTerceiroFornecedor)
 {
-    /// <summary>Para o gestor: tudo. Para o cliente: sem estoque e só as variações ativas.</summary>
+    /// <summary>Para o gestor: tudo. Para o cliente: sem estoque, sem fornecedor e só as variações ativas.</summary>
     public static ItemResponse De(ItemCatalogo i, bool publico = false) => new(
         i.Id,
         i.IdCategoria,
@@ -75,7 +82,8 @@ public sealed record ItemResponse(
         publico ? null : i.QuantidadeEstoque,
         i.ImagemUrl,
         i.Ativo,
-        [.. i.Variacoes.Where(v => !publico || v.Ativo).Select(v => new VariacaoResponse(v.Id, v.Nome, v.AcrescimoPreco, v.Ativo))]);
+        [.. i.Variacoes.Where(v => !publico || v.Ativo).Select(v => new VariacaoResponse(v.Id, v.Nome, v.AcrescimoPreco, v.Ativo))],
+        publico ? null : i.IdTerceiroFornecedor);
 }
 
 public sealed record VariacaoResponse(Guid IdVariacao, string Nome, decimal AcrescimoPreco, bool Ativo);
@@ -137,12 +145,13 @@ public sealed class CriarItemCommandHandler(
     IItemCatalogoRepository itens,
     ICategoriaRepository categorias,
     ICatalogoUnitOfWork unitOfWork,
-    ITenantContext tenantContext)
+    ITenantContext tenantContext,
+    ITerceirosConsultas terceiros)
     : ICommandHandler<CriarItemCommand, ItemResponse>
 {
     public async ValueTask<Result<ItemResponse>> Handle(CriarItemCommand command, CancellationToken cancellationToken)
     {
-        Result conferido = await ItensComuns.ConferirAsync(categorias, itens, command, exceto: null, cancellationToken);
+        Result conferido = await ItensComuns.ConferirAsync(categorias, itens, terceiros, command, atual: null, cancellationToken);
         if (conferido.IsFailure)
         {
             return Result.Failure<ItemResponse>(conferido.Error);
@@ -157,7 +166,8 @@ public sealed class CriarItemCommandHandler(
 public sealed class AtualizarItemCommandHandler(
     IItemCatalogoRepository itens,
     ICategoriaRepository categorias,
-    ICatalogoUnitOfWork unitOfWork)
+    ICatalogoUnitOfWork unitOfWork,
+    ITerceirosConsultas terceiros)
     : ICommandHandler<AtualizarItemCommand, ItemResponse>
 {
     public async ValueTask<Result<ItemResponse>> Handle(AtualizarItemCommand command, CancellationToken cancellationToken)
@@ -168,7 +178,7 @@ public sealed class AtualizarItemCommandHandler(
             return CatalogoErros.ItemNaoEncontrado;
         }
 
-        Result conferido = await ItensComuns.ConferirAsync(categorias, itens, command, exceto: item.Id, cancellationToken);
+        Result conferido = await ItensComuns.ConferirAsync(categorias, itens, terceiros, command, atual: item, cancellationToken);
         if (conferido.IsFailure)
         {
             return Result.Failure<ItemResponse>(conferido.Error);
@@ -322,17 +332,32 @@ public sealed class ObterImagemItemQueryHandler(IItemCatalogoRepository itens, I
 
 internal static class ItensComuns
 {
-    public static DadosItem Dados(IDadosItem i) => new(i.Nome, i.Descricao, i.Preco!.Value, i.ControlaEstoque, i.QuantidadeEstoque);
+    public static DadosItem Dados(IDadosItem i) =>
+        new(i.Nome, i.Descricao, i.Preco!.Value, i.ControlaEstoque, i.QuantidadeEstoque, i.IdTerceiroFornecedor);
 
+    /// <summary>Confere categoria, fornecedor e nome. <c>atual</c> é o item sendo alterado (nulo na criação).</summary>
     public static async Task<Result> ConferirAsync(
-        ICategoriaRepository categorias, IItemCatalogoRepository itens, IDadosItem dados, Guid? exceto, CancellationToken cancellationToken)
+        ICategoriaRepository categorias,
+        IItemCatalogoRepository itens,
+        ITerceirosConsultas terceiros,
+        IDadosItem dados,
+        ItemCatalogo? atual,
+        CancellationToken cancellationToken)
     {
         if (await categorias.ObterAsync(dados.IdCategoria!.Value, cancellationToken) is null)
         {
             return CatalogoErros.CategoriaNaoEncontrada;
         }
 
-        return await itens.ExisteNomeAsync(dados.IdCategoria.Value, dados.Nome.Trim(), exceto, cancellationToken)
+        // Só confere o fornecedor quando ele muda: um fornecedor desativado depois não trava a edição do item.
+        if (dados.IdTerceiroFornecedor is Guid idFornecedor
+            && idFornecedor != atual?.IdTerceiroFornecedor
+            && await terceiros.ObterAsync(idFornecedor, cancellationToken) is not { Tipo: "FORNECEDOR", Ativo: true })
+        {
+            return CatalogoErros.FornecedorInvalido;
+        }
+
+        return await itens.ExisteNomeAsync(dados.IdCategoria.Value, dados.Nome.Trim(), atual?.Id, cancellationToken)
             ? CatalogoErros.ItemDuplicado
             : Result.Success();
     }
