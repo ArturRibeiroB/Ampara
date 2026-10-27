@@ -1,5 +1,6 @@
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Contratos.Contracts;
+using Funeraria.Modules.Contratos.Application.Queries;
 using Funeraria.Modules.Contratos.Domain.Contratos;
 
 namespace Funeraria.Modules.Contratos.Application;
@@ -29,6 +30,17 @@ public sealed class ContratosApi(IContratoRepository contratos, TimeProvider tim
                 c.DataFim,
                 c.PessoasCobertas.Count(p => p.DataRemocao is null)))
             .ToList();
+
+    public async Task<IReadOnlyList<Guid>> ClientesComContratoAsync(string? status, CancellationToken cancellationToken = default)
+    {
+        StatusContrato? lido = null;
+        if (status is not null)
+        {
+            lido = StatusFiltro.Ler(status) ?? throw new ArgumentException($"Status de contrato inválido: {status}.", nameof(status));
+        }
+
+        return await contratos.ClientesComContratoAsync(lido, cancellationToken);
+    }
 
     public async Task<ElegibilidadeDto?> VerificarElegibilidadeAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default)
     {

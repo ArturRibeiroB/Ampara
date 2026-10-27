@@ -32,6 +32,13 @@ internal sealed class ContratoRepository(ContratosDbContext context) : IContrato
             .Distinct()
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Guid>> ClientesComContratoAsync(StatusContrato? status, CancellationToken cancellationToken = default) =>
+        await context.Contratos
+            .Where(c => status == null || c.Status == status)
+            .Select(c => c.IdCliente)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
     public Task<Contrato?> ObterPorPessoaCobertaAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default) =>
         context.Contratos
             .Include(c => c.PessoasCobertas)

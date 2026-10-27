@@ -18,8 +18,20 @@ public interface IContratosApi
     /// </summary>
     Task<Guid?> PlanoQueCobreAsync(Guid idCliente, Guid? idDependente, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Titulares da funerária atual com pelo menos um contrato no status informado (<see cref="StatusContratoApi"/>), ou com
+    /// qualquer contrato quando o status é nulo. Usado no filtro <c>status_contrato</c> da busca de clientes (CLI-03).
+    /// </summary>
+    Task<IReadOnlyList<Guid>> ClientesComContratoAsync(string? status, CancellationToken cancellationToken = default);
+
     /// <summary>Contratos do cliente, para a exportação dos dados pelo titular (SEG-01).</summary>
     Task<IReadOnlyList<ContratoDoClienteDto>> ListarDoClienteAsync(Guid idCliente, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Status do contrato no formato da API.</summary>
+public static class StatusContratoApi
+{
+    public static readonly IReadOnlyList<string> Todos = ["ATIVO", "A_PAGAR", "SUSPENSO", "CANCELADO"];
 }
 
 /// <summary>Contrato do cliente. Status: ATIVO, A_PAGAR, SUSPENSO ou CANCELADO; periodicidade: MENSAL ou ANUAL.</summary>
