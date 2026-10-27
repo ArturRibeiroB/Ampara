@@ -2,14 +2,28 @@ using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Identidade.Application.Abstractions;
 using Funeraria.Modules.Identidade.Application.Sessoes;
+using Funeraria.Modules.Identidade.Application.Termos;
 using Funeraria.Modules.Identidade.Contracts;
 using Funeraria.Modules.Identidade.Domain;
 using Funeraria.Modules.Identidade.Domain.Vinculos;
 
 namespace Funeraria.Modules.Identidade.Application;
 
-public sealed class IdentidadeApi(IUsuarios usuarios, IVinculoRepository vinculos, IIdentidadeUnitOfWork unitOfWork) : IIdentidadeApi
+public sealed class IdentidadeApi(
+    IUsuarios usuarios,
+    IVinculoRepository vinculos,
+    IIdentidadeUnitOfWork unitOfWork,
+    RegistroDeAceites aceites)
+    : IIdentidadeApi
 {
+    public Task RegistrarAceiteTermosAsync(Guid idUsuario, CancellationToken cancellationToken = default) =>
+        aceites.RegistrarVigentesAsync(idUsuario, cancellationToken);
+
+    public async Task<IReadOnlyList<AceiteTermosDto>> ListarAceitesTermosAsync(Guid idUsuario, CancellationToken cancellationToken = default) =>
+        (await aceites.ListarAsync(idUsuario, cancellationToken))
+            .Select(a => new AceiteTermosDto(NomeApi.De(a.Documento), a.Versao, a.AceitoEm))
+            .ToList();
+
     public async Task<Result<Guid>> ObterOuCriarContaAsync(string email, string nome, string senha, CancellationToken cancellationToken = default)
     {
         UsuarioInfo? existente = await usuarios.ObterPorEmailAsync(email, cancellationToken);

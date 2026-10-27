@@ -65,6 +65,12 @@ public sealed class CadastrarClienteCommandHandler(
 
         await identidade.VincularClienteAsync(conta.Value, idTenant, cliente.Id, cancellationToken);
 
+        // Aceite marcado na tela de cadastro: registra as versões vigentes com data e IP (SEG-01).
+        if (command.AceiteTermos)
+        {
+            await identidade.RegistrarAceiteTermosAsync(conta.Value, cancellationToken);
+        }
+
         return ClienteResponse.De(cliente);
     }
 

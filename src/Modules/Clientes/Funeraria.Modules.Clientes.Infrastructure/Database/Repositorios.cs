@@ -10,8 +10,11 @@ internal sealed class ClienteRepository(ClientesDbContext context) : IClienteRep
     public Task<Cliente?> ObterPorIdAsync(Guid idCliente, CancellationToken cancellationToken = default) =>
         context.Clientes.FirstOrDefaultAsync(c => c.Id == idCliente, cancellationToken);
 
-    public Task<bool> ExisteCpfAsync(string cpf, CancellationToken cancellationToken = default) =>
-        context.Clientes.AnyAsync(c => c.Cpf == cpf, cancellationToken);
+    public Task<bool> ExisteCpfAsync(string cpf, CancellationToken cancellationToken = default)
+    {
+        string hash = context.HashCpf(cpf);
+        return context.Clientes.AnyAsync(c => EF.Property<string>(c, ClientesDbContext.CpfHash) == hash, cancellationToken);
+    }
 
     public void Adicionar(Cliente cliente) => context.Clientes.Add(cliente);
 }
@@ -30,8 +33,11 @@ internal sealed class DependenteRepository(ClientesDbContext context) : IDepende
     public async Task<IReadOnlyList<Dependente>> ListarDoTitularAsync(Guid idCliente, CancellationToken cancellationToken = default) =>
         await Ativos.AsNoTracking().Where(d => d.IdCliente == idCliente).OrderBy(d => d.Nome).ToListAsync(cancellationToken);
 
-    public Task<bool> ExisteCpfDoTitularAsync(Guid idCliente, string cpf, CancellationToken cancellationToken = default) =>
-        Ativos.AnyAsync(d => d.IdCliente == idCliente && d.Cpf == cpf, cancellationToken);
+    public Task<bool> ExisteCpfDoTitularAsync(Guid idCliente, string cpf, CancellationToken cancellationToken = default)
+    {
+        string hash = context.HashCpf(cpf);
+        return Ativos.AnyAsync(d => d.IdCliente == idCliente && EF.Property<string>(d, ClientesDbContext.CpfHash) == hash, cancellationToken);
+    }
 
     public void Adicionar(Dependente dependente) => context.Dependentes.Add(dependente);
 }

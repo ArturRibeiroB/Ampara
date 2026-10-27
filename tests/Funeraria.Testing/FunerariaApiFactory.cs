@@ -86,6 +86,7 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("LimiteRequisicoes:CadastroCliente:Limite", "100000");
         builder.UseSetting("LimiteRequisicoes:Autenticacao:Limite", "100000");
         builder.UseSetting("Seguranca:ForcarHttps", "false");
+        builder.UseSetting("Seguranca:ChaveHash", Convert.ToBase64String("chave-de-hash-dos-testes-com-32-bytes!"u8.ToArray()));
         builder.UseSetting("Identidade:Links:UrlDefinirSenha", "http://{slug}.teste.localhost/definir-senha");
         builder.UseSetting("Identidade:Links:UrlConfirmarEmail", "http://{slug}.teste.localhost/confirmar-email");
         builder.UseSetting("Identidade:Links:UrlRedefinirSenha", "http://{slug}.teste.localhost/redefinir-senha");
@@ -97,6 +98,7 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
             builder.UseSetting("Armazenamento:S3:ServiceUrl", Armazenamento.ServiceUrl);
             builder.UseSetting("Armazenamento:S3:Bucket", ArmazenamentoDeTeste.Bucket);
             builder.UseSetting("Armazenamento:S3:ForcarPathStyle", "true");
+            builder.UseSetting("Armazenamento:S3:CifrarNoServidor", "false");
             builder.UseSetting("Armazenamento:S3:AccessKey", ArmazenamentoDeTeste.AccessKey);
             builder.UseSetting("Armazenamento:S3:SecretKey", ArmazenamentoDeTeste.SecretKey);
         }

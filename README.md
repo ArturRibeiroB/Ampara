@@ -198,6 +198,8 @@ Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 
 ## Decisões técnicas
 
+Os cuidados com dados pessoais (LGPD) estão em [docs/lgpd.md](docs/lgpd.md).
+
 As decisões de negócio do grupo (certidão, Stripe Connect, translado, consultor, multa e juros) estão em
 [docs/decisoes.md](docs/decisoes.md).
 

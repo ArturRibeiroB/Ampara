@@ -1,6 +1,9 @@
 using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Infrastructure.Jobs;
+using Funeraria.Modules.Identidade.Application.Termos;
+using Funeraria.Modules.Identidade.Domain.Termos;
 using Funeraria.Modules.Identidade.Infrastructure.Auditoria;
+using Funeraria.Modules.Identidade.Infrastructure.Termos;
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Funeraria.Modules.Identidade.Application;
@@ -19,6 +22,7 @@ using Funeraria.Modules.Identidade.Infrastructure.Sessoes;
 using Funeraria.Modules.Identidade.Infrastructure.Tokens;
 using Funeraria.Modules.Identidade.Infrastructure.Usuarios;
 using Funeraria.Modules.Identidade.Infrastructure.Vinculos;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,6 +60,12 @@ public static class IdentidadeModule
 
         services.AddAutenticacaoJwt(configuration);
 
+        // Chaves do Data Protection no banco: todas as instâncias da API cifram e decifram com as mesmas chaves (SEG-01).
+        // Em produção, proteja as chaves em repouso com certificado ou cofre (ProtectKeysWith...), conforme o provedor.
+        services.AddDataProtection()
+            .SetApplicationName("funeraria")
+            .PersistKeysToDbContext<IdentidadeDbContext>();
+
         services.AddScoped<IIdentidadeUnitOfWork>(sp => sp.GetRequiredService<IdentidadeDbContext>());
         services.AddScoped<IVinculoRepository, VinculoRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
@@ -65,6 +75,10 @@ public static class IdentidadeModule
         services.AddScoped<ITokenSenhaRepository, TokenSenhaRepository>();
         services.AddScoped<IFuncionarioRepository, FuncionarioRepository>();
         services.AddScoped<IAuditoria, AuditoriaService>();
+        services.AddOptions<LgpdOptions>().Bind(configuration.GetSection(LgpdOptions.Section));
+        services.AddSingleton<ITermosVigentes, TermosVigentes>();
+        services.AddScoped<IAceiteTermosRepository, AceiteTermosRepository>();
+        services.AddScoped<RegistroDeAceites>();
         services.AddOptions<IdentidadeOptions>().Bind(configuration.GetSection(IdentidadeOptions.Section));
         services.AddSingleton<ILinksIdentidade, LinksIdentidade>();
         services.AddScoped<SenhaPorLink>();

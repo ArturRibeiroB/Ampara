@@ -91,10 +91,14 @@ namespace Funeraria.Modules.Clientes.Infrastructure.Database.Migrations
 
                     b.Property<string>("Cpf")
                         .IsRequired()
-                        .HasMaxLength(11)
-                        .HasColumnType("character(11)")
-                        .HasColumnName("cpf")
-                        .IsFixedLength();
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("cpf");
+
+                    b.Property<string>("CpfHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("cpf_hash");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -163,9 +167,9 @@ namespace Funeraria.Modules.Clientes.Infrastructure.Database.Migrations
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_clientes_id_tenant");
 
-                    b.HasIndex("TenantId", "Cpf")
+                    b.HasIndex("TenantId", "CpfHash")
                         .IsUnique()
-                        .HasDatabaseName("ix_clientes_tenant_id_cpf");
+                        .HasDatabaseName("ix_clientes_tenant_id_cpf_hash");
 
                     b.ToTable("clientes", "clientes");
                 });
@@ -178,10 +182,14 @@ namespace Funeraria.Modules.Clientes.Infrastructure.Database.Migrations
 
                     b.Property<string>("Cpf")
                         .IsRequired()
-                        .HasMaxLength(11)
-                        .HasColumnType("character(11)")
-                        .HasColumnName("cpf")
-                        .IsFixedLength();
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("cpf");
+
+                    b.Property<string>("CpfHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("cpf_hash");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -245,9 +253,9 @@ namespace Funeraria.Modules.Clientes.Infrastructure.Database.Migrations
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_dependentes_id_tenant");
 
-                    b.HasIndex("IdCliente", "Cpf")
+                    b.HasIndex("IdCliente", "CpfHash")
                         .IsUnique()
-                        .HasDatabaseName("ix_dependentes_id_cliente_cpf")
+                        .HasDatabaseName("ix_dependentes_id_cliente_cpf_hash")
                         .HasFilter("removido_em IS NULL");
 
                     b.ToTable("dependentes", "clientes");

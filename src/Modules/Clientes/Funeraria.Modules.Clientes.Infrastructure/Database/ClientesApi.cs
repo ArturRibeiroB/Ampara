@@ -23,12 +23,15 @@ internal sealed class ClientesApi(ClientesDbContext context) : IClientesApi
                 .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf))
                 .ToListAsync(cancellationToken);
 
-    public Task<TitularDto?> ObterTitularPorCpfAsync(string cpf, CancellationToken cancellationToken = default) =>
-        context.Clientes
+    public Task<TitularDto?> ObterTitularPorCpfAsync(string cpf, CancellationToken cancellationToken = default)
+    {
+        string hash = context.HashCpf(cpf);
+        return context.Clientes
             .AsNoTracking()
-            .Where(c => c.Cpf == cpf)
+            .Where(c => EF.Property<string>(c, ClientesDbContext.CpfHash) == hash)
             .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf))
             .FirstOrDefaultAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<DependenteDto>> ObterDependentesAsync(
         IReadOnlyCollection<Guid> idsDependente,

@@ -3,7 +3,6 @@ using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Application.Serialization;
 using Funeraria.Modules.Identidade.Domain.Auditoria;
 using Funeraria.Modules.Identidade.Infrastructure.Database;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +17,7 @@ internal sealed class AuditoriaService(
     IServiceScopeFactory escopos,
     ICurrentUser usuario,
     ITenantContext tenantContext,
-    IHttpContextAccessor http,
+    IOrigemRequisicao origem,
     TimeProvider timeProvider)
     : IAuditoria
 {
@@ -34,7 +33,7 @@ internal sealed class AuditoriaService(
             Json(registro.ValoresAnteriores),
             Json(registro.ValoresNovos),
             timeProvider.GetUtcNow().UtcDateTime,
-            http.HttpContext?.Connection.RemoteIpAddress?.ToString());
+            origem.Ip);
 
         await using AsyncServiceScope escopo = escopos.CreateAsyncScope();
         var context = escopo.ServiceProvider.GetRequiredService<IdentidadeDbContext>();

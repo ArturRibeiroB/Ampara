@@ -10,6 +10,7 @@ namespace Funeraria.Modules.Clientes.Application.Queries.Gestao;
 
 /// <summary>
 /// Busca de clientes pela equipe da funerária (CLI-03), por nome (parte do nome) ou CPF, com paginação (INF-17).
+/// O CPF é cifrado no banco (SEG-01): a busca usa o hash e a listagem mostra o CPF mascarado.
 /// O filtro por status do contrato entra quando o módulo Contratos existir.
 /// </summary>
 public sealed record BuscarClientesQuery(PaginaRequest Pagina, string? Nome, string? Cpf, OrdenacaoRequest? Ordenacao = null)
@@ -21,6 +22,7 @@ public sealed record ClienteResumoResponse
 
     public required string Nome { get; init; }
 
+    /// <summary>Mascarado (***.456.789-**): a listagem não precisa do CPF completo (SEG-01).</summary>
     public required string Cpf { get; init; }
 
     public required string Email { get; init; }
@@ -34,7 +36,10 @@ public sealed record ClienteResumoResponse
     public int QuantidadeDependentes { get; init; }
 }
 
-public sealed class BuscarClientesQueryHandler(IDbConnectionFactory connectionFactory, ITenantContext tenantContext)
+public sealed class BuscarClientesQueryHandler(
+    IDbConnectionFactory connectionFactory,
+    ITenantContext tenantContext,
+    ICriptografiaDados criptografia)
     : IQueryHandler<BuscarClientesQuery, PaginaResult<ClienteResumoResponse>>
 {
     // Dapper não passa pelo filtro global do EF Core: o id_tenant é obrigatório no WHERE (TEN-01).
@@ -53,7 +58,7 @@ public sealed class BuscarClientesQueryHandler(IDbConnectionFactory connectionFa
         FROM clientes.clientes c
         WHERE c.id_tenant = @IdTenant
           AND (@Nome IS NULL OR c.nome ILIKE @Nome)
-          AND (@Cpf IS NULL OR c.cpf = @Cpf)
+          AND (@CpfHash::text IS NULL OR c.cpf_hash = @CpfHash)
         /*ORDENACAO*/
         LIMIT @Tamanho OFFSET @Deslocamento
         """;
@@ -62,7 +67,6 @@ public sealed class BuscarClientesQueryHandler(IDbConnectionFactory connectionFa
         new Dictionary<string, string>
         {
             ["nome"] = "c.nome",
-            ["cpf"] = "c.cpf",
             ["cidade"] = "c.cidade",
             ["cadastrado_em"] = "c.created_at"
         },
@@ -86,12 +90,12 @@ public sealed class BuscarClientesQueryHandler(IDbConnectionFactory connectionFa
         await using DbConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         List<Linha> linhas = (await connection.QueryAsync<Linha>(new CommandDefinition(
             Sql.Replace("/*ORDENACAO*/", orderBy.Value, StringComparison.Ordinal),
-            new { IdTenant = tenantContext.RequiredTenantId, Nome = nome, Cpf = cpf, pagina.Tamanho, pagina.Deslocamento },
+            new { IdTenant = tenantContext.RequiredTenantId, Nome = nome, CpfHash = cpf is null ? null : criptografia.Hash(cpf), pagina.Tamanho, pagina.Deslocamento },
             cancellationToken: cancellationToken))).ToList();
 
         long total = linhas.Count > 0 ? linhas[0].Total : 0;
         return new PaginaResult<ClienteResumoResponse>(
-            linhas.Select(l => l.Resumo).ToList(), pagina.Pagina, pagina.Tamanho, total);
+            linhas.Select(l => l.Resumo(criptografia)).ToList(), pagina.Pagina, pagina.Tamanho, total);
     }
 
     private sealed record Linha
@@ -114,11 +118,11 @@ public sealed class BuscarClientesQueryHandler(IDbConnectionFactory connectionFa
 
         public long Total { get; init; }
 
-        public ClienteResumoResponse Resumo => new()
+        public ClienteResumoResponse Resumo(ICriptografiaDados criptografia) => new()
         {
             IdCliente = IdCliente,
             Nome = Nome,
-            Cpf = Cpf.Trim(),
+            Cpf = Mascaras.Cpf(criptografia.Decifrar(Cpf).Trim()),
             Email = Email,
             Telefone = Telefone,
             Cidade = Cidade,
