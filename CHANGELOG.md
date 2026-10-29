@@ -23,6 +23,6 @@ Primeira versão do contrato. Será publicada como `v0.1.0`.
 - Contratos: contratação pelo cliente e pela equipe, consulta, elegibilidade (carência), inclusão e remoção de
   dependentes depois da contratação e cancelamento com motivo.
 - Funeral: preferências de funeral em vida; registro do beneficiário (falecido) e do funeral, mudança de etapa
-  com histórico e aviso à família, listagem da equipe e acompanhamento pelo titular.
+  com histórico e aviso à família, listagem da equipe, acompanhamento pelo titular e equipe responsável pelo atendimento.
 - Terceiros: cadastro de parceiros, portal do terceiro com a lista de atribuições, aceite e recusa.
 - Notificações: central (`/api/v1/notificacoes`) e tempo real pelo SignalR em `/hubs/notificacoes`.

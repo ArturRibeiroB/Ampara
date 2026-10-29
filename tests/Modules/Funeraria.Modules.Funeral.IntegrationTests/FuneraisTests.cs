@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Funeraria.BuildingBlocks.Application.Authorization;
+using Funeraria.Modules.Identidade.Domain.Vinculos;
 using Funeraria.Testing;
 
 namespace Funeraria.Modules.Funeral.IntegrationTests;
@@ -96,6 +97,43 @@ public sealed class FuneraisTests(FuneralApiFactory factory)
         // Concluído, o contrato já pode ser cancelado.
         cancelar = await equipe.PostAsJsonAsync($"/api/v1/contratos/{idContrato}/cancelar", new { motivo = "Família encerrou o plano." }, Json, Ct);
         Assert.Equal(HttpStatusCode.OK, cancelar.StatusCode);
+    }
+
+    [Fact]
+    public async Task Equipe_responsavel_e_atribuida_e_o_funcionario_ve_os_seus_funerais()
+    {
+        FunerariaDeTeste funeraria = await factory.CriarFunerariaContratavelAsync();
+        (_, Guid idContrato) = await ContratoAtivoAsync(funeraria);
+        HttpClient equipe = funeraria.Equipe();
+        Guid idBeneficiario = (await Cenarios.LerAsync(
+            await RegistrarBeneficiarioAsync(equipe, await TitularAsync(funeraria, idContrato), Hoje), HttpStatusCode.Created))["id_beneficiario"]!.GetValue<Guid>();
+        Guid idFuneral = (await Cenarios.LerAsync(
+            await RegistrarFuneralAsync(equipe, idBeneficiario, DateTime.UtcNow.AddDays(1)), HttpStatusCode.Created))["id_funeral"]!.GetValue<Guid>();
+        (Guid idFuncionario, string email) = await factory.CriarUsuarioAsync((funeraria.Tenant, PerfilVinculo.Funcionario));
+        (Guid idDeOutraFuneraria, _) = await factory.CriarUsuarioAsync();
+
+        JsonObject atribuido = await Cenarios.LerAsync(
+            await equipe.PutAsJsonAsync($"/api/v1/funerais/{idFuneral}/equipe/{idFuncionario}", new { funcao = "AGENTE_FUNERARIO" }, Json, Ct),
+            HttpStatusCode.OK);
+        JsonNode membro = Assert.Single(atribuido["equipe"]!.AsArray())!;
+        Assert.Equal("AGENTE_FUNERARIO", membro["funcao"]!.GetValue<string>());
+        Assert.Equal("Usuário de Teste", membro["nome"]!.GetValue<string>());
+
+        // Trocar a função não duplica; quem não é da equipe interna da funerária não entra.
+        JsonObject trocado = await Cenarios.LerAsync(
+            await equipe.PutAsJsonAsync($"/api/v1/funerais/{idFuneral}/equipe/{idFuncionario}", new { funcao = "MOTORISTA" }, Json, Ct),
+            HttpStatusCode.OK);
+        Assert.Equal("MOTORISTA", Assert.Single(trocado["equipe"]!.AsArray())!["funcao"]!.GetValue<string>());
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await equipe.PutAsJsonAsync($"/api/v1/funerais/{idFuneral}/equipe/{idDeOutraFuneraria}", new { funcao = "MOTORISTA" }, Json, Ct)).StatusCode);
+
+        HttpClient funcionario = factory.Http(funeraria.Slug, await factory.EntrarAsync(funeraria.Slug, email));
+        JsonArray meus = (await funcionario.GetFromJsonAsync<JsonArray>("/api/v1/funerais/atribuidos", Json, Ct))!;
+        Assert.Equal(idFuneral, Assert.Single(meus)!["id_funeral"]!.GetValue<Guid>());
+
+        Assert.Equal(HttpStatusCode.OK, (await equipe.DeleteAsync($"/api/v1/funerais/{idFuneral}/equipe/{idFuncionario}", Ct)).StatusCode);
+        Assert.Empty((await funcionario.GetFromJsonAsync<JsonArray>("/api/v1/funerais/atribuidos", Json, Ct))!);
+        Assert.Equal(HttpStatusCode.NotFound, (await equipe.DeleteAsync($"/api/v1/funerais/{idFuneral}/equipe/{idFuncionario}", Ct)).StatusCode);
     }
 
     private async Task<(ClienteDeTeste Cliente, Guid IdContrato)> ContratoAtivoAsync(FunerariaDeTeste funeraria, int dependentes = 0)

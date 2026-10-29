@@ -313,6 +313,49 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                     b.ToTable("funerais", "funeral");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.MembroEquipeFuneral", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_membro");
+
+                    b.Property<DateTime>("AtribuidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("atribuido_em");
+
+                    b.Property<string>("Funcao")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("funcao");
+
+                    b.Property<Guid>("IdFuneral")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_funeral");
+
+                    b.Property<Guid>("IdUsuario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nome");
+
+                    b.HasKey("Id")
+                        .HasName("pk_funerais_equipe");
+
+                    b.HasIndex("IdUsuario")
+                        .HasDatabaseName("ix_funerais_equipe_id_usuario");
+
+                    b.HasIndex("IdFuneral", "IdUsuario")
+                        .IsUnique()
+                        .HasDatabaseName("ix_funerais_equipe_id_funeral_id_usuario");
+
+                    b.ToTable("funerais_equipe", "funeral");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Preferencias.PreferenciaFuneral", b =>
                 {
                     b.Property<Guid>("Id")
@@ -428,8 +471,20 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                         .HasConstraintName("fk_funerais_beneficiarios_id_beneficiario");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.MembroEquipeFuneral", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Funeral.Domain.Funerais.Funeral", null)
+                        .WithMany("Equipe")
+                        .HasForeignKey("IdFuneral")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_funerais_equipe_funerais_id_funeral");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.Funeral", b =>
                 {
+                    b.Navigation("Equipe");
+
                     b.Navigation("Historico");
                 });
 #pragma warning restore 612, 618

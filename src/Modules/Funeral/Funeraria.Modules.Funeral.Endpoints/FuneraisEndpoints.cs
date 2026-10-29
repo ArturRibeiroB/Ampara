@@ -81,6 +81,37 @@ internal sealed class FuneraisEndpoints : IEndpoint
             .Produces<FuneralResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        // Equipe responsável (FUN-08).
+        app.MapPut("funerais/{id:guid}/equipe/{idUsuario:guid}", async (Guid id, Guid idUsuario, AtribuirMembroRequest r, ISender sender, CancellationToken ct) =>
+                (await sender.Send(new AtribuirMembroFuneralCommand(id, idUsuario, r.Funcao), ct)).Match(Results.Ok))
+            .RequireAuthorization(Politicas.EquipeFuneraria)
+            .WithTags(Tag)
+            .WithName("AtribuirMembroFuneral")
+            .WithSummary("Coloca um gestor ou funcionário na equipe do funeral (ou troca a função dele)")
+            .WithDescription("Funções: AGENTE_FUNERARIO, CERIMONIALISTA, MOTORISTA ou OUTRA. Funeral concluído ou cancelado não muda.")
+            .Produces<FuneralResponse>()
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        app.MapDelete("funerais/{id:guid}/equipe/{idUsuario:guid}", async (Guid id, Guid idUsuario, ISender sender, CancellationToken ct) =>
+                (await sender.Send(new RemoverMembroFuneralCommand(id, idUsuario), ct)).Match(Results.Ok))
+            .RequireAuthorization(Politicas.EquipeFuneraria)
+            .WithTags(Tag)
+            .WithName("RemoverMembroFuneral")
+            .WithSummary("Tira a pessoa da equipe do funeral")
+            .Produces<FuneralResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        app.MapGet("funerais/atribuidos", async (ISender sender, CancellationToken ct) =>
+                (await sender.Send(new MeusFuneraisQuery(), ct)).Match(Results.Ok))
+            .RequireAuthorization(Politicas.EquipeFuneraria)
+            .WithTags(Tag)
+            .WithName("MeusFunerais")
+            .WithSummary("Funerais em andamento em que o usuário logado está na equipe")
+            .Produces<IReadOnlyList<FuneralResumoResponse>>();
+
         app.MapGet("gestao/funerais", async (
                 ISender sender,
                 CancellationToken ct,
@@ -105,5 +136,7 @@ public sealed record RegistrarBeneficiarioRequest(
     Guid? IdPessoaCoberta, DateOnly? DataFalecimento, string? LocalFalecimento, ResponsavelRequest? Responsavel);
 
 public sealed record RegistrarFuneralRequest(Guid? IdBeneficiario, DateTime? DataHoraPrevista, Destinacao? Destinacao, string? Observacoes);
+
+public sealed record AtribuirMembroRequest(FuncaoEquipe? Funcao);
 
 public sealed record AlterarStatusFuneralRequest(StatusFuneral? Status, string? Observacao);

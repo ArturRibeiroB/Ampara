@@ -47,12 +47,31 @@ internal sealed class FuneralConfiguration : IEntityTypeConfiguration<FuneralEnt
         builder.HasOne<Beneficiario>().WithMany().HasForeignKey(f => f.IdBeneficiario).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(f => f.Historico).WithOne().HasForeignKey("IdFuneral").OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(f => f.Equipe).WithOne().HasForeignKey("IdFuneral").OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(f => f.Equipe).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
         builder.Navigation(f => f.Historico).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
 
         // Um funeral não cancelado por beneficiário; cancelado, a equipe pode abrir outro.
         builder.HasIndex(f => f.IdBeneficiario).IsUnique().HasFilter($"status <> '{nameof(StatusFuneral.Cancelado)}'");
         builder.HasIndex(f => new { f.TenantId, f.Status, f.DataHoraPrevista });
         builder.HasIndex(f => f.IdContrato);
+    }
+}
+
+internal sealed class MembroEquipeFuneralConfiguration : IEntityTypeConfiguration<MembroEquipeFuneral>
+{
+    public void Configure(EntityTypeBuilder<MembroEquipeFuneral> builder)
+    {
+        builder.ToTable("funerais_equipe");
+
+        builder.HasKey(m => m.Id);
+        builder.Property(m => m.Id).HasColumnName("id_membro").ValueGeneratedNever();
+        builder.Property<Guid>("IdFuneral").HasColumnName("id_funeral");
+        builder.Property(m => m.Nome).HasMaxLength(150);
+        builder.Property(m => m.Funcao).HasConversion<string>().HasMaxLength(30);
+
+        builder.HasIndex("IdFuneral", nameof(MembroEquipeFuneral.IdUsuario)).IsUnique();
+        builder.HasIndex(m => m.IdUsuario);
     }
 }
 
@@ -95,6 +114,14 @@ internal sealed class FuneralRepository(FuneralDbContext context) : IFuneralRepo
         context.Funerais.AnyAsync(
             f => f.IdContrato == idContrato && f.Status != StatusFuneral.Concluido && f.Status != StatusFuneral.Cancelado,
             cancellationToken);
+
+    public async Task<IReadOnlyList<FuneralEntity>> ListarAtribuidosAsync(Guid idUsuario, CancellationToken cancellationToken = default) =>
+        await context.Funerais
+            .AsNoTracking()
+            .Where(f => f.Status != StatusFuneral.Concluido && f.Status != StatusFuneral.Cancelado)
+            .Where(f => f.Equipe.Any(m => m.IdUsuario == idUsuario))
+            .OrderBy(f => f.DataHoraPrevista)
+            .ToListAsync(cancellationToken);
 
     public void Adicionar(FuneralEntity funeral) => context.Funerais.Add(funeral);
 

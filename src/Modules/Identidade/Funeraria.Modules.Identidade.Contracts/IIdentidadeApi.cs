@@ -30,9 +30,18 @@ public interface IIdentidadeApi
     /// <summary>A conta já tem algum vínculo (de qualquer perfil) com a funerária.</summary>
     Task<bool> PossuiVinculoAsync(Guid idUsuario, Guid idTenant, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Pessoa da equipe interna (FUNERARIA ou FUNCIONARIO) com vínculo e conta ativos na funerária, para atribuir ao
+    /// atendimento (FUN-08). Nulo se a conta não for da equipe interna desta funerária.
+    /// </summary>
+    Task<MembroEquipeDto?> ObterMembroEquipeAsync(Guid idUsuario, Guid idTenant, CancellationToken cancellationToken = default);
+
     /// <summary>Cria o vínculo CLIENTE da conta com a funerária. Idempotente.</summary>
     Task VincularClienteAsync(Guid idUsuario, Guid idTenant, Guid idCliente, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Membro da equipe interna. Perfil: FUNERARIA ou FUNCIONARIO.</summary>
+public sealed record MembroEquipeDto(Guid IdUsuario, string Nome, string Perfil);
 
 /// <summary>Aceite de um documento legal. Documento: TERMOS_DE_USO ou POLITICA_DE_PRIVACIDADE.</summary>
 public sealed record AceiteTermosDto(string Documento, string Versao, DateTime AceitoEm);

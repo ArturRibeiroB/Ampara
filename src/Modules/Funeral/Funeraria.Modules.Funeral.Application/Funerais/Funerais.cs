@@ -13,6 +13,7 @@ using Funeraria.Modules.Funeral.Contracts.IntegrationEvents;
 using Funeraria.Modules.Funeral.Domain.Beneficiarios;
 using Funeraria.Modules.Funeral.Domain.Funerais;
 using Funeraria.Modules.Funeral.Domain.Preferencias;
+using Funeraria.Modules.Identidade.Contracts;
 using FuneralEntity = Funeraria.Modules.Funeral.Domain.Funerais.Funeral;
 
 namespace Funeraria.Modules.Funeral.Application.Funerais;
@@ -35,6 +36,14 @@ public sealed record RegistrarFuneralCommand(Guid? IdBeneficiario, DateTime? Dat
 
 /// <summary>Muda a etapa do funeral (FUN-06). Só transições permitidas; cada mudança vai para o histórico e avisa a família.</summary>
 public sealed record AlterarStatusFuneralCommand(Guid IdFuneral, StatusFuneral? Status, string? Observacao) : ICommand<FuneralResponse>;
+
+/// <summary>Coloca um gestor ou funcionário na equipe do funeral, ou troca a função dele (FUN-08).</summary>
+public sealed record AtribuirMembroFuneralCommand(Guid IdFuneral, Guid IdUsuario, FuncaoEquipe? Funcao) : ICommand<FuneralResponse>;
+
+public sealed record RemoverMembroFuneralCommand(Guid IdFuneral, Guid IdUsuario) : ICommand<FuneralResponse>;
+
+/// <summary>Funerais em andamento em que o usuário logado está na equipe (FUN-08).</summary>
+public sealed record MeusFuneraisQuery : IQuery<IReadOnlyList<FuneralResumoResponse>>;
 
 /// <summary>Detalhe do funeral (FUN-07): a equipe vê qualquer um; o titular, os dos próprios contratos.</summary>
 public sealed record ObterFuneralQuery(Guid IdFuneral) : IQuery<FuneralResponse>;
@@ -70,6 +79,7 @@ public sealed record FuneralResponse(
     Destinacao Destinacao,
     string? Observacoes,
     IReadOnlyList<StatusFuneral> ProximosStatus,
+    IReadOnlyList<MembroEquipeResponse> Equipe,
     IReadOnlyList<HistoricoStatusResponse> Historico)
 {
     public static FuneralResponse De(FuneralEntity f) => new(
@@ -82,8 +92,11 @@ public sealed record FuneralResponse(
         f.Destinacao,
         f.Observacoes,
         [.. EstadosFuneral.Maquina.Transicoes.Where(t => t.De == f.Status).Select(t => t.Para)],
+        [.. f.Equipe.OrderBy(m => m.AtribuidoEm).Select(m => new MembroEquipeResponse(m.IdUsuario, m.Nome, m.Funcao))],
         [.. f.Historico.OrderBy(h => h.Em).Select(h => new HistoricoStatusResponse(h.De, h.Para, h.IdUsuario, h.Observacao, h.Em))]);
 }
+
+public sealed record MembroEquipeResponse(Guid IdUsuario, string Nome, FuncaoEquipe Funcao);
 
 public sealed record HistoricoStatusResponse(StatusFuneral De, StatusFuneral Para, Guid? IdUsuario, string? Observacao, DateTime Em);
 
@@ -137,6 +150,13 @@ internal sealed class AlterarStatusFuneralCommandValidator : AbstractValidator<A
             .IsInEnum().WithMessage("Status inválido. Use EM_PREPARACAO, VELORIO, CONCLUIDO ou CANCELADO.");
         RuleFor(c => c.Observacao).MaximumLength(1000).WithMessage("Observação deve ter no máximo 1000 caracteres.");
     }
+}
+
+internal sealed class AtribuirMembroFuneralCommandValidator : AbstractValidator<AtribuirMembroFuneralCommand>
+{
+    public AtribuirMembroFuneralCommandValidator() =>
+        RuleFor(c => c.Funcao).NotNull().WithMessage("Informe a função.")
+            .IsInEnum().WithMessage("Função inválida. Use AGENTE_FUNERARIO, CERIMONIALISTA, MOTORISTA ou OUTRA.");
 }
 
 internal sealed class ListarFuneraisQueryValidator : AbstractValidator<ListarFuneraisQuery>
@@ -368,6 +388,70 @@ public sealed class ListarFuneraisQueryHandler(IFuneraisLeitura leitura) : IQuer
             FiltroStatus.Ler(query.Status), de, ate, pagina.Deslocamento, pagina.Tamanho, cancellationToken);
         return new PaginaResult<FuneralResumoResponse>(itens, pagina.Pagina, pagina.Tamanho, total);
     }
+}
+
+public sealed class AtribuirMembroFuneralCommandHandler(
+    IFuneralRepository funerais,
+    IFuneralUnitOfWork unitOfWork,
+    IIdentidadeApi identidade,
+    ITenantContext tenantContext,
+    TimeProvider timeProvider)
+    : ICommandHandler<AtribuirMembroFuneralCommand, FuneralResponse>
+{
+    public async ValueTask<Result<FuneralResponse>> Handle(AtribuirMembroFuneralCommand command, CancellationToken cancellationToken)
+    {
+        FuneralEntity? funeral = await funerais.ObterAsync(command.IdFuneral, cancellationToken);
+        if (funeral is null)
+        {
+            return FuneralErros.NaoEncontrado;
+        }
+
+        MembroEquipeDto? membro = await identidade.ObterMembroEquipeAsync(command.IdUsuario, tenantContext.RequiredTenantId, cancellationToken);
+        if (membro is null)
+        {
+            return FuneralErros.MembroInvalido;
+        }
+
+        Result atribuido = funeral.AtribuirMembro(membro.IdUsuario, membro.Nome, command.Funcao!.Value, timeProvider.GetUtcNow().UtcDateTime);
+        if (atribuido.IsFailure)
+        {
+            return Result.Failure<FuneralResponse>(atribuido.Error);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return FuneralResponse.De(funeral);
+    }
+}
+
+public sealed class RemoverMembroFuneralCommandHandler(IFuneralRepository funerais, IFuneralUnitOfWork unitOfWork)
+    : ICommandHandler<RemoverMembroFuneralCommand, FuneralResponse>
+{
+    public async ValueTask<Result<FuneralResponse>> Handle(RemoverMembroFuneralCommand command, CancellationToken cancellationToken)
+    {
+        FuneralEntity? funeral = await funerais.ObterAsync(command.IdFuneral, cancellationToken);
+        if (funeral is null)
+        {
+            return FuneralErros.NaoEncontrado;
+        }
+
+        Result removido = funeral.RemoverMembro(command.IdUsuario);
+        if (removido.IsFailure)
+        {
+            return Result.Failure<FuneralResponse>(removido.Error);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return FuneralResponse.De(funeral);
+    }
+}
+
+public sealed class MeusFuneraisQueryHandler(IFuneralRepository funerais, ICurrentUser usuario)
+    : IQueryHandler<MeusFuneraisQuery, IReadOnlyList<FuneralResumoResponse>>
+{
+    public async ValueTask<Result<IReadOnlyList<FuneralResumoResponse>>> Handle(MeusFuneraisQuery query, CancellationToken cancellationToken) =>
+        (await funerais.ListarAtribuidosAsync(usuario.IdUsuario!.Value, cancellationToken))
+            .Select(f => new FuneralResumoResponse(f.Id, f.IdBeneficiario, f.NomeFalecido, f.Status, f.DataHoraPrevista, f.Destinacao))
+            .ToList();
 }
 
 /// <summary>Publica a mudança de etapa para o Notificacoes avisar a família (FUN-06).</summary>
