@@ -200,10 +200,10 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Clientes | `clientes` | Cadastro do cliente (conta + vínculo CLIENTE), meus dados, dependentes e busca pela equipe (Criar Cliente, Criar Dependente, CLI-01 a CLI-03) |
 | Planos | `planos` | Gestão de planos, configurações em jsonb, coberturas com itens do catálogo e planos modelo copiados para cada funerária nova (PLA-01, PLA-02, PLA-03) |
 | Notificacoes | `notificacoes` | Envio de e-mail por SMTP (Mailpit em desenvolvimento; provider de produção pendente, NOT-01); central de notificações e entrega em tempo real pelo SignalR em `/hubs/notificacoes` (NOT-02) |
-| Contratos | `contratos` | Contratação pelo cliente (`POST /contratos`) e pela equipe (`POST /gestao/contratos`), com pessoas cobertas, valor e periodicidade da contratação; consulta pelo cliente e busca pela equipe ; dependentes depois da contratação e cancelamento com motivo (Criar Contrato, CON-01 a CON-04) |
+| Contratos | `contratos` | Contratação pelo cliente (`POST /contratos`) e pela equipe (`POST /gestao/contratos`), com pessoas cobertas, valor e periodicidade da contratação; consulta pelo cliente e busca pela equipe; dependentes depois da contratação e cancelamento com motivo (Criar Contrato, CON-01 a CON-04) |
 | Catalogo | `catalogo` | Categorias, itens, variações e imagens; catálogo modelo copiado para cada funerária nova; `ICatalogoConsultas` para os outros módulos (FUN-01) |
 | Terceiros | `terceiros` | Cadastro de parceiros (frota, despachante/cartório, fornecedor) com convite e acesso pela Identidade; portal do terceiro com a lista única de atribuições, aceite e recusa (TER-01, TER-02) |
-| Funeral | `funeral` | Preferências de funeral em vida (FUN-02), com crença religiosa cifrada; máquina de estados do funeral (ARQ-01) |
+| Funeral | `funeral` | Preferências de funeral em vida (FUN-02), com crença religiosa cifrada; beneficiário (falecido, com elegibilidade do CON-04), funeral com etapas e histórico, aviso à família e acompanhamento (Gerar Beneficiário, Registrar Funeral, FUN-06, FUN-07) |
 | Financeiro, Documentos, Translado, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso (Documentos e Translado já têm as tabelas de status do ARQ-01) |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.

@@ -3,11 +3,13 @@ using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Application.Serialization;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
 using Funeraria.Modules.Funeral.Application.Abstractions;
+using Funeraria.Modules.Funeral.Domain.Beneficiarios;
 using Funeraria.Modules.Funeral.Domain.Preferencias;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using FuneralEntity = Funeraria.Modules.Funeral.Domain.Funerais.Funeral;
 
 namespace Funeraria.Modules.Funeral.Infrastructure.Database;
 
@@ -19,6 +21,10 @@ public sealed class FuneralDbContext(DbContextOptions<FuneralDbContext> options,
     public override string Schema => SchemaName;
 
     internal DbSet<PreferenciaFuneral> Preferencias => Set<PreferenciaFuneral>();
+
+    internal DbSet<Beneficiario> Beneficiarios => Set<Beneficiario>();
+
+    internal DbSet<FuneralEntity> Funerais => Set<FuneralEntity>();
 
     protected override void ConfigureModel(ModelBuilder modelBuilder)
     {

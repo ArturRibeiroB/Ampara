@@ -28,4 +28,14 @@ public static class EstadosFuneral
         .Permitir(AcaoFuneral.IniciarVelorio, StatusFuneral.Velorio, StatusFuneral.EmPreparacao)
         .Permitir(AcaoFuneral.Concluir, StatusFuneral.Concluido, StatusFuneral.Velorio)
         .Permitir(AcaoFuneral.Cancelar, StatusFuneral.Cancelado, StatusFuneral.Registrado, StatusFuneral.EmPreparacao, StatusFuneral.Velorio);
+
+    /// <summary>A API recebe o status de destino (PATCH /funerais/{id}/status); cada destino tem uma ação só.</summary>
+    public static AcaoFuneral? AcaoPara(StatusFuneral destino) => destino switch
+    {
+        StatusFuneral.EmPreparacao => AcaoFuneral.IniciarPreparacao,
+        StatusFuneral.Velorio => AcaoFuneral.IniciarVelorio,
+        StatusFuneral.Concluido => AcaoFuneral.Concluir,
+        StatusFuneral.Cancelado => AcaoFuneral.Cancelar,
+        _ => null
+    };
 }

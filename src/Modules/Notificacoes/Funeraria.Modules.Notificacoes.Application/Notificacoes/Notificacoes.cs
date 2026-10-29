@@ -3,6 +3,7 @@ using Funeraria.BuildingBlocks.Application.Events;
 using Funeraria.BuildingBlocks.Application.Messaging;
 using Funeraria.BuildingBlocks.Application.Paginacao;
 using Funeraria.BuildingBlocks.Domain.Results;
+using Funeraria.Modules.Funeral.Contracts.IntegrationEvents;
 using Funeraria.Modules.Identidade.Contracts;
 using Funeraria.Modules.Notificacoes.Contracts;
 using Funeraria.Modules.Notificacoes.Domain.Notificacoes;
@@ -160,4 +161,24 @@ internal sealed class AvisarFunerariaDaRecusa(INotificacoes notificacoes, IIdent
             await identidade.ListarGestoresAtivosAsync(evento.IdTenant, cancellationToken), evento.IdTenant, "ATRIBUICAO_RECUSADA",
             $"Parceiro recusou o {AvisarTerceiroDaAtribuicao.Assunto(evento.Tipo)}", $"Motivo: {evento.Motivo} Escolha outro parceiro.",
             $"/gestao/terceiros/{evento.IdTerceiro}"), cancellationToken);
+}
+
+/// <summary>O funeral mudou de etapa (FUN-06): avisa a família (o titular do contrato).</summary>
+internal sealed class AvisarFamiliaDoFuneral(INotificacoes notificacoes) : IIntegrationEventHandler<FuneralStatusAlteradoIntegrationEvent>
+{
+    public Task Handle(FuneralStatusAlteradoIntegrationEvent evento, CancellationToken cancellationToken) =>
+        evento.IdUsuarioTitular is Guid idUsuario
+            ? notificacoes.NotificarAsync(new NovaNotificacao(
+                [idUsuario], evento.IdTenant, "FUNERAL_STATUS", $"Funeral de {evento.NomeFalecido}", Mensagem(evento.Status),
+                $"/funerais/{evento.IdFuneral}"), cancellationToken)
+            : Task.CompletedTask;
+
+    private static string Mensagem(string status) => status switch
+    {
+        "EM_PREPARACAO" => "A preparação começou.",
+        "VELORIO" => "O velório começou.",
+        "CONCLUIDO" => "O atendimento foi concluído. Nossos sentimentos à família.",
+        "CANCELADO" => "O funeral foi cancelado. Em caso de dúvida, fale com a funerária.",
+        _ => $"O status mudou para {status}."
+    };
 }
