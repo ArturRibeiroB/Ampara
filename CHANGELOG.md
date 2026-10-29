@@ -28,5 +28,7 @@ Primeira versão do contrato. Será publicada como `v0.1.0`.
   horário nas salas próprias (com intervalo de preparação).
 - Itens do funeral: inclusão e remoção, separação entre o que o plano cobre e o adicional (com a diferença das
   variações), baixa e devolução de estoque e importação das preferências registradas em vida.
+- Pedidos aos fornecedores: geração por fornecedor a partir dos itens, aceite e recusa pelo portal, reenvio a outro
+  fornecedor, preparo e entrega pelo fornecedor (`/terceiros/pedidos`) e cancelamento junto com o funeral.
 - Terceiros: cadastro de parceiros, portal do terceiro com a lista de atribuições, aceite e recusa.
 - Notificações: central (`/api/v1/notificacoes`) e tempo real pelo SignalR em `/hubs/notificacoes`.

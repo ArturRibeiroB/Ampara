@@ -38,6 +38,54 @@ internal static class CenariosFuneral
 
         return new FuneralDeTeste(idFuneral, idContrato, cliente);
     }
+
+    /// <summary>Terceiro FORNECEDOR com conta ativa, já logado no portal (o vínculo nasce pelo outbox).</summary>
+    public static async Task<FornecedorDeTeste> CriarFornecedorAsync(this FuneralApiFactory factory, FunerariaDeTeste funeraria, string nome)
+    {
+        (_, string email) = await factory.CriarUsuarioAsync();
+        HttpResponseMessage criado = await funeraria.Equipe().PostAsJsonAsync("/api/v1/gestao/terceiros", new
+        {
+            tipo = "FORNECEDOR",
+            email,
+            nome_razao_social = nome,
+            cpf_cnpj = DocumentosDeTeste.NovoCnpj()
+        }, JsonApi.Opcoes);
+        Guid idTerceiro = (await Cenarios.LerAsync(criado, HttpStatusCode.Created))["id_terceiro"]!.GetValue<Guid>();
+
+        for (int i = 0; i < 75; i++)
+        {
+            HttpResponseMessage login = await factory.Http(funeraria.Slug).PostAsJsonAsync("/api/v1/auth/login",
+                new { email, senha = FunerariaApiFactory.SenhaPadrao }, JsonApi.Opcoes);
+            if (login.IsSuccessStatusCode)
+            {
+                string token = (await login.Content.ReadFromJsonAsync<JsonObject>(JsonApi.Opcoes))!["access_token"]!.GetValue<string>();
+                return new FornecedorDeTeste(idTerceiro, factory.Http(funeraria.Slug, token));
+            }
+
+            await Task.Delay(200);
+        }
+
+        throw new TimeoutException($"O fornecedor {nome} não conseguiu entrar.");
+    }
+
+    /// <summary>Espera uma condição que depende do outbox (eventos e notificações).</summary>
+    public static async Task<T> AguardarAsync<T>(Func<Task<T>> consultar, Func<T, bool> pronto, string oQue)
+    {
+        for (int i = 0; i < 75; i++)
+        {
+            T valor = await consultar();
+            if (pronto(valor))
+            {
+                return valor;
+            }
+
+            await Task.Delay(200);
+        }
+
+        throw new TimeoutException($"Esperando: {oQue}.");
+    }
 }
+
+internal sealed record FornecedorDeTeste(Guid IdTerceiro, HttpClient Http);
 
 internal sealed record FuneralDeTeste(Guid IdFuneral, Guid IdContrato, ClienteDeTeste Cliente);

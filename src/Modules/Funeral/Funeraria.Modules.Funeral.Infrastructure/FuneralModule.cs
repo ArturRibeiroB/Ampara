@@ -5,10 +5,12 @@ using Funeraria.Modules.Funeral.Contracts;
 using Funeraria.Modules.Funeral.Application.Funerais;
 using Funeraria.Modules.Funeral.Application.Itens;
 using Funeraria.Modules.Funeral.Application.Locais;
+using Funeraria.Modules.Funeral.Application.Pedidos;
 using Funeraria.Modules.Funeral.Application.Preferencias;
 using Funeraria.Modules.Funeral.Domain.Beneficiarios;
 using Funeraria.Modules.Funeral.Domain.Funerais;
 using Funeraria.Modules.Funeral.Domain.Locais;
+using Funeraria.Modules.Funeral.Domain.Pedidos;
 using Funeraria.Modules.Funeral.Domain.Preferencias;
 using Funeraria.Modules.Funeral.Infrastructure.Database;
 using Microsoft.Extensions.Configuration;
@@ -43,6 +45,10 @@ public static class FuneralModule
         // Itens do funeral: coberto x adicional e estoque (FUN-03).
         services.AddScoped<EscolhaNoCatalogo>();
         services.AddScoped<ComposicaoDosItens>();
+
+        // Pedidos a fornecedores (FUN-09).
+        services.AddScoped<IPedidoRepository, PedidoRepository>();
+        services.AddScoped<EnvioDePedidos>();
 
         return services;
     }

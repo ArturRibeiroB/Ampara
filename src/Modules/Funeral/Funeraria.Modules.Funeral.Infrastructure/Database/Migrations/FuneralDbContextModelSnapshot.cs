@@ -74,6 +74,56 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                     b.ToTable("funerais_historico", "funeral");
                 });
 
+            modelBuilder.Entity("Funeraria.BuildingBlocks.Domain.Estados.HistoricoStatus<Funeraria.Modules.Funeral.Domain.Pedidos.StatusPedido>", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_historico");
+
+                    b.Property<string>("Acao")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("acao");
+
+                    b.Property<string>("De")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("de");
+
+                    b.Property<DateTime>("Em")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("em");
+
+                    b.Property<Guid>("IdPedido")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_pedido");
+
+                    b.Property<Guid?>("IdUsuario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("observacao");
+
+                    b.Property<string>("Para")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("para");
+
+                    b.HasKey("Id")
+                        .HasName("pk_pedidos_historico");
+
+                    b.HasIndex("IdPedido")
+                        .HasDatabaseName("ix_pedidos_historico_id_pedido");
+
+                    b.ToTable("pedidos_historico", "funeral");
+                });
+
             modelBuilder.Entity("Funeraria.BuildingBlocks.Infrastructure.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -569,6 +619,98 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                     b.ToTable("reservas", "funeral");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Pedidos.Pedido", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_pedido");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DataHoraEntrega")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_hora_entrega");
+
+                    b.Property<Guid?>("IdAtribuicao")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_atribuicao");
+
+                    b.Property<Guid>("IdFuneral")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_funeral");
+
+                    b.Property<Guid>("IdTerceiro")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_terceiro");
+
+                    b.Property<string>("Itens")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("itens");
+
+                    b.Property<string>("LocalEntrega")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("local_entrega");
+
+                    b.Property<string>("MotivoRecusa")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("motivo_recusa");
+
+                    b.Property<string>("NomeFalecido")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nome_falecido");
+
+                    b.Property<string>("Observacoes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("observacoes");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_tenant");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_pedidos");
+
+                    b.HasIndex("IdFuneral")
+                        .HasDatabaseName("ix_pedidos_id_funeral");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_pedidos_id_tenant");
+
+                    b.HasIndex("IdTerceiro", "Status")
+                        .HasDatabaseName("ix_pedidos_id_terceiro_status");
+
+                    b.ToTable("pedidos", "funeral");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Preferencias.PreferenciaFuneral", b =>
                 {
                     b.Property<Guid>("Id")
@@ -674,6 +816,16 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                         .HasConstraintName("fk_funerais_historico_funerais_id_funeral");
                 });
 
+            modelBuilder.Entity("Funeraria.BuildingBlocks.Domain.Estados.HistoricoStatus<Funeraria.Modules.Funeral.Domain.Pedidos.StatusPedido>", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Funeral.Domain.Pedidos.Pedido", null)
+                        .WithMany("Historico")
+                        .HasForeignKey("IdPedido")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_pedidos_historico_pedidos_id_pedido");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.Funeral", b =>
                 {
                     b.HasOne("Funeraria.Modules.Funeral.Domain.Beneficiarios.Beneficiario", null)
@@ -721,6 +873,11 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                     b.Navigation("Historico");
 
                     b.Navigation("Itens");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Pedidos.Pedido", b =>
+                {
+                    b.Navigation("Historico");
                 });
 #pragma warning restore 612, 618
         }

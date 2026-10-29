@@ -24,7 +24,8 @@ public sealed partial class EmailsCapturados : IEmailTransporte
     /// <summary>Espera o e-mail chegar: ele é enviado em background, pelo outbox.</summary>
     public async Task<EmailMensagem> AguardarAsync(string para, Func<EmailMensagem, bool>? filtro = null, TimeSpan? timeout = null)
     {
-        DateTime limite = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(15));
+        // 30 s: com a suíte inteira em paralelo, a fila do Hangfire às vezes passa dos 15 s.
+        DateTime limite = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(30));
         while (DateTime.UtcNow < limite)
         {
             EmailMensagem? email = Para(para).FirstOrDefault(e => filtro?.Invoke(e) ?? true);
