@@ -8,7 +8,8 @@ namespace Funeraria.Modules.Funeral.IntegrationTests;
 /// <summary>Funeral pronto para os testes de locais, itens e pedidos: contrato ativo sem carência, beneficiário e funeral.</summary>
 internal static class CenariosFuneral
 {
-    public static async Task<FuneralDeTeste> CriarFuneralAsync(this FuneralApiFactory factory, FunerariaDeTeste funeraria, Guid? plano = null)
+    public static async Task<FuneralDeTeste> CriarFuneralAsync(
+        this FuneralApiFactory factory, FunerariaDeTeste funeraria, Guid? plano = null, DateOnly? dataFalecimento = null)
     {
         ClienteDeTeste cliente = await funeraria.CriarClienteAsync();
         Guid idContrato = await cliente.ContratarAsync(plano ?? await funeraria.CriarPlanoAsync(carenciaDias: 0));
@@ -22,7 +23,7 @@ internal static class CenariosFuneral
         HttpResponseMessage beneficiario = await equipe.PostAsJsonAsync("/api/v1/beneficiarios", new
         {
             id_pessoa_coberta = titular,
-            data_falecimento = DateOnly.FromDateTime(DateTime.Now),
+            data_falecimento = dataFalecimento ?? DateOnly.FromDateTime(DateTime.Now),
             local_falecimento = "Hospital Central",
             responsavel = new { nome = "Ana Silva", telefone = "(44) 98888-7777", parentesco = "Filha" }
         }, JsonApi.Opcoes);
@@ -39,13 +40,16 @@ internal static class CenariosFuneral
         return new FuneralDeTeste(idFuneral, idContrato, cliente, idBeneficiario);
     }
 
-    /// <summary>Terceiro FORNECEDOR com conta ativa, já logado no portal (o vínculo nasce pelo outbox).</summary>
-    public static async Task<FornecedorDeTeste> CriarFornecedorAsync(this FuneralApiFactory factory, FunerariaDeTeste funeraria, string nome)
+    public static Task<FornecedorDeTeste> CriarFornecedorAsync(this FuneralApiFactory factory, FunerariaDeTeste funeraria, string nome) =>
+        factory.CriarTerceiroAsync(funeraria, nome, "FORNECEDOR");
+
+    /// <summary>Terceiro com conta ativa, já logado no portal (o vínculo nasce pelo outbox).</summary>
+    public static async Task<FornecedorDeTeste> CriarTerceiroAsync(this FuneralApiFactory factory, FunerariaDeTeste funeraria, string nome, string tipo)
     {
         (_, string email) = await factory.CriarUsuarioAsync();
         HttpResponseMessage criado = await funeraria.Equipe().PostAsJsonAsync("/api/v1/gestao/terceiros", new
         {
-            tipo = "FORNECEDOR",
+            tipo,
             email,
             nome_razao_social = nome,
             cpf_cnpj = DocumentosDeTeste.NovoCnpj()

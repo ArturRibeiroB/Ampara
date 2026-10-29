@@ -90,6 +90,9 @@ public sealed class RenderizadorEmailTests
         public Task<ParametrosCobrancaDto?> ObterParametrosCobrancaAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
+        public Task<string?> ObterModoCertidaoAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
         public Task<TimeSpan?> ObterPrazoAceiteTerceiroAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 

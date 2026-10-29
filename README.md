@@ -210,7 +210,7 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Catalogo | `catalogo` | Categorias, itens, variações e imagens; catálogo modelo copiado para cada funerária nova; `ICatalogoConsultas` para os outros módulos (FUN-01) |
 | Terceiros | `terceiros` | Cadastro de parceiros (frota, despachante/cartório, fornecedor) com convite e acesso pela Identidade; portal do terceiro com a lista única de atribuições, aceite e recusa (TER-01, TER-02) |
 | Funeral | `funeral` | Preferências de funeral em vida (FUN-02), com crença religiosa cifrada; beneficiário (falecido, com elegibilidade do CON-04), funeral com etapas e histórico, aviso à família, acompanhamento e equipe responsável (Gerar Beneficiário, Registrar Funeral, FUN-06 a FUN-08); locais e reserva de salas sem conflito de horário (FUN-05); itens do funeral com coberto x adicional, estoque e importação das preferências (FUN-03); pedidos aos fornecedores pelo portal do terceiro (FUN-09) |
-| Documentos | `documentos` | Documentos do falecido com download por link temporário (CER-01) |
+| Documentos | `documentos` | Documentos do falecido com download por link temporário (CER-01); certidão de óbito no modo manual assistido ou simulado, com despachante pelo portal, alerta de prazo e aviso ao titular (CER-02 a CER-04) |
 | Financeiro, Translado, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso (Translado já tem a máquina de estados do ARQ-01) |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.

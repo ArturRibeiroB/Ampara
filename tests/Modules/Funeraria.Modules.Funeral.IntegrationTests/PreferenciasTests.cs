@@ -7,6 +7,7 @@ using Dapper;
 using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Application.Authorization;
 using Funeraria.Testing;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Funeraria.Modules.Funeral.IntegrationTests;
@@ -17,6 +18,13 @@ public sealed class FuneralApiFactory : FunerariaApiFactory, IAsyncLifetime
     protected override bool UsaArmazenamento => true;
 
     public ValueTask InitializeAsync() => IniciarAsync();
+
+    /// <summary>O modo SIMULADO da certidão (CER-02) só vale onde a configuração permite.</summary>
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+        builder.UseSetting("Documentos:PermitirModoSimulado", "true");
+    }
 }
 
 [CollectionDefinition(Nome)]

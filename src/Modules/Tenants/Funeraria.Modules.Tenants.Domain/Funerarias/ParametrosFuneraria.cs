@@ -11,6 +11,8 @@ public sealed record ParametrosFuneraria
     public ParametrosLembretes Lembretes { get; init; } = new();
 
     public ParametrosTerceiros Terceiros { get; init; } = new();
+
+    public ParametrosCertidao Certidao { get; init; } = new();
 }
 
 public sealed record ParametrosCobranca
@@ -75,6 +77,18 @@ public sealed record ParametrosTerceiros
 {
     /// <summary>Horas que o terceiro tem para aceitar ou recusar um serviço (TER-02).</summary>
     public int PrazoAceiteHoras { get; init; } = 24;
+}
+
+public sealed record ParametrosCertidao
+{
+    /// <summary>Como a certidão de óbito é pedida (CER-02). MANUAL no MVP; SIMULADO só onde a configuração permite.</summary>
+    public ModoCertidao Modo { get; init; } = ModoCertidao.Manual;
+}
+
+public enum ModoCertidao
+{
+    Manual = 1,
+    Simulado = 2
 }
 
 public enum ModoVencimento

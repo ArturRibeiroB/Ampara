@@ -55,6 +55,8 @@ internal sealed class ParametrosFunerariaValidator : AbstractValidator<Parametro
         RuleFor(p => p.Cobranca).NotNull().WithMessage("Parâmetros de cobrança são obrigatórios.");
         RuleFor(p => p.Lembretes).NotNull().WithMessage("Parâmetros de lembretes são obrigatórios.");
         RuleFor(p => p.Terceiros).NotNull().WithMessage("Parâmetros dos terceiros são obrigatórios.");
+        RuleFor(p => p.Certidao).NotNull().WithMessage("Parâmetros da certidão são obrigatórios.");
+        RuleFor(p => p.Certidao.Modo).IsInEnum().WithMessage("Modo da certidão inválido. Use MANUAL ou SIMULADO.").When(p => p.Certidao is not null);
 
         When(p => p.Cobranca is not null, () =>
         {

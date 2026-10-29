@@ -1,6 +1,7 @@
 using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
 using Funeraria.Modules.Documentos.Application.Documentos;
+using Funeraria.Modules.Documentos.Domain.Certidoes;
 using Funeraria.Modules.Documentos.Domain.Documentos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -15,6 +16,8 @@ public sealed class DocumentosDbContext(DbContextOptions<DocumentosDbContext> op
     public override string Schema => SchemaName;
 
     internal DbSet<Documento> Documentos => Set<Documento>();
+
+    internal DbSet<SolicitacaoCertidao> Solicitacoes => Set<SolicitacaoCertidao>();
 
     protected override void ConfigureModel(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DocumentosDbContext).Assembly);

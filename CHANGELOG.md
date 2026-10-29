@@ -32,4 +32,6 @@ Primeira versão do contrato. Será publicada como `v0.1.0`.
   fornecedor, preparo e entrega pelo fornecedor (`/terceiros/pedidos`) e cancelamento junto com o funeral.
 - Terceiros: cadastro de parceiros, portal do terceiro com a lista de atribuições, aceite e recusa.
 - Documentos do falecido: anexar (PDF, JPEG ou PNG), listar, baixar por link temporário e remover.
+- Certidão de óbito: checklist com o prazo legal, solicitação (modo MANUAL ou SIMULADO por funerária), responsável
+  (funcionário ou despachante), etapas pela equipe ou pelo portal (`/terceiros/certidoes`), registro da certidão emitida.
 - Notificações: central (`/api/v1/notificacoes`) e tempo real pelo SignalR em `/hubs/notificacoes`.

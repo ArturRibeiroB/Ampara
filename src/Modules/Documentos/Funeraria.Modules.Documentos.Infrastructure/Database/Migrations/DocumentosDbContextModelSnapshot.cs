@@ -23,6 +23,56 @@ namespace Funeraria.Modules.Documentos.Infrastructure.Database.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Funeraria.BuildingBlocks.Domain.Estados.HistoricoStatus<Funeraria.Modules.Documentos.Domain.Certidoes.StatusCertidao>", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_historico");
+
+                    b.Property<string>("Acao")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("acao");
+
+                    b.Property<string>("De")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("de");
+
+                    b.Property<DateTime>("Em")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("em");
+
+                    b.Property<Guid>("IdSolicitacao")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_solicitacao");
+
+                    b.Property<Guid?>("IdUsuario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("observacao");
+
+                    b.Property<string>("Para")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("para");
+
+                    b.HasKey("Id")
+                        .HasName("pk_solicitacoes_certidao_historico");
+
+                    b.HasIndex("IdSolicitacao")
+                        .HasDatabaseName("ix_solicitacoes_certidao_historico_id_solicitacao");
+
+                    b.ToTable("solicitacoes_certidao_historico", "documentos");
+                });
+
             modelBuilder.Entity("Funeraria.BuildingBlocks.Infrastructure.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -70,6 +120,121 @@ namespace Funeraria.Modules.Documentos.Infrastructure.Database.Migrations
                         .HasFilter("processed_on_utc IS NULL");
 
                     b.ToTable("outbox_messages", "documentos");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Documentos.Domain.Certidoes.SolicitacaoCertidao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_solicitacao");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid?>("IdAtribuicao")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_atribuicao");
+
+                    b.Property<Guid>("IdBeneficiario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_beneficiario");
+
+                    b.Property<Guid>("IdCliente")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_cliente");
+
+                    b.Property<Guid?>("IdDocumentoCertidao")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_documento_certidao");
+
+                    b.Property<Guid?>("IdTerceiroResponsavel")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_terceiro_responsavel");
+
+                    b.Property<Guid?>("IdUsuarioResponsavel")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario_responsavel");
+
+                    b.Property<string>("Modo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("modo");
+
+                    b.Property<string>("NomeFalecido")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nome_falecido");
+
+                    b.Property<string>("NomeResponsavel")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("nome_responsavel");
+
+                    b.Property<string>("NumeroMatricula")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("numero_matricula");
+
+                    b.Property<string>("Pendencia")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("pendencia");
+
+                    b.Property<DateOnly>("PrazoRegistro")
+                        .HasColumnType("date")
+                        .HasColumnName("prazo_registro");
+
+                    b.Property<string>("Protocolo")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("protocolo");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_tenant");
+
+                    b.Property<string>("TipoDoResponsavel")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("tipo_do_responsavel");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_solicitacoes_certidao");
+
+                    b.HasIndex("IdBeneficiario")
+                        .IsUnique()
+                        .HasDatabaseName("ix_solicitacoes_certidao_id_beneficiario");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_solicitacoes_certidao_id_tenant");
+
+                    b.HasIndex("Status", "PrazoRegistro")
+                        .HasDatabaseName("ix_solicitacoes_certidao_status_prazo_registro");
+
+                    b.ToTable("solicitacoes_certidao", "documentos");
                 });
 
             modelBuilder.Entity("Funeraria.Modules.Documentos.Domain.Documentos.Documento", b =>
@@ -146,6 +311,21 @@ namespace Funeraria.Modules.Documentos.Infrastructure.Database.Migrations
                         .HasDatabaseName("ix_documentos_id_tenant");
 
                     b.ToTable("documentos", "documentos");
+                });
+
+            modelBuilder.Entity("Funeraria.BuildingBlocks.Domain.Estados.HistoricoStatus<Funeraria.Modules.Documentos.Domain.Certidoes.StatusCertidao>", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Documentos.Domain.Certidoes.SolicitacaoCertidao", null)
+                        .WithMany("Historico")
+                        .HasForeignKey("IdSolicitacao")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_solicitacoes_certidao_historico_solicitacoes_certidao_id_so");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Documentos.Domain.Certidoes.SolicitacaoCertidao", b =>
+                {
+                    b.Navigation("Historico");
                 });
 #pragma warning restore 612, 618
         }
