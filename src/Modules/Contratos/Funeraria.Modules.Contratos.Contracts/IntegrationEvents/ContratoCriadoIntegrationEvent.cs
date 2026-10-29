@@ -13,3 +13,23 @@ public sealed record ContratoCriadoIntegrationEvent(
     int QuantidadeDependentes,
     decimal ValorTotal)
     : IntegrationEvent(IdTenant);
+
+/// <summary>
+/// Dependente incluído ou removido (CON-02). O Financeiro atualiza a quantidade de dependentes da assinatura, sem cobrança
+/// proporcional: o novo valor vale a partir da próxima fatura (COB-01).
+/// </summary>
+public sealed record PessoasDoContratoAlteradasIntegrationEvent(
+    Guid IdTenant,
+    Guid IdContrato,
+    int QuantidadeDependentes,
+    decimal ValorTotal)
+    : IntegrationEvent(IdTenant);
+
+/// <summary>Contrato cancelado (CON-03). O Financeiro cancela as faturas futuras; as vencidas continuam em aberto.</summary>
+public sealed record ContratoCanceladoIntegrationEvent(
+    Guid IdTenant,
+    Guid IdContrato,
+    Guid IdCliente,
+    DateOnly DataCancelamento,
+    string Motivo)
+    : IntegrationEvent(IdTenant);

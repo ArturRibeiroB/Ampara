@@ -20,7 +20,8 @@ Primeira versão do contrato. Será publicada como `v0.1.0`.
 - Clientes: cadastro, meus dados, dependentes, exportação dos dados (LGPD) e busca pela equipe
   (nome, CPF e status do contrato).
 - Planos e catálogo: gestão, consulta pública, coberturas, variações, imagens e fornecedor do item.
-- Contratos: contratação pelo cliente e pela equipe, consulta e elegibilidade (carência).
+- Contratos: contratação pelo cliente e pela equipe, consulta, elegibilidade (carência), inclusão e remoção de
+  dependentes depois da contratação e cancelamento com motivo.
 - Funeral: preferências de funeral em vida.
 - Terceiros: cadastro de parceiros, portal do terceiro com a lista de atribuições, aceite e recusa.
 - Notificações: central (`/api/v1/notificacoes`) e tempo real pelo SignalR em `/hubs/notificacoes`.

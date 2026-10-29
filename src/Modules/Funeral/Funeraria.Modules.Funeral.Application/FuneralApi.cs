@@ -19,4 +19,12 @@ public sealed class FuneralApi(IPreferenciaRepository preferencias) : IFuneralAp
                 p.Observacoes,
                 [.. p.Itens.Select(i => i.IdItemCatalogo)]))
             .ToList();
+
+    // Beneficiário e funeral entram com os cards Gerar Beneficiário e Registrar Funeral. Até lá não existe nenhum,
+    // então as duas travas do Contratos (CON-02 e CON-03) nunca disparam.
+    public Task<bool> PessoaEhBeneficiariaAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default) =>
+        Task.FromResult(false);
+
+    public Task<bool> PossuiFuneralEmAndamentoAsync(Guid idContrato, CancellationToken cancellationToken = default) =>
+        Task.FromResult(false);
 }
