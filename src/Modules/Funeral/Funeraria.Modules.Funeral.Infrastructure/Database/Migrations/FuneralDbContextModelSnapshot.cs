@@ -313,6 +313,82 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                     b.ToTable("funerais", "funeral");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.FuneralItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_funeral_item");
+
+                    b.Property<decimal>("AcrescimoVariacao")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("acrescimo_variacao");
+
+                    b.Property<string>("Categoria")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("categoria");
+
+                    b.Property<bool>("EstoqueBaixado")
+                        .HasColumnType("boolean")
+                        .HasColumnName("estoque_baixado");
+
+                    b.Property<Guid>("IdFuneral")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_funeral");
+
+                    b.Property<Guid>("IdItemCatalogo")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_item_catalogo");
+
+                    b.Property<Guid?>("IdTerceiroFornecedor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_terceiro_fornecedor");
+
+                    b.Property<Guid?>("IdVariacao")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_variacao");
+
+                    b.Property<DateTime>("IncluidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("incluido_em");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nome");
+
+                    b.Property<string>("NomeVariacao")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("nome_variacao");
+
+                    b.Property<string>("Origem")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("origem");
+
+                    b.Property<decimal>("PrecoBase")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("preco_base");
+
+                    b.Property<int>("Quantidade")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantidade");
+
+                    b.HasKey("Id")
+                        .HasName("pk_funerais_itens");
+
+                    b.HasIndex("IdFuneral")
+                        .HasDatabaseName("ix_funerais_itens_id_funeral");
+
+                    b.ToTable("funerais_itens", "funeral");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.MembroEquipeFuneral", b =>
                 {
                     b.Property<Guid>("Id")
@@ -608,6 +684,16 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                         .HasConstraintName("fk_funerais_beneficiarios_id_beneficiario");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.FuneralItem", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Funeral.Domain.Funerais.Funeral", null)
+                        .WithMany("Itens")
+                        .HasForeignKey("IdFuneral")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_funerais_itens_funerais_id_funeral");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.MembroEquipeFuneral", b =>
                 {
                     b.HasOne("Funeraria.Modules.Funeral.Domain.Funerais.Funeral", null)
@@ -633,6 +719,8 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                     b.Navigation("Equipe");
 
                     b.Navigation("Historico");
+
+                    b.Navigation("Itens");
                 });
 #pragma warning restore 612, 618
         }

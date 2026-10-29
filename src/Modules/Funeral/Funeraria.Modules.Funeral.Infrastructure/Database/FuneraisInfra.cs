@@ -48,6 +48,8 @@ internal sealed class FuneralConfiguration : IEntityTypeConfiguration<FuneralEnt
 
         builder.HasMany(f => f.Historico).WithOne().HasForeignKey("IdFuneral").OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(f => f.Equipe).WithOne().HasForeignKey("IdFuneral").OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(f => f.Itens).WithOne().HasForeignKey("IdFuneral").OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(f => f.Itens).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
         builder.Navigation(f => f.Equipe).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
         builder.Navigation(f => f.Historico).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
 
@@ -55,6 +57,27 @@ internal sealed class FuneralConfiguration : IEntityTypeConfiguration<FuneralEnt
         builder.HasIndex(f => f.IdBeneficiario).IsUnique().HasFilter($"status <> '{nameof(StatusFuneral.Cancelado)}'");
         builder.HasIndex(f => new { f.TenantId, f.Status, f.DataHoraPrevista });
         builder.HasIndex(f => f.IdContrato);
+    }
+}
+
+internal sealed class FuneralItemConfiguration : IEntityTypeConfiguration<FuneralItem>
+{
+    public void Configure(EntityTypeBuilder<FuneralItem> builder)
+    {
+        builder.ToTable("funerais_itens");
+
+        builder.HasKey(i => i.Id);
+        builder.Property(i => i.Id).HasColumnName("id_funeral_item").ValueGeneratedNever();
+        builder.Property<Guid>("IdFuneral").HasColumnName("id_funeral");
+        builder.Property(i => i.Nome).HasMaxLength(150);
+        builder.Property(i => i.Categoria).HasMaxLength(100);
+        builder.Property(i => i.NomeVariacao).HasMaxLength(100);
+        builder.Property(i => i.PrecoBase).HasPrecision(12, 2);
+        builder.Property(i => i.AcrescimoVariacao).HasPrecision(12, 2);
+        builder.Property(i => i.Origem).HasConversion<string>().HasMaxLength(20);
+        builder.Ignore(i => i.PrecoUnitario);
+
+        builder.HasIndex("IdFuneral");
     }
 }
 

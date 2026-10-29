@@ -21,6 +21,7 @@ public static class CatalogoModule
         services.AddScoped<CatalogoLeitura>();
         services.AddScoped<ICatalogoLeitura>(sp => sp.GetRequiredService<CatalogoLeitura>());
         services.AddScoped<ICatalogoConsultas>(sp => sp.GetRequiredService<CatalogoLeitura>());
+        services.AddScoped<ICatalogoEstoque>(sp => sp.GetRequiredService<CatalogoLeitura>());
 
         return services;
     }

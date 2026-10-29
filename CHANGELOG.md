@@ -26,5 +26,7 @@ Primeira versão do contrato. Será publicada como `v0.1.0`.
   com histórico e aviso à família, listagem da equipe, acompanhamento pelo titular e equipe responsável pelo atendimento.
 - Locais (salas próprias, cemitérios, crematórios, igrejas), agenda e reserva para o funeral, sem conflito de
   horário nas salas próprias (com intervalo de preparação).
+- Itens do funeral: inclusão e remoção, separação entre o que o plano cobre e o adicional (com a diferença das
+  variações), baixa e devolução de estoque e importação das preferências registradas em vida.
 - Terceiros: cadastro de parceiros, portal do terceiro com a lista de atribuições, aceite e recusa.
 - Notificações: central (`/api/v1/notificacoes`) e tempo real pelo SignalR em `/hubs/notificacoes`.

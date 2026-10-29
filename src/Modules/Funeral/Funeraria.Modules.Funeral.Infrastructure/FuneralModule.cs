@@ -3,6 +3,7 @@ using Funeraria.Modules.Funeral.Application;
 using Funeraria.Modules.Funeral.Application.Abstractions;
 using Funeraria.Modules.Funeral.Contracts;
 using Funeraria.Modules.Funeral.Application.Funerais;
+using Funeraria.Modules.Funeral.Application.Itens;
 using Funeraria.Modules.Funeral.Application.Locais;
 using Funeraria.Modules.Funeral.Application.Preferencias;
 using Funeraria.Modules.Funeral.Domain.Beneficiarios;
@@ -38,6 +39,10 @@ public static class FuneralModule
         services.AddScoped<ILocalRepository, LocalRepository>();
         services.AddScoped<IReservaRepository, ReservaRepository>();
         services.AddScoped<ReservasDoFuneral>();
+
+        // Itens do funeral: coberto x adicional e estoque (FUN-03).
+        services.AddScoped<EscolhaNoCatalogo>();
+        services.AddScoped<ComposicaoDosItens>();
 
         return services;
     }

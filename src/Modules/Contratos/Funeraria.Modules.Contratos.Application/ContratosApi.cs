@@ -18,6 +18,9 @@ public sealed class ContratosApi(IContratoRepository contratos, TimeProvider tim
             .Select(c => (Guid?)c.IdPlano)
             .FirstOrDefault();
 
+    public async Task<Guid?> PlanoDoContratoAsync(Guid idContrato, CancellationToken cancellationToken = default) =>
+        (await contratos.ObterAsync(idContrato, cancellationToken))?.IdPlano;
+
     public async Task<IReadOnlyList<ContratoDoClienteDto>> ListarDoClienteAsync(Guid idCliente, CancellationToken cancellationToken = default) =>
         (await contratos.ListarDoClienteAsync(idCliente, cancellationToken))
             .Select(c => new ContratoDoClienteDto(

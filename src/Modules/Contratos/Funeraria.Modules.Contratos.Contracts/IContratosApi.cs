@@ -24,6 +24,9 @@ public interface IContratosApi
     /// </summary>
     Task<IReadOnlyList<Guid>> ClientesComContratoAsync(string? status, CancellationToken cancellationToken = default);
 
+    /// <summary>Plano do contrato, para calcular o que o funeral tem coberto (FUN-03). Nulo se o contrato não existir.</summary>
+    Task<Guid?> PlanoDoContratoAsync(Guid idContrato, CancellationToken cancellationToken = default);
+
     /// <summary>Contratos do cliente, para a exportação dos dados pelo titular (SEG-01).</summary>
     Task<IReadOnlyList<ContratoDoClienteDto>> ListarDoClienteAsync(Guid idCliente, CancellationToken cancellationToken = default);
 }

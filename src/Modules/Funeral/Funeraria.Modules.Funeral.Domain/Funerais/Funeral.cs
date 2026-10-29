@@ -15,6 +15,7 @@ namespace Funeraria.Modules.Funeral.Domain.Funerais;
 public sealed class Funeral : AgregadoComStatus<StatusFuneral, AcaoFuneral>, ITenantEntity, IAuditableEntity
 {
     private readonly List<MembroEquipeFuneral> _equipe = [];
+    private readonly List<FuneralItem> _itens = [];
 
     private Funeral(Guid id, Guid tenantId)
         : base(id, StatusFuneral.Registrado)
@@ -44,6 +45,9 @@ public sealed class Funeral : AgregadoComStatus<StatusFuneral, AcaoFuneral>, ITe
     public Destinacao Destinacao { get; private set; }
 
     public string? Observacoes { get; private set; }
+
+    /// <summary>Itens e serviços escolhidos pela família (FUN-03), com o preço do momento da escolha.</summary>
+    public IReadOnlyList<FuneralItem> Itens => _itens;
 
     /// <summary>Quem da funerária cuida do atendimento e em qual função (FUN-08).</summary>
     public IReadOnlyList<MembroEquipeFuneral> Equipe => _equipe;
@@ -89,6 +93,50 @@ public sealed class Funeral : AgregadoComStatus<StatusFuneral, AcaoFuneral>, ITe
             ? Executar(acao, agora, idUsuario, observacao)
             : FuneralErros.TransicaoInvalida(Status, destino);
 
+    /// <summary>Inclui um item escolhido pela família (FUN-03). Item, variação e estoque já foram conferidos no catálogo.</summary>
+    public Result<FuneralItem> AdicionarItem(ItemEscolhido escolhido, DateTime agora)
+    {
+        if (Encerrado)
+        {
+            return FuneralErros.Encerrado;
+        }
+
+        var item = FuneralItem.Criar(escolhido, agora);
+        _itens.Add(item);
+        return item;
+    }
+
+    /// <returns>O item removido, para devolver o estoque baixado.</returns>
+    public Result<FuneralItem> RemoverItem(Guid idFuneralItem)
+    {
+        if (Encerrado)
+        {
+            return FuneralErros.Encerrado;
+        }
+
+        FuneralItem? item = _itens.FirstOrDefault(i => i.Id == idFuneralItem);
+        if (item is null)
+        {
+            return FuneralErros.ItemNaoEncontrado;
+        }
+
+        _itens.Remove(item);
+        return item;
+    }
+
+    /// <summary>Funeral cancelado: os itens ficam no histórico, mas o estoque baixado volta ao catálogo (FUN-03).</summary>
+    /// <returns>Os itens cujo estoque precisa ser devolvido.</returns>
+    public IReadOnlyList<FuneralItem> LiberarEstoque()
+    {
+        FuneralItem[] baixados = [.. _itens.Where(i => i.EstoqueBaixado)];
+        foreach (FuneralItem item in baixados)
+        {
+            item.EstoqueDevolvido();
+        }
+
+        return baixados;
+    }
+
     /// <summary>Coloca a pessoa na equipe do funeral, ou troca a função dela (FUN-08). A pessoa já foi conferida na Identidade.</summary>
     public Result AtribuirMembro(Guid idUsuario, string nome, FuncaoEquipe funcao, DateTime agora)
     {
@@ -129,6 +177,93 @@ public sealed class Funeral : AgregadoComStatus<StatusFuneral, AcaoFuneral>, ITe
 
     protected override void AoMudarStatus(StatusFuneral anterior, StatusFuneral atual, AcaoFuneral acao) =>
         Raise(new FuneralStatusAlteradoDomainEvent(Id, anterior, atual));
+}
+
+/// <summary>
+/// Item do catálogo no funeral (FUN-03). Nome, variação e preços são copiados na escolha: mudar o catálogo depois não muda
+/// o funeral nem o orçamento (FUN-01, FUN-04).
+/// </summary>
+public sealed class FuneralItem : Entity<Guid>
+{
+    private FuneralItem(Guid id)
+        : base(id)
+    {
+    }
+
+    private FuneralItem()
+    {
+    }
+
+    public Guid IdItemCatalogo { get; private set; }
+
+    public Guid? IdVariacao { get; private set; }
+
+    public string Nome { get; private set; } = null!;
+
+    public string Categoria { get; private set; } = null!;
+
+    public string? NomeVariacao { get; private set; }
+
+    public int Quantidade { get; private set; }
+
+    /// <summary>Preço do item no catálogo, sem a variação.</summary>
+    public decimal PrecoBase { get; private set; }
+
+    /// <summary>Diferença da variação escolhida (pode ser negativa). Paga à parte mesmo quando o item está coberto.</summary>
+    public decimal AcrescimoVariacao { get; private set; }
+
+    /// <summary>Fornecedor que recebe o pedido deste item (FUN-09).</summary>
+    public Guid? IdTerceiroFornecedor { get; private set; }
+
+    /// <summary>A quantidade saiu do estoque do catálogo e volta se o item sair ou o funeral for cancelado.</summary>
+    public bool EstoqueBaixado { get; private set; }
+
+    public OrigemItem Origem { get; private set; }
+
+    public DateTime IncluidoEm { get; private set; }
+
+    public decimal PrecoUnitario => PrecoBase + AcrescimoVariacao;
+
+    internal static FuneralItem Criar(ItemEscolhido e, DateTime agora) =>
+        new(Guid.CreateVersion7())
+        {
+            IdItemCatalogo = e.IdItemCatalogo,
+            IdVariacao = e.IdVariacao,
+            Nome = e.Nome,
+            Categoria = e.Categoria,
+            NomeVariacao = e.NomeVariacao,
+            Quantidade = e.Quantidade,
+            PrecoBase = e.PrecoBase,
+            AcrescimoVariacao = e.AcrescimoVariacao,
+            IdTerceiroFornecedor = e.IdTerceiroFornecedor,
+            EstoqueBaixado = e.EstoqueBaixado,
+            Origem = e.Origem,
+            IncluidoEm = agora
+        };
+
+    internal void EstoqueDevolvido() => EstoqueBaixado = false;
+}
+
+public sealed record ItemEscolhido(
+    Guid IdItemCatalogo,
+    Guid? IdVariacao,
+    string Nome,
+    string Categoria,
+    string? NomeVariacao,
+    int Quantidade,
+    decimal PrecoBase,
+    decimal AcrescimoVariacao,
+    Guid? IdTerceiroFornecedor,
+    bool EstoqueBaixado,
+    OrigemItem Origem);
+
+public enum OrigemItem
+{
+    /// <summary>Escolhido pela equipe com a família.</summary>
+    Manual = 1,
+
+    /// <summary>Veio das preferências registradas em vida (FUN-02).</summary>
+    Preferencia = 2
 }
 
 /// <summary>Pessoa da equipe interna no atendimento (FUN-08). O nome é copiado da conta para as telas.</summary>
@@ -179,6 +314,9 @@ public static class FuneralErros
 
     public static readonly Error AntesDoFalecimento =
         Error.Validacao("Funeral.AntesDoFalecimento", "A data do funeral não pode ser anterior à data de falecimento.");
+
+    public static readonly Error ItemNaoEncontrado =
+        Error.NaoEncontrado("Funeral.ItemNaoEncontrado", "Item não encontrado neste funeral.");
 
     public static readonly Error MembroNaoEncontrado =
         Error.NaoEncontrado("Funeral.MembroNaoEncontrado", "Esta pessoa não está na equipe do funeral.");
