@@ -356,6 +356,143 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                     b.ToTable("funerais_equipe", "funeral");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Locais.Local", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_local");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ativo");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Endereco")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("endereco");
+
+                    b.Property<int>("IntervaloPreparacaoMinutos")
+                        .HasColumnType("integer")
+                        .HasColumnName("intervalo_preparacao_minutos");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nome");
+
+                    b.Property<bool>("Proprio")
+                        .HasColumnType("boolean")
+                        .HasColumnName("proprio");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_tenant");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("tipo");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_locais");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_locais_id_tenant");
+
+                    b.ToTable("locais", "funeral");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Locais.Reserva", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_reserva");
+
+                    b.Property<bool>("Cancelada")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cancelada");
+
+                    b.Property<bool>("ControlaAgenda")
+                        .HasColumnType("boolean")
+                        .HasColumnName("controla_agenda");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("Fim")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fim");
+
+                    b.Property<Guid>("IdFuneral")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_funeral");
+
+                    b.Property<Guid>("IdLocal")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_local");
+
+                    b.Property<DateTime>("Inicio")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inicio");
+
+                    b.Property<DateTime>("OcupadoAte")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ocupado_ate");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_tenant");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_reservas");
+
+                    b.HasIndex("IdFuneral")
+                        .HasDatabaseName("ix_reservas_id_funeral");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_reservas_id_tenant");
+
+                    b.HasIndex("IdLocal", "Inicio")
+                        .HasDatabaseName("ix_reservas_id_local_inicio");
+
+                    b.ToTable("reservas", "funeral");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Preferencias.PreferenciaFuneral", b =>
                 {
                     b.Property<Guid>("Id")
@@ -479,6 +616,16 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_funerais_equipe_funerais_id_funeral");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Locais.Reserva", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Funeral.Domain.Locais.Local", null)
+                        .WithMany()
+                        .HasForeignKey("IdLocal")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_reservas_locais_id_local");
                 });
 
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.Funeral", b =>

@@ -137,6 +137,12 @@ Gerar o openapi.json localmente:
 dotnet build src/Funeraria.Api -p:OpenApiGenerateDocumentsOnBuild=true
 ```
 
+## Banco em produção
+
+- A migration de reservas (FUN-05) cria a extensão `btree_gist` (restrição de exclusão que impede duas reservas
+  da mesma sala no mesmo horário). No RDS/Azure/Cloud SQL ela é permitida, mas o usuário das migrations precisa
+  poder criar extensões (ou um DBA roda `CREATE EXTENSION btree_gist;` antes do deploy).
+
 ## Contrato da API e versões (INF-21)
 
 O `openapi.json` é o contrato com o frontend. Cada release publica o arquivo e a imagem Docker com a mesma versão,
@@ -203,7 +209,7 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Contratos | `contratos` | Contratação pelo cliente (`POST /contratos`) e pela equipe (`POST /gestao/contratos`), com pessoas cobertas, valor e periodicidade da contratação; consulta pelo cliente e busca pela equipe; dependentes depois da contratação e cancelamento com motivo (Criar Contrato, CON-01 a CON-04) |
 | Catalogo | `catalogo` | Categorias, itens, variações e imagens; catálogo modelo copiado para cada funerária nova; `ICatalogoConsultas` para os outros módulos (FUN-01) |
 | Terceiros | `terceiros` | Cadastro de parceiros (frota, despachante/cartório, fornecedor) com convite e acesso pela Identidade; portal do terceiro com a lista única de atribuições, aceite e recusa (TER-01, TER-02) |
-| Funeral | `funeral` | Preferências de funeral em vida (FUN-02), com crença religiosa cifrada; beneficiário (falecido, com elegibilidade do CON-04), funeral com etapas e histórico, aviso à família, acompanhamento e equipe responsável (Gerar Beneficiário, Registrar Funeral, FUN-06 a FUN-08) |
+| Funeral | `funeral` | Preferências de funeral em vida (FUN-02), com crença religiosa cifrada; beneficiário (falecido, com elegibilidade do CON-04), funeral com etapas e histórico, aviso à família, acompanhamento e equipe responsável (Gerar Beneficiário, Registrar Funeral, FUN-06 a FUN-08); locais e reserva de salas sem conflito de horário (FUN-05) |
 | Financeiro, Documentos, Translado, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso (Documentos e Translado já têm as tabelas de status do ARQ-01) |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.

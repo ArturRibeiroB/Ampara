@@ -24,5 +24,7 @@ Primeira versão do contrato. Será publicada como `v0.1.0`.
   dependentes depois da contratação e cancelamento com motivo.
 - Funeral: preferências de funeral em vida; registro do beneficiário (falecido) e do funeral, mudança de etapa
   com histórico e aviso à família, listagem da equipe, acompanhamento pelo titular e equipe responsável pelo atendimento.
+- Locais (salas próprias, cemitérios, crematórios, igrejas), agenda e reserva para o funeral, sem conflito de
+  horário nas salas próprias (com intervalo de preparação).
 - Terceiros: cadastro de parceiros, portal do terceiro com a lista de atribuições, aceite e recusa.
 - Notificações: central (`/api/v1/notificacoes`) e tempo real pelo SignalR em `/hubs/notificacoes`.

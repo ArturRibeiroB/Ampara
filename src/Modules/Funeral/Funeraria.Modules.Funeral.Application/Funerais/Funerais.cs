@@ -9,6 +9,7 @@ using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Clientes.Contracts;
 using Funeraria.Modules.Contratos.Contracts;
 using Funeraria.Modules.Funeral.Application.Abstractions;
+using Funeraria.Modules.Funeral.Application.Locais;
 using Funeraria.Modules.Funeral.Contracts.IntegrationEvents;
 using Funeraria.Modules.Funeral.Domain.Beneficiarios;
 using Funeraria.Modules.Funeral.Domain.Funerais;
@@ -80,9 +81,12 @@ public sealed record FuneralResponse(
     string? Observacoes,
     IReadOnlyList<StatusFuneral> ProximosStatus,
     IReadOnlyList<MembroEquipeResponse> Equipe,
+    IReadOnlyList<ReservaResponse> Reservas,
     IReadOnlyList<HistoricoStatusResponse> Historico)
 {
-    public static FuneralResponse De(FuneralEntity f) => new(
+    /// <param name="f">Funeral.</param>
+    /// <param name="reservas">Locais reservados (FUN-05); só o detalhe carrega.</param>
+    public static FuneralResponse De(FuneralEntity f, IReadOnlyList<ReservaResponse>? reservas = null) => new(
         f.Id,
         f.IdBeneficiario,
         f.IdContrato,
@@ -93,6 +97,7 @@ public sealed record FuneralResponse(
         f.Observacoes,
         [.. EstadosFuneral.Maquina.Transicoes.Where(t => t.De == f.Status).Select(t => t.Para)],
         [.. f.Equipe.OrderBy(m => m.AtribuidoEm).Select(m => new MembroEquipeResponse(m.IdUsuario, m.Nome, m.Funcao))],
+        reservas ?? [],
         [.. f.Historico.OrderBy(h => h.Em).Select(h => new HistoricoStatusResponse(h.De, h.Para, h.IdUsuario, h.Observacao, h.Em))]);
 }
 
@@ -364,13 +369,14 @@ public sealed class AlterarStatusFuneralCommandHandler(
     }
 }
 
-public sealed class ObterFuneralQueryHandler(IFuneralRepository funerais, ICurrentUser usuario) : IQueryHandler<ObterFuneralQuery, FuneralResponse>
+public sealed class ObterFuneralQueryHandler(IFuneralRepository funerais, ReservasDoFuneral reservas, ICurrentUser usuario)
+    : IQueryHandler<ObterFuneralQuery, FuneralResponse>
 {
     public async ValueTask<Result<FuneralResponse>> Handle(ObterFuneralQuery query, CancellationToken cancellationToken)
     {
         FuneralEntity? funeral = await funerais.ObterAsync(query.IdFuneral, cancellationToken);
         return funeral is not null && AcessoDaFamilia.Permitido(usuario, funeral.IdCliente)
-            ? FuneralResponse.De(funeral)
+            ? FuneralResponse.De(funeral, await reservas.ListarAsync(funeral.Id, cancellationToken))
             : FuneralErros.NaoEncontrado;
     }
 }

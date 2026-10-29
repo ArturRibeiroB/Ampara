@@ -3,9 +3,11 @@ using Funeraria.Modules.Funeral.Application;
 using Funeraria.Modules.Funeral.Application.Abstractions;
 using Funeraria.Modules.Funeral.Contracts;
 using Funeraria.Modules.Funeral.Application.Funerais;
+using Funeraria.Modules.Funeral.Application.Locais;
 using Funeraria.Modules.Funeral.Application.Preferencias;
 using Funeraria.Modules.Funeral.Domain.Beneficiarios;
 using Funeraria.Modules.Funeral.Domain.Funerais;
+using Funeraria.Modules.Funeral.Domain.Locais;
 using Funeraria.Modules.Funeral.Domain.Preferencias;
 using Funeraria.Modules.Funeral.Infrastructure.Database;
 using Microsoft.Extensions.Configuration;
@@ -31,6 +33,11 @@ public static class FuneralModule
         services.AddScoped<FuneralRepository>();
         services.AddScoped<IFuneralRepository>(sp => sp.GetRequiredService<FuneralRepository>());
         services.AddScoped<IFuneraisLeitura>(sp => sp.GetRequiredService<FuneralRepository>());
+
+        // Locais, agenda e reservas (FUN-05).
+        services.AddScoped<ILocalRepository, LocalRepository>();
+        services.AddScoped<IReservaRepository, ReservaRepository>();
+        services.AddScoped<ReservasDoFuneral>();
 
         return services;
     }
