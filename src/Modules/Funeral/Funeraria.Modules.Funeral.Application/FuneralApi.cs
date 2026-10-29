@@ -23,6 +23,11 @@ public sealed class FuneralApi(IPreferenciaRepository preferencias, IBeneficiari
                 [.. p.Itens.Select(i => i.IdItemCatalogo)]))
             .ToList();
 
+    public async Task<BeneficiarioDto?> ObterBeneficiarioAsync(Guid idBeneficiario, CancellationToken cancellationToken = default) =>
+        await beneficiarios.ObterAsync(idBeneficiario, cancellationToken) is { } b
+            ? new BeneficiarioDto(b.Id, b.IdCliente, b.Nome, b.DataNascimento, b.DataFalecimento, b.LocalFalecimento, b.Responsavel.Nome, b.Responsavel.Telefone)
+            : null;
+
     public Task<bool> PessoaEhBeneficiariaAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default) =>
         beneficiarios.ExisteDaPessoaAsync(idPessoaCoberta, cancellationToken);
 

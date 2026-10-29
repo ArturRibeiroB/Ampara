@@ -31,4 +31,5 @@ Primeira versão do contrato. Será publicada como `v0.1.0`.
 - Pedidos aos fornecedores: geração por fornecedor a partir dos itens, aceite e recusa pelo portal, reenvio a outro
   fornecedor, preparo e entrega pelo fornecedor (`/terceiros/pedidos`) e cancelamento junto com o funeral.
 - Terceiros: cadastro de parceiros, portal do terceiro com a lista de atribuições, aceite e recusa.
+- Documentos do falecido: anexar (PDF, JPEG ou PNG), listar, baixar por link temporário e remover.
 - Notificações: central (`/api/v1/notificacoes`) e tempo real pelo SignalR em `/hubs/notificacoes`.

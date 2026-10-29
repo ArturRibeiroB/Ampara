@@ -13,6 +13,9 @@ namespace Funeraria.Modules.Funeral.IntegrationTests;
 
 public sealed class FuneralApiFactory : FunerariaApiFactory, IAsyncLifetime
 {
+    /// <summary>Documentos e certidão do falecido (CER) gravam no armazenamento de arquivos.</summary>
+    protected override bool UsaArmazenamento => true;
+
     public ValueTask InitializeAsync() => IniciarAsync();
 }
 

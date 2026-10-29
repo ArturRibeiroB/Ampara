@@ -36,7 +36,7 @@ internal static class CenariosFuneral
         }, JsonApi.Opcoes);
         Guid idFuneral = (await Cenarios.LerAsync(funeral, HttpStatusCode.Created))["id_funeral"]!.GetValue<Guid>();
 
-        return new FuneralDeTeste(idFuneral, idContrato, cliente);
+        return new FuneralDeTeste(idFuneral, idContrato, cliente, idBeneficiario);
     }
 
     /// <summary>Terceiro FORNECEDOR com conta ativa, já logado no portal (o vínculo nasce pelo outbox).</summary>
@@ -88,4 +88,4 @@ internal static class CenariosFuneral
 
 internal sealed record FornecedorDeTeste(Guid IdTerceiro, HttpClient Http);
 
-internal sealed record FuneralDeTeste(Guid IdFuneral, Guid IdContrato, ClienteDeTeste Cliente);
+internal sealed record FuneralDeTeste(Guid IdFuneral, Guid IdContrato, ClienteDeTeste Cliente, Guid IdBeneficiario);
