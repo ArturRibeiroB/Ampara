@@ -74,6 +74,7 @@ internal static class ModuleRegistration
     public static IEndpointRouteBuilder MapModuleEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGroup("/api/v1").MapEndpoints();
+        app.MapNotificacoesHub();
         return app;
     }
 }

@@ -6,8 +6,12 @@ using System.Text.Json.Nodes;
 using Funeraria.BuildingBlocks.Application.Authorization;
 using Funeraria.Modules.Contratos.Domain.Contratos;
 using Funeraria.Modules.Contratos.Infrastructure.Database;
+using Funeraria.Modules.Identidade.Domain.Vinculos;
+using Funeraria.Modules.Identidade.Infrastructure.Database;
+using Funeraria.Modules.Identidade.Infrastructure.Usuarios;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
 using Funeraria.Modules.Tenants.Infrastructure.Database;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using FunerariaEntity = Funeraria.Modules.Tenants.Domain.Funerarias.Funeraria;
@@ -39,6 +43,53 @@ public static class Cenarios
         }
 
         return client;
+    }
+
+    /// <summary>Cria uma conta com a <see cref="FunerariaApiFactory.SenhaPadrao"/> e os vínculos informados.</summary>
+    public static async Task<(Guid IdUsuario, string Email)> CriarUsuarioAsync(
+        this FunerariaApiFactory factory, params (Guid IdTenant, PerfilVinculo Perfil)[] vinculos)
+    {
+        string email = $"{Guid.NewGuid():N}@teste.localhost";
+
+        await using AsyncServiceScope scope = factory.Services.CreateAsyncScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Usuario>>();
+        var usuario = new Usuario
+        {
+            Id = Guid.CreateVersion7(),
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true,
+            Nome = "Usuário de Teste",
+            CriadoEm = DateTime.UtcNow
+        };
+
+        IdentityResult result = await userManager.CreateAsync(usuario, FunerariaApiFactory.SenhaPadrao);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(string.Join("; ", result.Errors.Select(e => e.Description)));
+        }
+
+        var context = scope.ServiceProvider.GetRequiredService<IdentidadeDbContext>();
+        foreach ((Guid idTenant, PerfilVinculo perfil) in vinculos)
+        {
+            context.Add(UsuarioVinculo.Criar(usuario.Id, idTenant, perfil, idCliente: perfil == PerfilVinculo.Cliente ? Guid.NewGuid() : null));
+        }
+
+        await context.SaveChangesAsync();
+        return (usuario.Id, email);
+    }
+
+    /// <summary>Entra pela API e devolve o access token (com o sub da conta real).</summary>
+    public static async Task<string> EntrarAsync(this FunerariaApiFactory factory, string? slug, string email)
+    {
+        HttpClient client = factory.CreateClient();
+        if (slug is not null)
+        {
+            client.DefaultRequestHeaders.Add("X-Tenant", slug);
+        }
+
+        HttpResponseMessage login = await client.PostAsJsonAsync("/api/v1/auth/login", new { email, senha = FunerariaApiFactory.SenhaPadrao }, JsonApi.Opcoes);
+        return (await LerAsync(login, HttpStatusCode.OK))["access_token"]!.GetValue<string>();
     }
 
     /// <summary>Funerária ativa com os parâmetros de cobrança preenchidos, que é o que libera a contratação (TEN-03).</summary>

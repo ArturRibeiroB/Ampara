@@ -40,6 +40,17 @@ internal static class JwtAuthenticationExtensions
                 // 401 e 403 com ProblemDetails e mensagem, no mesmo formato dos outros erros (INF-07).
                 bearer.Events = new JwtBearerEvents
                 {
+                    // SignalR (NOT-02): no navegador o WebSocket não manda cabeçalho, então o token vem na query, só nos hubs.
+                    OnMessageReceived = context =>
+                    {
+                        if (context.Request.Path.StartsWithSegments("/hubs") && context.Request.Query["access_token"] is { Count: > 0 } token)
+                        {
+                            context.Token = token;
+                        }
+
+                        return Task.CompletedTask;
+                    },
+
                     OnChallenge = async context =>
                     {
                         context.HandleResponse();

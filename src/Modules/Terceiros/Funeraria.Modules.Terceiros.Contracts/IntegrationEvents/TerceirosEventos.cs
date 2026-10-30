@@ -23,3 +23,11 @@ public sealed record AtribuicaoAceitaIntegrationEvent(Guid IdTenant, Guid IdAtri
 /// <summary>O terceiro recusou um serviço (TER-02). O módulo de origem atualiza o registro e a funerária escolhe outro parceiro.</summary>
 public sealed record AtribuicaoRecusadaIntegrationEvent(Guid IdTenant, Guid IdAtribuicao, Guid IdTerceiro, string Tipo, Guid IdOrigem, string Motivo)
     : IntegrationEvent(IdTenant);
+
+/// <summary>
+/// Serviço atribuído a um terceiro (TER-02). As Notificações avisam o parceiro. Sem conta ligada ainda (convite pendente),
+/// IdUsuarioTerceiro vem vazio.
+/// </summary>
+public sealed record AtribuicaoCriadaIntegrationEvent(
+    Guid IdTenant, Guid IdAtribuicao, Guid IdTerceiro, Guid? IdUsuarioTerceiro, string Tipo, Guid IdOrigem, DateTime PrazoAceite)
+    : IntegrationEvent(IdTenant);

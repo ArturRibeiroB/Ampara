@@ -45,8 +45,9 @@ public sealed class Atribuicao : AggregateRoot<Guid>, ITenantEntity, IAuditableE
 
     public string? MotivoRecusa { get; private set; }
 
-    public static Atribuicao Criar(Guid tenantId, Guid idTerceiro, TipoAtribuicao tipo, Guid idOrigem, string resumo, DateTime prazoAceite) =>
-        new(Guid.CreateVersion7(), tenantId)
+    public static Atribuicao Criar(Guid tenantId, Guid idTerceiro, TipoAtribuicao tipo, Guid idOrigem, string resumo, DateTime prazoAceite)
+    {
+        var atribuicao = new Atribuicao(Guid.CreateVersion7(), tenantId)
         {
             IdTerceiro = idTerceiro,
             Tipo = tipo,
@@ -55,6 +56,9 @@ public sealed class Atribuicao : AggregateRoot<Guid>, ITenantEntity, IAuditableE
             Status = StatusAtribuicao.Pendente,
             PrazoAceite = prazoAceite
         };
+        atribuicao.Raise(new AtribuicaoCriadaDomainEvent(atribuicao.Id));
+        return atribuicao;
+    }
 
     /// <summary>Status para mostrar: pendente com o prazo vencido aparece como EXPIRADA.</summary>
     public StatusAtribuicao StatusEm(DateTime agora) =>
@@ -113,6 +117,8 @@ public enum StatusAtribuicao
     Concluida = 5,
     Cancelada = 6
 }
+
+public sealed record AtribuicaoCriadaDomainEvent(Guid IdAtribuicao) : DomainEvent;
 
 public sealed record AtribuicaoRespondidaDomainEvent(Guid IdAtribuicao, bool Aceita) : DomainEvent;
 

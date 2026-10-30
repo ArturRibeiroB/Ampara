@@ -225,6 +225,23 @@ public sealed class RecusarAtribuicaoCommandHandler(
     }
 }
 
+/// <summary>Publica a atribuição nova, com a conta do terceiro, para as Notificações avisarem o parceiro (TER-02, NOT-02).</summary>
+internal sealed class AtribuicaoCriadaDomainEventHandler(IAtribuicaoRepository atribuicoes, ITerceiroRepository terceiros, IEventBus eventBus)
+    : IDomainEventHandler<AtribuicaoCriadaDomainEvent>
+{
+    public async Task Handle(AtribuicaoCriadaDomainEvent evento, CancellationToken cancellationToken)
+    {
+        if (await atribuicoes.ObterAsync(evento.IdAtribuicao, cancellationToken) is not Atribuicao a)
+        {
+            return;
+        }
+
+        Terceiro? terceiro = await terceiros.ObterAsync(a.IdTerceiro, cancellationToken);
+        await eventBus.PublishAsync(new AtribuicaoCriadaIntegrationEvent(
+            a.TenantId, a.Id, a.IdTerceiro, terceiro?.IdUsuario, a.Tipo.ToString().ToUpperInvariant(), a.IdOrigem, a.PrazoAceite), cancellationToken);
+    }
+}
+
 /// <summary>Publica a resposta do terceiro para o módulo de origem (TER-02).</summary>
 internal sealed class AtribuicaoRespondidaDomainEventHandler(IAtribuicaoRepository atribuicoes, IEventBus eventBus)
     : IDomainEventHandler<AtribuicaoRespondidaDomainEvent>
