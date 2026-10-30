@@ -82,6 +82,18 @@ internal sealed class ContratosEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        app.MapGet("contratos/{id:guid}/elegibilidade", async (Guid id, ISender sender, CancellationToken ct) =>
+                (await sender.Send(new ConsultarElegibilidadeQuery(id), ct)).Match(Results.Ok))
+            .RequireAuthorization(Politicas.ClienteOuEquipe)
+            .WithTags(Tag)
+            .WithName("ElegibilidadeContrato")
+            .WithSummary("Quem do contrato pode usar o plano hoje: contrato ativo e adimplente e carência cumprida")
+            .WithDescription("Por pessoa coberta: elegivel, motivo e carencia_cumprida_em (CON-04).")
+            .Produces<IReadOnlyList<ElegibilidadeResponse>>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         app.MapGet("gestao/contratos", async (
                 ISender sender,
                 CancellationToken ct,

@@ -112,7 +112,52 @@ public sealed class Contrato : AggregateRoot<Guid>, ITenantEntity, IAuditableEnt
         contrato.Raise(new ContratoCriadoDomainEvent(contrato.Id));
         return contrato;
     }
+
+    /// <summary>Primeira cobrança paga ou pendência quitada (COB-01, COB-03): a cobertura passa a valer.</summary>
+    public void Ativar()
+    {
+        if (Status is StatusContrato.APagar or StatusContrato.Suspenso)
+        {
+            Status = StatusContrato.Ativo;
+        }
+    }
+
+    /// <summary>Atraso além da tolerância (COB-03, DEC-12): a cobertura fica suspensa até a quitação.</summary>
+    public void Suspender()
+    {
+        if (Status == StatusContrato.Ativo)
+        {
+            Status = StatusContrato.Suspenso;
+        }
+    }
+
+    /// <summary>
+    /// Se a pessoa pode usar o plano hoje (CON-04): contrato ativo e adimplente e carência cumprida, contada da data de
+    /// inclusão da pessoa com a carência gravada na contratação.
+    /// </summary>
+    public Elegibilidade AvaliarElegibilidade(PessoaCoberta pessoa, DateOnly hoje)
+    {
+        DateOnly carenciaCumpridaEm = pessoa.DataInclusao.AddDays(CarenciaDias);
+
+        string? motivo = Status switch
+        {
+            StatusContrato.Cancelado => "Contrato cancelado.",
+            StatusContrato.Suspenso => "Contrato suspenso por falta de pagamento.",
+            StatusContrato.APagar => "Contrato aguardando o pagamento da primeira cobrança.",
+            _ when pessoa.DataRemocao is not null => "Pessoa removida do contrato.",
+            _ when hoje < carenciaCumpridaEm => $"Em carência até {carenciaCumpridaEm:dd/MM/yyyy}.",
+            _ => null
+        };
+
+        return new Elegibilidade(motivo is null, motivo, carenciaCumpridaEm);
+    }
 }
+
+/// <summary>Resposta do CON-04 para uma pessoa coberta.</summary>
+/// <param name="Elegivel">Pode usar o plano hoje.</param>
+/// <param name="Motivo">Por que não pode; vazio quando pode.</param>
+/// <param name="CarenciaCumpridaEm">Data em que a carência termina (ou terminou).</param>
+public sealed record Elegibilidade(bool Elegivel, string? Motivo, DateOnly CarenciaCumpridaEm);
 
 /// <summary>Titular ou dependente coberto pelo contrato, com a data de inclusão que conta para a carência (CON-04).</summary>
 public sealed class PessoaCoberta : Entity<Guid>

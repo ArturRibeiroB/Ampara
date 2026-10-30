@@ -6,6 +6,8 @@ using System.Text.Json.Nodes;
 using Funeraria.BuildingBlocks.Application.Authorization;
 using Funeraria.BuildingBlocks.Application.Events;
 using Funeraria.Modules.Contratos.Contracts.IntegrationEvents;
+using Funeraria.Modules.Contratos.Domain.Contratos;
+using Funeraria.Modules.Contratos.Infrastructure.Database;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
 using Funeraria.Modules.Tenants.Infrastructure.Database;
 using Funeraria.Testing;
@@ -53,6 +55,16 @@ public sealed class ContratosApiFactory : FunerariaApiFactory, IAsyncLifetime
         await context.SaveChangesAsync();
     }
 
+    /// <summary>Simula o pagamento da primeira cobrança (o COB-01 fará isso pelo webhook do Stripe).</summary>
+    public async Task AtivarContratoAsync(Guid idContrato)
+    {
+        await using AsyncServiceScope scope = Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ContratosDbContext>();
+        Contrato contrato = await context.Set<Contrato>().IgnoreQueryFilters().SingleAsync(c => c.Id == idContrato);
+        contrato.Ativar();
+        await context.SaveChangesAsync();
+    }
+
     public HttpClient Http(string slug, string? token = null)
     {
         HttpClient client = CreateClient();
@@ -74,7 +86,7 @@ public sealed class ContratosApiFactory : FunerariaApiFactory, IAsyncLifetime
 
         public HttpClient Equipe(string perfil = Perfis.Funeraria) => factory.Http(Slug, TokenDeTeste.Gerar(perfil, Tenant));
 
-        public async Task<Guid> CriarPlanoAsync(int limiteDependentes = 4, bool permiteSomenteDependente = false, bool ativo = true)
+        public async Task<Guid> CriarPlanoAsync(int limiteDependentes = 4, bool permiteSomenteDependente = false, bool ativo = true, int carenciaDias = 90)
         {
             HttpResponseMessage criado = await Equipe().PostAsJsonAsync("/api/v1/gestao/planos", new
             {
@@ -84,7 +96,7 @@ public sealed class ContratosApiFactory : FunerariaApiFactory, IAsyncLifetime
                 valor_anual = 970.92m,
                 valor_dependente_mensal = 19.90m,
                 valor_dependente_anual = 214.92m,
-                carencia_dias = 90,
+                carencia_dias = carenciaDias,
                 limite_dependentes = limiteDependentes,
                 permite_somente_dependente = permiteSomenteDependente
             }, Json, Ct);
