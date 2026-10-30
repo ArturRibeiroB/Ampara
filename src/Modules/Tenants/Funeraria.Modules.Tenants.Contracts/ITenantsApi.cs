@@ -18,6 +18,9 @@ public interface ITenantsApi
     /// <summary>Prazo para o terceiro aceitar ou recusar um serviço (TER-02). Nulo se a funerária não existir.</summary>
     Task<TimeSpan?> ObterPrazoAceiteTerceiroAsync(Guid idTenant, CancellationToken cancellationToken = default);
 
+    /// <summary>Modo da certidão de óbito da funerária (CER-02): MANUAL ou SIMULADO. Nulo se a funerária não existir.</summary>
+    Task<string?> ObterModoCertidaoAsync(Guid idTenant, CancellationToken cancellationToken = default);
+
     /// <summary>Resumo das funerárias informadas. Ids inexistentes são ignorados.</summary>
     Task<IReadOnlyList<FunerariaResumoDto>> ListarAsync(IReadOnlyCollection<Guid> idsTenant, CancellationToken cancellationToken = default);
 }

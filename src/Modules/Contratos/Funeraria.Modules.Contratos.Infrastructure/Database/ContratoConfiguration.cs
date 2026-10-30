@@ -14,6 +14,7 @@ internal sealed class ContratoConfiguration : IEntityTypeConfiguration<Contrato>
         builder.Property(c => c.Id).HasColumnName("id_contrato").ValueGeneratedNever();
 
         builder.Property(c => c.NomePlano).HasMaxLength(100);
+        builder.Property(c => c.MotivoCancelamento).HasMaxLength(500);
         builder.Property(c => c.TipoCobertura).HasConversion<string>().HasMaxLength(30);
         builder.Property(c => c.Periodicidade).HasConversion<string>().HasMaxLength(10);
         builder.Property(c => c.Status).HasConversion<string>().HasMaxLength(20);

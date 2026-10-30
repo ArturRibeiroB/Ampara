@@ -4,6 +4,7 @@ using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.BuildingBlocks.Application.Paginacao;
 using Funeraria.BuildingBlocks.Infrastructure.Endpoints;
 using Funeraria.Modules.Contratos.Application;
+using Funeraria.Modules.Contratos.Application.Commands.AlterarContrato;
 using Funeraria.Modules.Contratos.Application.Commands.CriarContrato;
 using Funeraria.Modules.Contratos.Application.Queries;
 using Funeraria.Modules.Contratos.Domain.Contratos;
@@ -56,6 +57,52 @@ internal sealed class ContratosEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         MapConsultas(app);
+        MapAlteracoes(app);
+    }
+
+    /// <summary>
+    /// Dependentes depois da contratação (CON-02) e cancelamento (CON-03). O cliente só altera os próprios contratos
+    /// (os outros dão 404); o consultor não cancela.
+    /// </summary>
+    private static void MapAlteracoes(IEndpointRouteBuilder app)
+    {
+        app.MapPost("contratos/{id:guid}/dependentes", async (Guid id, IncluirDependenteRequest r, ISender sender, CancellationToken ct) =>
+                (await sender.Send(new IncluirDependenteContratoCommand(id, r.IdDependente), ct)).Match(Results.Ok))
+            .RequireAuthorization(Politicas.ClienteOuEquipe)
+            .WithTags(Tag)
+            .WithName("IncluirDependenteContrato")
+            .WithSummary("Inclui um dependente do titular no contrato")
+            .WithDescription("A carência do dependente conta a partir da inclusão e o novo valor vale a partir da próxima fatura. "
+                + "Respeita o limite de dependentes do plano.")
+            .Produces<ContratoResponse>()
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        app.MapDelete("contratos/{id:guid}/dependentes/{idDependente:guid}", async (Guid id, Guid idDependente, ISender sender, CancellationToken ct) =>
+                (await sender.Send(new RemoverDependenteContratoCommand(id, idDependente), ct)).Match(Results.Ok))
+            .RequireAuthorization(Politicas.ClienteOuEquipe)
+            .WithTags(Tag)
+            .WithName("RemoverDependenteContrato")
+            .WithSummary("Tira um dependente do contrato")
+            .WithDescription("Dependente já registrado como beneficiário não pode ser removido. O novo valor vale a partir da próxima fatura.")
+            .Produces<ContratoResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        app.MapPost("contratos/{id:guid}/cancelar", async (Guid id, CancelarContratoRequest r, ISender sender, CancellationToken ct) =>
+                (await sender.Send(new CancelarContratoCommand(id, r.Motivo), ct)).Match(Results.Ok))
+            .RequireAuthorization(Politicas.ClienteOuEquipe)
+            .WithTags(Tag)
+            .WithName("CancelarContrato")
+            .WithSummary("Cancela o contrato, pelo titular ou pela equipe da funerária")
+            .WithDescription("Faturas futuras são canceladas e as vencidas continuam em aberto. Contrato com funeral em andamento "
+                + "não pode ser cancelado. O consultor não cancela contratos.")
+            .Produces<ContratoResponse>()
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
     private static void MapConsultas(IEndpointRouteBuilder app)
@@ -138,3 +185,7 @@ public sealed record ContratarParaClienteRequest(
     IReadOnlyList<Guid>? Dependentes,
     Periodicidade? Periodicidade,
     int? DiaVencimento);
+
+public sealed record IncluirDependenteRequest(Guid? IdDependente);
+
+public sealed record CancelarContratoRequest(string? Motivo);

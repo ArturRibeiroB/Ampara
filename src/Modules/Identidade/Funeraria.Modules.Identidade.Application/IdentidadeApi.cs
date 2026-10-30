@@ -53,6 +53,18 @@ public sealed class IdentidadeApi(
         return vinculo?.Perfil.ParaClaim();
     }
 
+    public async Task<MembroEquipeDto?> ObterMembroEquipeAsync(Guid idUsuario, Guid idTenant, CancellationToken cancellationToken = default)
+    {
+        UsuarioVinculo? vinculo = await vinculos.ObterAsync(idUsuario, idTenant, cancellationToken);
+        if (vinculo is not { Ativo: true, Perfil: PerfilVinculo.Funeraria or PerfilVinculo.Funcionario })
+        {
+            return null;
+        }
+
+        UsuarioInfo? usuario = await usuarios.ObterAsync(idUsuario, cancellationToken);
+        return usuario is { Ativo: true } ? new MembroEquipeDto(usuario.Id, usuario.Nome, vinculo.Perfil.ParaClaim()) : null;
+    }
+
     public async Task<bool> PossuiVinculoAsync(Guid idUsuario, Guid idTenant, CancellationToken cancellationToken = default) =>
         await vinculos.ObterAsync(idUsuario, idTenant, cancellationToken) is not null;
 

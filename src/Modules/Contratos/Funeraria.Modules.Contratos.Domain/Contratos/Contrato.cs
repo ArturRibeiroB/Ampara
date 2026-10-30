@@ -1,5 +1,6 @@
 using Funeraria.BuildingBlocks.Domain.Entities;
 using Funeraria.BuildingBlocks.Domain.Events;
+using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.BuildingBlocks.Domain.Tenancy;
 
 namespace Funeraria.Modules.Contratos.Domain.Contratos;
@@ -56,6 +57,9 @@ public sealed class Contrato : AggregateRoot<Guid>, ITenantEntity, IAuditableEnt
 
     /// <summary>Carência do plano na contratação, em dias (CON-04).</summary>
     public int CarenciaDias { get; private set; }
+
+    /// <summary>Por que o contrato foi cancelado (CON-03).</summary>
+    public string? MotivoCancelamento { get; private set; }
 
     /// <summary>Conta do consultor que fez a contratação com a família, para acompanhamento e comissão (DEC-11).</summary>
     public Guid? IdConsultor { get; private set; }
@@ -132,6 +136,107 @@ public sealed class Contrato : AggregateRoot<Guid>, ITenantEntity, IAuditableEnt
     }
 
     /// <summary>
+    /// Pessoas cobertas enquanto o contrato valia: as atuais ou, no contrato cancelado, as que saíram com o cancelamento.
+    /// O histórico do contrato continua visível depois do cancelamento (CON-03).
+    /// </summary>
+    public IEnumerable<PessoaCoberta> PessoasNaVigencia() =>
+        Status == StatusContrato.Cancelado
+            ? _pessoasCobertas.Where(p => p.DataRemocao == DataFim)
+            : _pessoasCobertas.Where(p => p.DataRemocao is null);
+
+    /// <summary>
+    /// Inclui um dependente depois da contratação (CON-02). A carência dele conta a partir de hoje e o novo valor vale a
+    /// partir da próxima cobrança. Dependente, titular e limite do plano já foram conferidos pelo caso de uso.
+    /// </summary>
+    public Result<PessoaCoberta> IncluirDependente(Guid idDependente, DateOnly hoje)
+    {
+        if (Status == StatusContrato.Cancelado)
+        {
+            return ContratoErros.ContratoCancelado;
+        }
+
+        if (_pessoasCobertas.Any(p => p.IdDependente == idDependente && p.DataRemocao is null))
+        {
+            return ContratoErros.DependenteEmContratoVigente;
+        }
+
+        var pessoa = PessoaCoberta.Dependente(idDependente, hoje);
+        _pessoasCobertas.Add(pessoa);
+        if (TipoCobertura == TipoCobertura.Titular)
+        {
+            TipoCobertura = TipoCobertura.TitularEDependentes;
+        }
+
+        RecalcularValor();
+        return pessoa;
+    }
+
+    /// <summary>
+    /// Tira o dependente do contrato (CON-02). A linha fica, com a data de saída, para o histórico. Contrato só de
+    /// dependentes precisa manter ao menos um.
+    /// </summary>
+    public Result RemoverDependente(Guid idDependente, DateOnly hoje)
+    {
+        if (Status == StatusContrato.Cancelado)
+        {
+            return ContratoErros.ContratoCancelado;
+        }
+
+        PessoaCoberta? pessoa = _pessoasCobertas.FirstOrDefault(p => p.IdDependente == idDependente && p.DataRemocao is null);
+        if (pessoa is null)
+        {
+            return ContratoErros.DependenteNaoCoberto;
+        }
+
+        int restantes = QuantidadeDependentes - 1;
+        if (TipoCobertura == TipoCobertura.SomenteDependentes && restantes == 0)
+        {
+            return ContratoErros.UltimoDependente;
+        }
+
+        pessoa.Remover(hoje);
+        if (TipoCobertura == TipoCobertura.TitularEDependentes && restantes == 0)
+        {
+            TipoCobertura = TipoCobertura.Titular;
+        }
+
+        RecalcularValor();
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Cancela o contrato (CON-03). As pessoas saem com a data do cancelamento, o que libera os dependentes para outro
+    /// contrato; o Financeiro cancela as cobranças futuras e mantém as vencidas em aberto.
+    /// </summary>
+    public Result Cancelar(string motivo, DateOnly hoje)
+    {
+        if (Status == StatusContrato.Cancelado)
+        {
+            return ContratoErros.ContratoCancelado;
+        }
+
+        Status = StatusContrato.Cancelado;
+        DataFim = hoje;
+        MotivoCancelamento = motivo.Trim();
+        foreach (PessoaCoberta pessoa in _pessoasCobertas.Where(p => p.DataRemocao is null))
+        {
+            pessoa.Remover(hoje);
+        }
+
+        Raise(new ContratoCanceladoDomainEvent(Id));
+        return Result.Success();
+    }
+
+    public int QuantidadeDependentes =>
+        _pessoasCobertas.Count(p => p.Tipo == TipoPessoaCoberta.Dependente && p.DataRemocao is null);
+
+    private void RecalcularValor()
+    {
+        ValorTotal = ValorPlano + (ValorPorDependente * QuantidadeDependentes);
+        Raise(new PessoasDoContratoAlteradasDomainEvent(Id));
+    }
+
+    /// <summary>
     /// Se a pessoa pode usar o plano hoje (CON-04): contrato ativo e adimplente e carência cumprida, contada da data de
     /// inclusão da pessoa com a carência gravada na contratação.
     /// </summary>
@@ -186,6 +291,8 @@ public sealed class PessoaCoberta : Entity<Guid>
 
     internal static PessoaCoberta Dependente(Guid idDependente, DateOnly hoje) =>
         new(Guid.CreateVersion7()) { Tipo = TipoPessoaCoberta.Dependente, IdDependente = idDependente, DataInclusao = hoje };
+
+    internal void Remover(DateOnly hoje) => DataRemocao = hoje;
 }
 
 /// <summary>Dados do plano usados na contratação, já na periodicidade escolhida.</summary>
@@ -226,3 +333,8 @@ public enum StatusContrato
 }
 
 public sealed record ContratoCriadoDomainEvent(Guid IdContrato) : DomainEvent;
+
+/// <summary>Dependente incluído ou removido (CON-02): muda o valor e a quantidade de dependentes da assinatura.</summary>
+public sealed record PessoasDoContratoAlteradasDomainEvent(Guid IdContrato) : DomainEvent;
+
+public sealed record ContratoCanceladoDomainEvent(Guid IdContrato) : DomainEvent;

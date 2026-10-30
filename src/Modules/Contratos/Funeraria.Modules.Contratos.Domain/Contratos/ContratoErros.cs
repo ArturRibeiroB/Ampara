@@ -41,6 +41,26 @@ public static class ContratoErros
     public static readonly Error DependenteEmContratoVigente =
         Error.Conflito("Contrato.DependenteEmContratoVigente", "Dependente já está vinculado a um contrato ativo.");
 
+    public static readonly Error ContratoCancelado =
+        Error.Conflito("Contrato.Cancelado", "Este contrato está cancelado.");
+
+    public static readonly Error DependenteNaoCoberto =
+        Error.NaoEncontrado("Contrato.DependenteNaoCoberto", "Dependente não está coberto por este contrato.");
+
+    public static readonly Error UltimoDependente =
+        Error.Conflito("Contrato.UltimoDependente",
+            "O contrato cobre somente dependentes e precisa manter ao menos um. Para encerrar, cancele o contrato.");
+
+    public static readonly Error DependenteBeneficiario =
+        Error.Conflito("Contrato.DependenteBeneficiario", "Dependente já registrado como beneficiário não pode ser removido.");
+
+    public static readonly Error FuneralEmAndamento =
+        Error.Conflito("Contrato.FuneralEmAndamento", "Contrato com funeral em andamento não pode ser cancelado.");
+
+    /// <summary>Cancelamento é do titular ou da equipe interna (gestor e funcionário), não do consultor (CON-03).</summary>
+    public static readonly Error CancelamentoNaoPermitido =
+        Error.Proibido("Contrato.CancelamentoNaoPermitido", "Somente o titular ou a equipe da funerária podem cancelar o contrato.");
+
     /// <summary>Multa, juros e desconto anual ainda não preenchidos pela funerária (TEN-03, DEC-12).</summary>
     public static readonly Error ContratacaoIndisponivel =
         Error.Conflito("Contrato.ContratacaoIndisponivel",

@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Funerária (local)",
+      "Group": "Funerária",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "funeraria",
+      "Username": "funeraria",
+      "PassFile": "/tmp/pgpass",
+      "SSLMode": "prefer"
+    }
+  }
+}

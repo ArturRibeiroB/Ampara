@@ -1,5 +1,7 @@
 using Hangfire;
+using Hangfire.AspNetCore;
 using Hangfire.PostgreSql;
+using Hangfire.PostgreSql.Factories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,23 +18,32 @@ public static class JobsExtensions
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
-            .UsePostgreSqlStorage(
-                pg => pg.UseNpgsqlConnection(
-                    configuration.GetConnectionString(DependencyInjection.ConnectionStringName)
-                    ?? throw new InvalidOperationException("Connection string 'Database' não configurada.")),
-                new PostgreSqlStorageOptions
-                {
-                    SchemaName = "hangfire",
-                    PrepareSchemaIfNecessary = true,
-                    QueuePollInterval = opcoes.IntervaloFila
-                })
+            .UseStorage(sp.GetRequiredService<JobStorage>())
             // Política de retry padrão: 5 tentativas com espera crescente; depois o job fica como falho no painel.
             .UseFilter(new AutomaticRetryAttribute { Attempts = opcoes.Tentativas }));
 
+        // Um JobStorage por host, registrado depois do AddHangfire para valer sobre o dele (o JobStorage.Current, que é
+        // global). Com o global, dois hosts no mesmo processo (testes com mais de uma factory) trocavam de banco: o job de
+        // um caía na fila do outro. Cliente, servidor e agendador pegam o storage do DI.
+        services.AddSingleton<JobStorage>(_ =>
+        {
+            var armazenamento = new PostgreSqlStorageOptions
+            {
+                SchemaName = "hangfire",
+                PrepareSchemaIfNecessary = true,
+                QueuePollInterval = opcoes.IntervaloFila
+            };
+            string connectionString = configuration.GetConnectionString(DependencyInjection.ConnectionStringName)
+                ?? throw new InvalidOperationException("Connection string 'Database' não configurada.");
+            return new PostgreSqlStorage(new NpgsqlConnectionFactory(connectionString, armazenamento), armazenamento);
+        });
+
         if (opcoes.ServidorHabilitado)
         {
-            services.AddHangfireServer(server =>
+            services.AddHangfireServer((sp, server) =>
             {
+                // Ativador do próprio host: o padrão é o JobActivator.Current, global, que fica com o último host configurado.
+                server.Activator = new AspNetCoreJobActivator(sp.GetRequiredService<IServiceScopeFactory>());
                 server.Queues = FilasJobs.Todas;
                 server.WorkerCount = opcoes.Workers;
                 server.ServerName = $"funeraria-{Environment.MachineName}";

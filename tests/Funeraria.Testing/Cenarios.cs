@@ -143,7 +143,8 @@ public static class Cenarios
         return (await LerAsync(response, HttpStatusCode.Created))["id_contrato"]!.GetValue<Guid>();
     }
 
-    internal static async Task<JsonObject> LerAsync(HttpResponseMessage response, HttpStatusCode esperado)
+    /// <summary>Lê o JSON da resposta; com outro status, lança a exceção com o corpo (mostra o problema no teste).</summary>
+    public static async Task<JsonObject> LerAsync(HttpResponseMessage response, HttpStatusCode esperado)
     {
         if (response.StatusCode != esperado)
         {

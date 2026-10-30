@@ -13,8 +13,12 @@ public sealed class ContratosApiFactory : FunerariaApiFactory, IAsyncLifetime
 
     public ValueTask InitializeAsync() => IniciarAsync();
 
-    protected override void ConfigurarServicos(IServiceCollection services) =>
+    protected override void ConfigurarServicos(IServiceCollection services)
+    {
         services.AddScoped<IIntegrationEventHandler<ContratoCriadoIntegrationEvent>, CapturarEvento<ContratoCriadoIntegrationEvent>>();
+        services.AddScoped<IIntegrationEventHandler<PessoasDoContratoAlteradasIntegrationEvent>, CapturarEvento<PessoasDoContratoAlteradasIntegrationEvent>>();
+        services.AddScoped<IIntegrationEventHandler<ContratoCanceladoIntegrationEvent>, CapturarEvento<ContratoCanceladoIntegrationEvent>>();
+    }
 }
 
 [CollectionDefinition(Nome)]

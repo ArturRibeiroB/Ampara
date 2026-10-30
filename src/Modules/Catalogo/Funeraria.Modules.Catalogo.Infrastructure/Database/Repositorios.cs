@@ -33,7 +33,7 @@ internal sealed class ItemCatalogoRepository(CatalogoDbContext context) : IItemC
     public void Adicionar(ItemCatalogo item) => context.Itens.Add(item);
 }
 
-internal sealed class CatalogoLeitura(CatalogoDbContext context) : ICatalogoLeitura, ICatalogoConsultas
+internal sealed class CatalogoLeitura(CatalogoDbContext context) : ICatalogoLeitura, ICatalogoConsultas, ICatalogoEstoque
 {
     public async Task<IReadOnlyList<Categoria>> ListarCategoriasAsync(bool somenteAtivas, CancellationToken cancellationToken = default) =>
         await context.Categorias
@@ -89,7 +89,26 @@ internal sealed class CatalogoLeitura(CatalogoDbContext context) : ICatalogoLeit
                 i.Preco,
                 i.Ativo && categorias[i.IdCategoria].Ativo,
                 [.. i.Variacoes.Where(v => v.Ativo).Select(v => new VariacaoDto(v.Id, v.Nome, v.AcrescimoPreco))],
-                i.IdTerceiroFornecedor))
+                i.IdTerceiroFornecedor,
+                i.ControlaEstoque))
             .ToList();
     }
+
+    // UPDATE ... WHERE quantidade_estoque >= @quantidade: duas baixas ao mesmo tempo não deixam o estoque negativo.
+    public async Task<bool> BaixarAsync(Guid idItem, int quantidade, CancellationToken cancellationToken = default)
+    {
+        if (!await context.Itens.AnyAsync(i => i.Id == idItem && i.ControlaEstoque, cancellationToken))
+        {
+            return true;
+        }
+
+        return await context.Itens
+            .Where(i => i.Id == idItem && i.QuantidadeEstoque >= quantidade)
+            .ExecuteUpdateAsync(s => s.SetProperty(i => i.QuantidadeEstoque, i => i.QuantidadeEstoque - quantidade), cancellationToken) == 1;
+    }
+
+    public Task DevolverAsync(Guid idItem, int quantidade, CancellationToken cancellationToken = default) =>
+        context.Itens
+            .Where(i => i.Id == idItem && i.ControlaEstoque)
+            .ExecuteUpdateAsync(s => s.SetProperty(i => i.QuantidadeEstoque, i => i.QuantidadeEstoque + quantidade), cancellationToken);
 }

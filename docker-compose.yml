@@ -106,12 +106,23 @@ services:
     ports:
       - "${SEQ_PORTA:-5341}:80"
 
+  # Já abre com o servidor "Funerária (local)" cadastrado e sem tela de login (modo desktop, só para uso local).
+  # O pgpass é copiado para /tmp com permissão 600: montado direto do Windows, o libpq ignoraria o arquivo.
   pgadmin:
     image: dpage/pgadmin4:9
     profiles: ["tools"]
+    entrypoint: ["/bin/sh", "-c", "cp /pgadmin-config/pgpass /tmp/pgpass && chmod 600 /tmp/pgpass && exec /entrypoint.sh"]
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@funeraria.localhost
       PGADMIN_DEFAULT_PASSWORD: funeraria
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      # O pgAdmin recusa e-mails em domínios reservados (.localhost) sem esta opção.
+      PGADMIN_CONFIG_ALLOW_SPECIAL_EMAIL_DOMAINS: "['localhost']"
+      PGADMIN_SERVER_JSON_FILE: /pgadmin-config/servers.json
+    volumes:
+      - ./docker/pgadmin:/pgadmin-config:ro
+      - pgadmin-data:/var/lib/pgadmin
     ports:
       - "${PGADMIN_PORTA:-5050}:80"
     depends_on:
@@ -119,4 +130,5 @@ services:
 
 volumes:
   postgres-data:
+  pgadmin-data:
   seaweedfs-data:

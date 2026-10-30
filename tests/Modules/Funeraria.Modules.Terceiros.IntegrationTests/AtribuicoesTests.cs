@@ -131,7 +131,14 @@ public sealed class AtribuicoesTests(TerceirosApiFactory factory)
         Assert.Equal("Atribuicao.TipoIncompativel", pedidoParaFrota.Error.Code);
         Assert.Equal(primeira.Value, repetida.Value);
 
-        await Gestor(tenant, slug).PatchAsJsonAsync($"/api/v1/gestao/terceiros/{frota}/status", new { ativo = false }, Json, Ct);
+        // O vínculo da conta chega pelo outbox e também altera o terceiro: um PATCH no mesmo instante leva 409 (concorrência).
+        HttpStatusCode desativado = HttpStatusCode.Conflict;
+        for (int i = 0; i < 20 && desativado == HttpStatusCode.Conflict; i++)
+        {
+            desativado = (await Gestor(tenant, slug).PatchAsJsonAsync($"/api/v1/gestao/terceiros/{frota}/status", new { ativo = false }, Json, Ct)).StatusCode;
+        }
+
+        Assert.Equal(HttpStatusCode.NoContent, desativado);
         Result<Guid> inativo = await AtribuirAsync(tenant, new NovaAtribuicao(frota, Guid.NewGuid(), Translado()));
         Assert.Equal("Atribuicao.TerceiroIndisponivel", inativo.Error.Code);
     }

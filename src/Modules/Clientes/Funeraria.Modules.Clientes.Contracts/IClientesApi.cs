@@ -21,6 +21,7 @@ public interface IClientesApi
     Task<IReadOnlyList<DependenteDto>> ObterDependentesAsync(IReadOnlyCollection<Guid> idsDependente, CancellationToken cancellationToken = default);
 }
 
-public sealed record TitularDto(Guid IdCliente, string Nome, string Cpf);
+/// <summary>Titular do contrato. <c>IdUsuario</c> é a conta dele na Identidade, para notificar a família (FUN-06).</summary>
+public sealed record TitularDto(Guid IdCliente, string Nome, string Cpf, DateOnly DataNascimento, Guid IdUsuario);
 
-public sealed record DependenteDto(Guid IdDependente, Guid IdCliente, string Nome, string Cpf);
+public sealed record DependenteDto(Guid IdDependente, Guid IdCliente, string Nome, string Cpf, DateOnly DataNascimento);

@@ -18,6 +18,10 @@ public sealed class DemonstracaoApiFactory : FunerariaApiFactory, IAsyncLifetime
         base.ConfigureWebHost(builder);
         builder.UseSetting("Seed:Demo", "true");
         builder.UseSetting("Seed:SenhaDemo", SenhaPadrao);
+
+        // Segundo host no mesmo processo: sem servidor do Hangfire. A configuração do Hangfire é global e, com dois
+        // servidores, o job de um host rodava no container do outro (já descartado), e os e-mails dos outros testes atrasavam.
+        builder.UseSetting("Jobs:ServidorHabilitado", "false");
     }
 }
 

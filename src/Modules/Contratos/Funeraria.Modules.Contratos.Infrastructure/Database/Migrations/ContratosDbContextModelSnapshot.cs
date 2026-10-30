@@ -114,6 +114,11 @@ namespace Funeraria.Modules.Contratos.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id_plano");
 
+                    b.Property<string>("MotivoCancelamento")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("motivo_cancelamento");
+
                     b.Property<string>("NomePlano")
                         .IsRequired()
                         .HasMaxLength(100)

@@ -32,6 +32,13 @@ public static class AcoesAuditadas
     public const string UsuarioPerfilAlterado = "USUARIO_PERFIL_ALTERADO";
     public const string FunerariaStatusAlterado = "FUNERARIA_STATUS_ALTERADO";
     public const string ContratoCriado = "CONTRATO_CRIADO";
+    public const string ContratoDependenteIncluido = "CONTRATO_DEPENDENTE_INCLUIDO";
+    public const string ContratoDependenteRemovido = "CONTRATO_DEPENDENTE_REMOVIDO";
+    public const string ContratoCancelado = "CONTRATO_CANCELADO";
+    public const string BeneficiarioRegistrado = "BENEFICIARIO_REGISTRADO";
+    public const string FuneralRegistrado = "FUNERAL_REGISTRADO";
+    public const string FuneralStatusAlterado = "FUNERAL_STATUS_ALTERADO";
+    public const string CertidaoSolicitada = "CERTIDAO_SOLICITADA";
     public const string TerceiroCadastrado = "TERCEIRO_CADASTRADO";
     public const string TerceiroStatusAlterado = "TERCEIRO_STATUS_ALTERADO";
     public const string AtribuicaoAceita = "ATRIBUICAO_ACEITA";

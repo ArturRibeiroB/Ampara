@@ -3,6 +3,7 @@ using Funeraria.BuildingBlocks.Application.Events;
 using Funeraria.BuildingBlocks.Application.Messaging;
 using Funeraria.BuildingBlocks.Application.Paginacao;
 using Funeraria.BuildingBlocks.Domain.Results;
+using Funeraria.Modules.Funeral.Contracts.IntegrationEvents;
 using Funeraria.Modules.Identidade.Contracts;
 using Funeraria.Modules.Notificacoes.Contracts;
 using Funeraria.Modules.Notificacoes.Domain.Notificacoes;
@@ -160,4 +161,50 @@ internal sealed class AvisarFunerariaDaRecusa(INotificacoes notificacoes, IIdent
             await identidade.ListarGestoresAtivosAsync(evento.IdTenant, cancellationToken), evento.IdTenant, "ATRIBUICAO_RECUSADA",
             $"Parceiro recusou o {AvisarTerceiroDaAtribuicao.Assunto(evento.Tipo)}", $"Motivo: {evento.Motivo} Escolha outro parceiro.",
             $"/gestao/terceiros/{evento.IdTerceiro}"), cancellationToken);
+}
+
+/// <summary>O funeral mudou de etapa (FUN-06): avisa a família (o titular do contrato).</summary>
+internal sealed class AvisarFamiliaDoFuneral(INotificacoes notificacoes) : IIntegrationEventHandler<FuneralStatusAlteradoIntegrationEvent>
+{
+    public Task Handle(FuneralStatusAlteradoIntegrationEvent evento, CancellationToken cancellationToken) =>
+        evento.IdUsuarioTitular is Guid idUsuario
+            ? notificacoes.NotificarAsync(new NovaNotificacao(
+                [idUsuario], evento.IdTenant, "FUNERAL_STATUS", $"Funeral de {evento.NomeFalecido}", Mensagem(evento.Status),
+                $"/funerais/{evento.IdFuneral}"), cancellationToken)
+            : Task.CompletedTask;
+
+    private static string Mensagem(string status) => status switch
+    {
+        "EM_PREPARACAO" => "A preparação começou.",
+        "VELORIO" => "O velório começou.",
+        "CONCLUIDO" => "O atendimento foi concluído. Nossos sentimentos à família.",
+        "CANCELADO" => "O funeral foi cancelado. Em caso de dúvida, fale com a funerária.",
+        _ => $"O status mudou para {status}."
+    };
+}
+
+/// <summary>
+/// Pedido ao fornecedor (FUN-09): a funerária fica sabendo quando ele começa a preparar e quando entrega; o fornecedor,
+/// quando o pedido é cancelado. Aceite e recusa já chegam pelas atribuições.
+/// </summary>
+internal sealed class AvisarSobrePedido(INotificacoes notificacoes, IIdentidadeApi identidade) : IIntegrationEventHandler<PedidoStatusAlteradoIntegrationEvent>
+{
+    public async Task Handle(PedidoStatusAlteradoIntegrationEvent evento, CancellationToken cancellationToken)
+    {
+        string link = $"/funerais/{evento.IdFuneral}";
+        switch (evento.Status)
+        {
+            case "EM_PREPARO" or "ENTREGUE":
+                string feito = evento.Status == "ENTREGUE" ? "entregou" : "começou a preparar";
+                await notificacoes.NotificarAsync(new NovaNotificacao(
+                    await identidade.ListarGestoresAtivosAsync(evento.IdTenant, cancellationToken), evento.IdTenant, "PEDIDO_" + evento.Status,
+                    $"Pedido do funeral de {evento.NomeFalecido}", $"{evento.NomeFornecedor} {feito} o pedido.", link), cancellationToken);
+                break;
+            case "CANCELADO" when evento.IdUsuarioFornecedor is Guid idFornecedor:
+                await notificacoes.NotificarAsync(new NovaNotificacao(
+                    [idFornecedor], evento.IdTenant, "PEDIDO_CANCELADO", $"Pedido cancelado: {evento.NomeFalecido}",
+                    "A funerária cancelou o pedido. Não é preciso entregar.", $"/terceiros/pedidos/{evento.IdPedido}"), cancellationToken);
+                break;
+        }
+    }
 }

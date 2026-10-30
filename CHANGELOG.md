@@ -20,7 +20,18 @@ Primeira versão do contrato. Será publicada como `v0.1.0`.
 - Clientes: cadastro, meus dados, dependentes, exportação dos dados (LGPD) e busca pela equipe
   (nome, CPF e status do contrato).
 - Planos e catálogo: gestão, consulta pública, coberturas, variações, imagens e fornecedor do item.
-- Contratos: contratação pelo cliente e pela equipe, consulta e elegibilidade (carência).
-- Funeral: preferências de funeral em vida.
+- Contratos: contratação pelo cliente e pela equipe, consulta, elegibilidade (carência), inclusão e remoção de
+  dependentes depois da contratação e cancelamento com motivo.
+- Funeral: preferências de funeral em vida; registro do beneficiário (falecido) e do funeral, mudança de etapa
+  com histórico e aviso à família, listagem da equipe, acompanhamento pelo titular e equipe responsável pelo atendimento.
+- Locais (salas próprias, cemitérios, crematórios, igrejas), agenda e reserva para o funeral, sem conflito de
+  horário nas salas próprias (com intervalo de preparação).
+- Itens do funeral: inclusão e remoção, separação entre o que o plano cobre e o adicional (com a diferença das
+  variações), baixa e devolução de estoque e importação das preferências registradas em vida.
+- Pedidos aos fornecedores: geração por fornecedor a partir dos itens, aceite e recusa pelo portal, reenvio a outro
+  fornecedor, preparo e entrega pelo fornecedor (`/terceiros/pedidos`) e cancelamento junto com o funeral.
 - Terceiros: cadastro de parceiros, portal do terceiro com a lista de atribuições, aceite e recusa.
+- Documentos do falecido: anexar (PDF, JPEG ou PNG), listar, baixar por link temporário e remover.
+- Certidão de óbito: checklist com o prazo legal, solicitação (modo MANUAL ou SIMULADO por funerária), responsável
+  (funcionário ou despachante), etapas pela equipe ou pelo portal (`/terceiros/certidoes`), registro da certidão emitida.
 - Notificações: central (`/api/v1/notificacoes`) e tempo real pelo SignalR em `/hubs/notificacoes`.

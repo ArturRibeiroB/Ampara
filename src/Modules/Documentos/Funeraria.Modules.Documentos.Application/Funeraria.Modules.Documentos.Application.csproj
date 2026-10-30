@@ -8,6 +8,12 @@
     <ProjectReference Include="..\Funeraria.Modules.Documentos.Domain\Funeraria.Modules.Documentos.Domain.csproj" />
     <ProjectReference Include="..\Funeraria.Modules.Documentos.Contracts\Funeraria.Modules.Documentos.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Funeraria.BuildingBlocks.Application\Funeraria.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\Funeral\Funeraria.Modules.Funeral.Contracts\Funeraria.Modules.Funeral.Contracts.csproj" />
+    <ProjectReference Include="..\..\Terceiros\Funeraria.Modules.Terceiros.Contracts\Funeraria.Modules.Terceiros.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identidade\Funeraria.Modules.Identidade.Contracts\Funeraria.Modules.Identidade.Contracts.csproj" />
+    <ProjectReference Include="..\..\Tenants\Funeraria.Modules.Tenants.Contracts\Funeraria.Modules.Tenants.Contracts.csproj" />
+    <ProjectReference Include="..\..\Clientes\Funeraria.Modules.Clientes.Contracts\Funeraria.Modules.Clientes.Contracts.csproj" />
+    <ProjectReference Include="..\..\Notificacoes\Funeraria.Modules.Notificacoes.Contracts\Funeraria.Modules.Notificacoes.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,8 @@
 namespace Funeraria.BuildingBlocks.Application.Abstractions;
 
 /// <summary>
-/// O banco recusou a gravação por um índice único: outra requisição gravou o mesmo dado ao mesmo tempo.
+/// O banco recusou a gravação por um índice único ou uma restrição de exclusão: outra requisição gravou o mesmo dado
+/// (ou um horário que se sobrepõe) ao mesmo tempo.
 /// Os handlers verificam a duplicidade antes de gravar; esta exceção cobre a corrida entre duas gravações.
 /// Lançada pelo <see cref="IUnitOfWork"/>, para a camada Application não depender do EF Core nem do Npgsql.
 /// </summary>

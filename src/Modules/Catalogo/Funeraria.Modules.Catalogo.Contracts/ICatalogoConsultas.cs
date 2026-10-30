@@ -13,6 +13,19 @@ public interface ICatalogoConsultas
     Task<IReadOnlyList<CategoriaCatalogoDto>> ObterCategoriasAsync(IReadOnlyCollection<Guid> idsCategorias, CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Estoque dos itens do catálogo, baixado quando o item entra num funeral (FUN-03). Item que não controla estoque
+/// sempre aceita a baixa. Respeita o tenant da execução atual.
+/// </summary>
+public interface ICatalogoEstoque
+{
+    /// <summary>Baixa a quantidade numa operação só no banco (sem corrida). Falso se o estoque não for suficiente.</summary>
+    Task<bool> BaixarAsync(Guid idItem, int quantidade, CancellationToken cancellationToken = default);
+
+    /// <summary>Devolve ao estoque (item removido do funeral ou funeral cancelado).</summary>
+    Task DevolverAsync(Guid idItem, int quantidade, CancellationToken cancellationToken = default);
+}
+
 public sealed record CategoriaCatalogoDto(Guid IdCategoria, string Nome, bool Ativo);
 
 /// <param name="IdItem">Item do catálogo.</param>
@@ -23,6 +36,7 @@ public sealed record CategoriaCatalogoDto(Guid IdCategoria, string Nome, bool At
 /// <param name="Ativo">Item e categoria ativos.</param>
 /// <param name="Variacoes">Variações ativas do item.</param>
 /// <param name="IdTerceiroFornecedor">Fornecedor que recebe o pedido quando o item entra num funeral (FUN-09).</param>
+/// <param name="ControlaEstoque">O item tem estoque, baixado quando entra num funeral (FUN-03).</param>
 public sealed record ItemCatalogoDto(
     Guid IdItem,
     Guid IdCategoria,
@@ -31,6 +45,7 @@ public sealed record ItemCatalogoDto(
     decimal Preco,
     bool Ativo,
     IReadOnlyList<VariacaoDto> Variacoes,
-    Guid? IdTerceiroFornecedor = null);
+    Guid? IdTerceiroFornecedor = null,
+    bool ControlaEstoque = false);
 
 public sealed record VariacaoDto(Guid IdVariacao, string Nome, decimal AcrescimoPreco);

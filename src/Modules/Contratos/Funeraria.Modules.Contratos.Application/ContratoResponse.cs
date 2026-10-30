@@ -18,7 +18,8 @@ public sealed record ContratoResponse(
     decimal ValorPorDependente,
     decimal ValorTotal,
     Guid? IdConsultor,
-    IReadOnlyList<PessoaCobertaResponse> PessoasCobertas)
+    IReadOnlyList<PessoaCobertaResponse> PessoasCobertas,
+    string? MotivoCancelamento)
 {
     public static ContratoResponse De(Contrato c) => new(
         c.Id,
@@ -35,7 +36,8 @@ public sealed record ContratoResponse(
         c.ValorPorDependente,
         c.ValorTotal,
         c.IdConsultor,
-        [.. c.PessoasCobertas.Where(p => p.DataRemocao is null).Select(p => new PessoaCobertaResponse(p.Id, p.Tipo, p.IdDependente, p.DataInclusao))]);
+        [.. c.PessoasNaVigencia().Select(p => new PessoaCobertaResponse(p.Id, p.Tipo, p.IdDependente, p.DataInclusao))],
+        c.MotivoCancelamento);
 }
 
 public sealed record PessoaCobertaResponse(Guid IdPessoaCoberta, TipoPessoaCoberta Tipo, Guid? IdDependente, DateOnly DataInclusao);

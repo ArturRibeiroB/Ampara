@@ -8,6 +8,6 @@ public sealed class ConsultasTerceiros(ITerceiroRepository terceiros) : ITerceir
 {
     public async Task<TerceiroResumoDto?> ObterAsync(Guid idTerceiro, CancellationToken cancellationToken = default) =>
         await terceiros.ObterAsync(idTerceiro, cancellationToken) is { } t
-            ? new TerceiroResumoDto(t.Id, t.NomeRazaoSocial, NomeApi.De(t.Tipo), t.Status != StatusTerceiro.Inativo)
+            ? new TerceiroResumoDto(t.Id, t.NomeRazaoSocial, NomeApi.De(t.Tipo), t.Status != StatusTerceiro.Inativo, t.IdUsuario)
             : null;
 }

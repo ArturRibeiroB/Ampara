@@ -45,7 +45,8 @@ public sealed record ContratoDetalheResponse(
     decimal ValorTotal,
     int CarenciaDias,
     Guid? IdConsultor,
-    IReadOnlyList<PessoaCobertaDetalheResponse> PessoasCobertas);
+    IReadOnlyList<PessoaCobertaDetalheResponse> PessoasCobertas,
+    string? MotivoCancelamento);
 
 public sealed record TitularResponse(Guid IdCliente, string Nome, string Cpf);
 
@@ -101,7 +102,7 @@ public sealed class ObterContratoQueryHandler(IContratoRepository contratos, ICl
         }
 
         TitularDto? titular = await clientes.ObterTitularAsync(contrato.IdCliente, cancellationToken);
-        PessoaCoberta[] cobertas = [.. contrato.PessoasCobertas.Where(p => p.DataRemocao is null)];
+        PessoaCoberta[] cobertas = [.. contrato.PessoasNaVigencia()];
         Dictionary<Guid, DependenteDto> dependentes = (await clientes.ObterDependentesAsync(
                 [.. cobertas.Where(p => p.IdDependente is not null).Select(p => p.IdDependente!.Value)], cancellationToken))
             .ToDictionary(d => d.IdDependente);
@@ -131,6 +132,7 @@ public sealed class ObterContratoQueryHandler(IContratoRepository contratos, ICl
             contrato.ValorTotal,
             contrato.CarenciaDias,
             contrato.IdConsultor,
-            [.. cobertas.OrderBy(p => p.Tipo).ThenBy(p => p.DataInclusao).Select(Pessoa)]);
+            [.. cobertas.OrderBy(p => p.Tipo).ThenBy(p => p.DataInclusao).Select(Pessoa)],
+            contrato.MotivoCancelamento);
     }
 }

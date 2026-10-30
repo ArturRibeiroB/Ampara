@@ -9,7 +9,7 @@ internal sealed class ClientesApi(ClientesDbContext context) : IClientesApi
         context.Clientes
             .AsNoTracking()
             .Where(c => c.Id == idCliente)
-            .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf))
+            .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf, c.DataNascimento, c.IdUsuario))
             .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<IReadOnlyList<TitularDto>> ObterTitularesAsync(
@@ -20,7 +20,7 @@ internal sealed class ClientesApi(ClientesDbContext context) : IClientesApi
             : await context.Clientes
                 .AsNoTracking()
                 .Where(c => idsCliente.Contains(c.Id))
-                .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf))
+                .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf, c.DataNascimento, c.IdUsuario))
                 .ToListAsync(cancellationToken);
 
     public Task<TitularDto?> ObterTitularPorCpfAsync(string cpf, CancellationToken cancellationToken = default)
@@ -29,7 +29,7 @@ internal sealed class ClientesApi(ClientesDbContext context) : IClientesApi
         return context.Clientes
             .AsNoTracking()
             .Where(c => EF.Property<string>(c, ClientesDbContext.CpfHash) == hash)
-            .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf))
+            .Select(c => new TitularDto(c.Id, c.Nome, c.Cpf, c.DataNascimento, c.IdUsuario))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -38,7 +38,7 @@ internal sealed class ClientesApi(ClientesDbContext context) : IClientesApi
             .AsNoTracking()
             .Where(d => d.IdCliente == idCliente && d.RemovidoEm == null)
             .OrderBy(d => d.Nome)
-            .Select(d => new DependenteDto(d.Id, d.IdCliente, d.Nome, d.Cpf))
+            .Select(d => new DependenteDto(d.Id, d.IdCliente, d.Nome, d.Cpf, d.DataNascimento))
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<DependenteDto>> ObterDependentesAsync(
@@ -49,6 +49,6 @@ internal sealed class ClientesApi(ClientesDbContext context) : IClientesApi
             : await context.Dependentes
                 .AsNoTracking()
                 .Where(d => idsDependente.Contains(d.Id) && d.RemovidoEm == null)
-                .Select(d => new DependenteDto(d.Id, d.IdCliente, d.Nome, d.Cpf))
+                .Select(d => new DependenteDto(d.Id, d.IdCliente, d.Nome, d.Cpf, d.DataNascimento))
                 .ToListAsync(cancellationToken);
 }

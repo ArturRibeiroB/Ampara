@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Tenants.Application.Abstractions;
 using Funeraria.Modules.Tenants.Contracts;
 using Funeraria.Modules.Tenants.Domain.Funerarias;
@@ -50,6 +51,16 @@ internal sealed class TenantsApi(TenantsDbContext context, IMemoryCache cache) :
             .Select(f => f.Parametros)
             .FirstOrDefaultAsync(cancellationToken);
         return parametros is null ? null : TimeSpan.FromHours(parametros.Terceiros.PrazoAceiteHoras);
+    }
+
+    public async Task<string?> ObterModoCertidaoAsync(Guid idTenant, CancellationToken cancellationToken = default)
+    {
+        ParametrosFuneraria? parametros = await context.Funerarias
+            .AsNoTracking()
+            .Where(f => f.Id == idTenant)
+            .Select(f => f.Parametros)
+            .FirstOrDefaultAsync(cancellationToken);
+        return parametros is null ? null : NomeApi.De(parametros.Certidao.Modo);
     }
 
     public async Task<ParametrosCobrancaDto?> ObterParametrosCobrancaAsync(Guid idTenant, CancellationToken cancellationToken = default)

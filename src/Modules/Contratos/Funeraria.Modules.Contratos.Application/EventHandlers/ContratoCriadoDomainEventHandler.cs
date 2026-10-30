@@ -29,3 +29,32 @@ internal sealed class ContratoCriadoDomainEventHandler(IContratoRepository contr
             cancellationToken);
     }
 }
+
+internal sealed class PessoasDoContratoAlteradasDomainEventHandler(IContratoRepository contratos, IEventBus eventBus)
+    : IDomainEventHandler<PessoasDoContratoAlteradasDomainEvent>
+{
+    public async Task Handle(PessoasDoContratoAlteradasDomainEvent domainEvent, CancellationToken cancellationToken)
+    {
+        if (await contratos.ObterAsync(domainEvent.IdContrato, cancellationToken) is Contrato contrato)
+        {
+            await eventBus.PublishAsync(
+                new PessoasDoContratoAlteradasIntegrationEvent(contrato.TenantId, contrato.Id, contrato.QuantidadeDependentes, contrato.ValorTotal),
+                cancellationToken);
+        }
+    }
+}
+
+internal sealed class ContratoCanceladoDomainEventHandler(IContratoRepository contratos, IEventBus eventBus)
+    : IDomainEventHandler<ContratoCanceladoDomainEvent>
+{
+    public async Task Handle(ContratoCanceladoDomainEvent domainEvent, CancellationToken cancellationToken)
+    {
+        if (await contratos.ObterAsync(domainEvent.IdContrato, cancellationToken) is Contrato contrato)
+        {
+            await eventBus.PublishAsync(
+                new ContratoCanceladoIntegrationEvent(
+                    contrato.TenantId, contrato.Id, contrato.IdCliente, contrato.DataFim!.Value, contrato.MotivoCancelamento!),
+                cancellationToken);
+        }
+    }
+}

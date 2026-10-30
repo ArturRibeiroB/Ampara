@@ -24,6 +24,9 @@ public sealed class ContratoOpenApiTests(TenantsApiFactory factory)
         {
             b.UseSetting("Documentacao:Habilitada", "true");
             b.UseSetting("Seed:Executar", "false");
+
+            // Segundo host no mesmo processo: sem servidor do Hangfire (a configuração dele é global, ver DemonstracaoTests).
+            b.UseSetting("Jobs:ServidorHabilitado", "false");
             b.ConfigureTestServices(s => s.AddTransient<IEndpoint, EndpointObsoleto>());
         });
 
