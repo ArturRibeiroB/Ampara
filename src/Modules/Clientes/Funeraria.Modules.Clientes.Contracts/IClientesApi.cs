@@ -22,6 +22,6 @@ public interface IClientesApi
 }
 
 /// <summary>Titular do contrato. <c>IdUsuario</c> é a conta dele na Identidade, para notificar a família (FUN-06).</summary>
-public sealed record TitularDto(Guid IdCliente, string Nome, string Cpf, DateOnly DataNascimento, Guid IdUsuario);
+public sealed record TitularDto(Guid IdCliente, string Nome, string Cpf, DateOnly DataNascimento, Guid IdUsuario, string Email);
 
 public sealed record DependenteDto(Guid IdDependente, Guid IdCliente, string Nome, string Cpf, DateOnly DataNascimento);

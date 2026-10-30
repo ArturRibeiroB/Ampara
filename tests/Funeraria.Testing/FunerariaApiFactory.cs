@@ -86,6 +86,8 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("LimiteRequisicoes:CadastroCliente:Limite", "100000");
         builder.UseSetting("LimiteRequisicoes:Autenticacao:Limite", "100000");
         builder.UseSetting("Seguranca:ForcarHttps", "false");
+        builder.UseSetting("Stripe:PermitirFake", "true");
+        builder.UseSetting("Stripe:WebhookSecret", SegredoWebhookStripe);
         builder.UseSetting("Seguranca:ChaveHash", Convert.ToBase64String("chave-de-hash-dos-testes-com-32-bytes!"u8.ToArray()));
         builder.UseSetting("Identidade:Links:UrlDefinirSenha", "http://{slug}.teste.localhost/definir-senha");
         builder.UseSetting("Identidade:Links:UrlConfirmarEmail", "http://{slug}.teste.localhost/confirmar-email");
@@ -110,6 +112,9 @@ public abstract class FunerariaApiFactory : WebApplicationFactory<Program>
             ConfigurarServicos(services);
         });
     }
+
+    /// <summary>Segredo do webhook nos testes, para assinar os eventos simulados (COB-06).</summary>
+    public const string SegredoWebhookStripe = "whsec_segredo_de_teste";
 
     /// <summary>Cria uma funerária ativa com slug e CNPJ únicos e devolve o id_tenant e o slug.</summary>
     public async Task<(Guid IdTenant, string Slug)> CriarFunerariaAsync(StatusFuneraria status = StatusFuneraria.Ativa)

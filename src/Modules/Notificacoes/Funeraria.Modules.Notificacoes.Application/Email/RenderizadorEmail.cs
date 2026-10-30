@@ -35,7 +35,8 @@ public sealed partial class RenderizadorEmail(ITenantsApi tenants)
         [ModelosEmail.AcessoLiberado] = "Acesso liberado em {{nome_funeraria}}",
         [ModelosEmail.BoasVindas] = "Bem-vindo(a) à {{nome_funeraria}}",
         [ModelosEmail.ConfirmacaoEmail] = "Confirme seu e-mail",
-        [ModelosEmail.RecuperacaoSenha] = "Redefinição de senha"
+        [ModelosEmail.RecuperacaoSenha] = "Redefinição de senha",
+        [ModelosEmail.LembreteFatura] = "Sua fatura {{quando}}"
     };
 
     public static IReadOnlyCollection<string> Modelos => Assuntos.Keys;

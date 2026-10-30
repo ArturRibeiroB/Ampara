@@ -11,7 +11,11 @@ public sealed record ContratoCriadoIntegrationEvent(
     string Periodicidade,
     int DiaVencimento,
     int QuantidadeDependentes,
-    decimal ValorTotal)
+    decimal ValorTotal,
+    string NomePlano,
+    decimal ValorPlano,
+    decimal ValorPorDependente,
+    DateOnly DataContratacao)
     : IntegrationEvent(IdTenant);
 
 /// <summary>

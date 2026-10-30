@@ -227,6 +227,14 @@ public sealed class Contrato : AggregateRoot<Guid>, ITenantEntity, IAuditableEnt
         return Result.Success();
     }
 
+    /// <summary>Reajuste anual (COB-08): novos valores, vigentes a partir da fatura seguinte. O histórico fica no Financeiro.</summary>
+    public void Reajustar(decimal valorPlano, decimal valorPorDependente)
+    {
+        ValorPlano = valorPlano;
+        ValorPorDependente = valorPorDependente;
+        ValorTotal = ValorPlano + (ValorPorDependente * QuantidadeDependentes);
+    }
+
     public int QuantidadeDependentes =>
         _pessoasCobertas.Count(p => p.Tipo == TipoPessoaCoberta.Dependente && p.DataRemocao is null);
 

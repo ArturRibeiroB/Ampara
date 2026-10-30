@@ -35,6 +35,7 @@ public sealed class SegurancaTests(TenantsApiFactory factory)
         "POST /api/v1/auth/refresh",
         "POST /api/v1/clientes",
         "POST /api/v1/onboarding/funerarias",
+        "POST /api/v1/webhooks/stripe",
         "GET /health",
         "GET /health/ready"
     ];

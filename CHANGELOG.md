@@ -34,4 +34,6 @@ Primeira versão do contrato. Será publicada como `v0.1.0`.
 - Documentos do falecido: anexar (PDF, JPEG ou PNG), listar, baixar por link temporário e remover.
 - Certidão de óbito: checklist com o prazo legal, solicitação (modo MANUAL ou SIMULADO por funerária), responsável
   (funcionário ou despachante), etapas pela equipe ou pelo portal (`/terceiros/certidoes`), registro da certidão emitida.
+- Pagamentos: cadastro da funerária no Stripe (`/gestao/pagamentos/conta`), faturas do contrato (`/contratos/{id}/faturas`,
+  `/faturas/{id}`) com link de pagamento e estimativa de multa e juros, baixa manual (`/gestao/faturas/{id}/baixa`).
 - Notificações: central (`/api/v1/notificacoes`) e tempo real pelo SignalR em `/hubs/notificacoes`.

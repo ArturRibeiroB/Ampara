@@ -41,4 +41,7 @@ public static class ModelosEmail
 
     /// <summary>Recuperação de senha (AUT-05). Dados: nome, link, minutos.</summary>
     public const string RecuperacaoSenha = "recuperacao-senha";
+
+    /// <summary>Lembrete de vencimento (COB-04). Dados: nome, valor, vencimento, quando, link.</summary>
+    public const string LembreteFatura = "lembrete-fatura";
 }

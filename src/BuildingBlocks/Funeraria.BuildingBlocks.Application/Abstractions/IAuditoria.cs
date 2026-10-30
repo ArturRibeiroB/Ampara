@@ -35,6 +35,10 @@ public static class AcoesAuditadas
     public const string ContratoDependenteIncluido = "CONTRATO_DEPENDENTE_INCLUIDO";
     public const string ContratoDependenteRemovido = "CONTRATO_DEPENDENTE_REMOVIDO";
     public const string ContratoCancelado = "CONTRATO_CANCELADO";
+    public const string ContratoSuspenso = "CONTRATO_SUSPENSO";
+    public const string ContratoReativado = "CONTRATO_REATIVADO";
+    public const string ContratoReajustado = "CONTRATO_REAJUSTADO";
+    public const string FaturaBaixaManual = "FATURA_BAIXA_MANUAL";
     public const string BeneficiarioRegistrado = "BENEFICIARIO_REGISTRADO";
     public const string FuneralRegistrado = "FUNERAL_REGISTRADO";
     public const string FuneralStatusAlterado = "FUNERAL_STATUS_ALTERADO";

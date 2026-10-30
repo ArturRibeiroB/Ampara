@@ -235,8 +235,8 @@ public sealed class FunerariaDeTeste(FunerariaApiFactory factory, Guid tenant, s
             ids.Add((await Cenarios.LerAsync(dependente, HttpStatusCode.Created))["id_dependente"]!.GetValue<Guid>());
         }
 
-        return new ClienteDeTeste(idCliente, http, ids);
+        return new ClienteDeTeste(idCliente, http, ids, email);
     }
 }
 
-public sealed record ClienteDeTeste(Guid IdCliente, HttpClient Http, IReadOnlyList<Guid> Dependentes);
+public sealed record ClienteDeTeste(Guid IdCliente, HttpClient Http, IReadOnlyList<Guid> Dependentes, string Email);
