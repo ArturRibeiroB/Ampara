@@ -49,6 +49,8 @@ services:
       Jwt__ChaveAssinatura: ${JWT_CHAVE_ASSINATURA:?Copie .env.example para .env antes de subir a API}
       Seed__AdminSenha: ${SEED_ADMIN_SENHA:-}
       Seed__SenhaDemo: ${SEED_SENHA_DEMO:-}
+      # Traces e métricas no Aspire Dashboard (INF-20): OTLP_ENDPOINT=http://aspire-dashboard:18889 no .env
+      Observabilidade__OtlpEndpoint: ${OTLP_ENDPOINT:-}
     ports:
       # Swagger em http://localhost:5080/swagger
       - "${API_PORTA:-5080}:8080"
@@ -105,6 +107,17 @@ services:
       SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
     ports:
       - "${SEQ_PORTA:-5341}:80"
+
+  # Traces e métricas em desenvolvimento (INF-20). Interface em http://localhost:18888
+  # Suba com: docker compose --profile tools up -d aspire-dashboard
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:9.5
+    profiles: ["tools"]
+    environment:
+      DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+    ports:
+      - "${ASPIRE_PORTA:-18888}:18888"
+      - "${OTLP_PORTA:-4317}:18889"
 
   # Já abre com o servidor "Funerária (local)" cadastrado e sem tela de login (modo desktop, só para uso local).
   # O pgpass é copiado para /tmp com permissão 600: montado direto do Windows, o libpq ignoraria o arquivo.

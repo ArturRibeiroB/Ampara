@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Funeraria.BuildingBlocks.Application.Abstractions;
 
 namespace Funeraria.BuildingBlocks.Infrastructure.Tenancy;
@@ -10,5 +11,12 @@ public sealed class TenantContext : ITenantContext
 {
     public Guid? TenantId { get; private set; }
 
-    public void Set(Guid? tenantId) => TenantId = tenantId;
+    public void Set(Guid? tenantId)
+    {
+        TenantId = tenantId;
+        if (tenantId is not null)
+        {
+            Activity.Current?.SetTag("id_tenant", tenantId.ToString());
+        }
+    }
 }
