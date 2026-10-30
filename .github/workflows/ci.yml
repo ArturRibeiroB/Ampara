@@ -3,6 +3,7 @@
 #   O teste MigrationsTests falha se algum módulo tiver mudança no modelo sem migration.
 # - Push na main ou na developer: publica a imagem da API no GitHub Container Registry.
 # - Tag vX.Y.Z: publica a imagem com a versão e cria a release com o openapi.json da mesma versão (INF-21).
+# - Contrato: compara o openapi.json com o da última release (oasdiff); na tag, quebra sem versão maior falha.
 # Para bloquear o merge com testes falhando, exija o check "Build e testes" na proteção das branches (README).
 name: CI
 
@@ -46,7 +47,11 @@ jobs:
         run: dotnet restore Funeraria.slnx
 
       - name: Build (gera o openapi.json)
-        run: dotnet build Funeraria.slnx -c Release --no-restore -p:OpenApiGenerateDocumentsOnBuild=true
+        run: |
+          # Na tag vX.Y.Z a versão da API e do info.version do contrato é X.Y.Z (INF-21).
+          VERSAO=()
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then VERSAO=("-p:Version=${GITHUB_REF_NAME#v}"); fi
+          dotnet build Funeraria.slnx -c Release --no-restore -p:OpenApiGenerateDocumentsOnBuild=true "${VERSAO[@]}"
 
       - name: Testes
         run: dotnet test --solution Funeraria.slnx -c Release --no-build
@@ -57,6 +62,11 @@ jobs:
           name: openapi
           path: artifacts/openapi/openapi.json
           if-no-files-found: error
+
+      - name: Contrato da API (oasdiff)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/contrato-api.sh
 
   imagem-docker:
     name: Imagem Docker
@@ -97,6 +107,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSAO=${{ startsWith(github.ref, 'refs/tags/v') && steps.meta.outputs.version || '' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

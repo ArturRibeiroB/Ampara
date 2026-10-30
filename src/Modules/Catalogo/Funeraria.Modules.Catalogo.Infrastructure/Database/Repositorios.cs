@@ -88,7 +88,8 @@ internal sealed class CatalogoLeitura(CatalogoDbContext context) : ICatalogoLeit
                 i.Nome,
                 i.Preco,
                 i.Ativo && categorias[i.IdCategoria].Ativo,
-                [.. i.Variacoes.Where(v => v.Ativo).Select(v => new VariacaoDto(v.Id, v.Nome, v.AcrescimoPreco))]))
+                [.. i.Variacoes.Where(v => v.Ativo).Select(v => new VariacaoDto(v.Id, v.Nome, v.AcrescimoPreco))],
+                i.IdTerceiroFornecedor))
             .ToList();
     }
 }

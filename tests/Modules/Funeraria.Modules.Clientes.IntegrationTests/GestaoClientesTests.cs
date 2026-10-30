@@ -75,6 +75,35 @@ public sealed class GestaoClientesTests(ClientesApiFactory factory)
     }
 
     [Fact]
+    public async Task Equipe_filtra_pelo_status_do_contrato_e_ve_os_contratos_no_detalhe()
+    {
+        FunerariaDeTeste funeraria = await factory.CriarFunerariaContratavelAsync();
+        Guid plano = await funeraria.CriarPlanoAsync();
+        ClienteDeTeste ativo = await funeraria.CriarClienteAsync();
+        await factory.AtivarContratoAsync(await ativo.ContratarAsync(plano));
+        ClienteDeTeste aPagar = await funeraria.CriarClienteAsync();
+        await aPagar.ContratarAsync(plano);
+        ClienteDeTeste semContrato = await funeraria.CriarClienteAsync();
+        HttpClient equipe = funeraria.Equipe("FUNCIONARIO");
+
+        async Task<Guid[]> Filtrar(string status) =>
+            [.. (await equipe.GetFromJsonAsync<JsonObject>($"/api/v1/gestao/clientes?status_contrato={status}", Json, Ct))!["itens"]!
+                .AsArray().Select(c => c!["id_cliente"]!.GetValue<Guid>())];
+
+        Assert.Equal([ativo.IdCliente], await Filtrar("ATIVO"));
+        Assert.Equal([aPagar.IdCliente], await Filtrar("a_pagar"));
+        Assert.Equal([semContrato.IdCliente], await Filtrar("SEM_CONTRATO"));
+        Assert.Empty(await Filtrar("CANCELADO"));
+        Assert.Equal(HttpStatusCode.BadRequest, (await equipe.GetAsync("/api/v1/gestao/clientes?status_contrato=VENCIDO", Ct)).StatusCode);
+
+        JsonObject detalhe = (await equipe.GetFromJsonAsync<JsonObject>($"/api/v1/gestao/clientes/{ativo.IdCliente}", Json, Ct))!;
+        JsonNode contrato = Assert.Single(detalhe["contratos"]!.AsArray())!;
+        Assert.Equal("ATIVO", contrato["status"]!.GetValue<string>());
+        JsonObject detalheSemContrato = (await equipe.GetFromJsonAsync<JsonObject>($"/api/v1/gestao/clientes/{semContrato.IdCliente}", Json, Ct))!;
+        Assert.Empty(detalheSemContrato["contratos"]!.AsArray());
+    }
+
+    [Fact]
     public async Task Equipe_nao_ve_cliente_de_outra_funeraria_e_cliente_nao_acessa_a_gestao()
     {
         (_, Guid idClienteA, HttpClient clienteA) = await factory.ClienteLogadoAsync();

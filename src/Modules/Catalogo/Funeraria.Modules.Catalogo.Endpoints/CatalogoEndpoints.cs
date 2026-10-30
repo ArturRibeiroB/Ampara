@@ -124,7 +124,8 @@ internal sealed class CatalogoEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         gestao.MapPost(string.Empty, async (ItemRequest r, ISender sender, CancellationToken ct) =>
-                (await sender.Send(new CriarItemCommand(r.IdCategoria, r.Nome ?? string.Empty, r.Descricao, r.Preco, r.ControlaEstoque, r.QuantidadeEstoque), ct))
+                (await sender.Send(new CriarItemCommand(
+                    r.IdCategoria, r.Nome ?? string.Empty, r.Descricao, r.Preco, r.ControlaEstoque, r.QuantidadeEstoque, r.IdTerceiroFornecedor), ct))
                     .Match(i => Results.Created($"/api/v1/catalogo/{i.IdItem}", i)))
             .WithName("CriarItemCatalogo")
             .WithSummary("Cria um item do catálogo")
@@ -134,7 +135,8 @@ internal sealed class CatalogoEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         gestao.MapPut("{id:guid}", async (Guid id, ItemRequest r, ISender sender, CancellationToken ct) =>
-                (await sender.Send(new AtualizarItemCommand(id, r.IdCategoria, r.Nome ?? string.Empty, r.Descricao, r.Preco, r.ControlaEstoque, r.QuantidadeEstoque), ct))
+                (await sender.Send(new AtualizarItemCommand(
+                    id, r.IdCategoria, r.Nome ?? string.Empty, r.Descricao, r.Preco, r.ControlaEstoque, r.QuantidadeEstoque, r.IdTerceiroFornecedor), ct))
                     .Match(Results.Ok))
             .WithName("AtualizarItemCatalogo")
             .WithSummary("Altera o item. O preço novo não muda funerais e orçamentos já aprovados")
@@ -193,7 +195,8 @@ public sealed record ItemRequest(
     string? Descricao,
     decimal? Preco,
     bool ControlaEstoque,
-    int? QuantidadeEstoque);
+    int? QuantidadeEstoque,
+    Guid? IdTerceiroFornecedor = null);
 
 public sealed record VariacaoRequest(string? Nome, decimal? AcrescimoPreco);
 

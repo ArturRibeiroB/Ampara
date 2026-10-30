@@ -5,7 +5,9 @@ WORKDIR /src
 
 COPY global.json Directory.Build.props Directory.Packages.props ./
 COPY src/ src/
-RUN dotnet publish src/Funeraria.Api/Funeraria.Api.csproj -c Release -o /app/publish /p:UseAppHost=false
+# Versão do release (X.Y.Z), passada pelo CI na tag vX.Y.Z (INF-21). Vazia = versão de desenvolvimento.
+ARG VERSAO=
+RUN dotnet publish src/Funeraria.Api/Funeraria.Api.csproj -c Release -o /app/publish /p:UseAppHost=false ${VERSAO:+/p:Version=$VERSAO}
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app

@@ -5,6 +5,7 @@ using Funeraria.BuildingBlocks.Application.Events;
 using Funeraria.BuildingBlocks.Application.Messaging;
 using Funeraria.BuildingBlocks.Application.Serialization;
 using Funeraria.BuildingBlocks.Domain.Results;
+using Funeraria.Modules.Tenants.Contracts;
 using Funeraria.Modules.Terceiros.Application.Abstractions;
 using Funeraria.Modules.Terceiros.Application.Cadastro;
 using Funeraria.Modules.Terceiros.Contracts;
@@ -20,6 +21,7 @@ public sealed class AtribuicoesTerceiros(
     IAtribuicaoRepository atribuicoes,
     ITerceirosUnitOfWork unitOfWork,
     ITenantContext tenantContext,
+    ITenantsApi tenants,
     TimeProvider timeProvider)
     : ITerceirosAtribuicoes
 {
@@ -55,13 +57,15 @@ public sealed class AtribuicoesTerceiros(
         }
 
         DateTime agora = timeProvider.GetUtcNow().UtcDateTime;
+        DateTime prazo = atribuicao.PrazoAceite
+            ?? agora + (await tenants.ObterPrazoAceiteTerceiroAsync(tenantContext.RequiredTenantId, cancellationToken) ?? Atribuicao.PrazoPadrao);
         var nova = Atribuicao.Criar(
             tenantContext.RequiredTenantId,
             terceiro.Id,
             tipo,
             atribuicao.IdOrigem,
             JsonSerializer.Serialize(atribuicao.Resumo, atribuicao.Resumo.GetType(), JsonbOptions.Default),
-            atribuicao.PrazoAceite ?? agora + Atribuicao.PrazoPadrao);
+            prazo);
 
         atribuicoes.Adicionar(nova);
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -1,20 +1,41 @@
 using System.Data.Common;
 using Dapper;
+using FluentValidation;
 using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Application.Messaging;
 using Funeraria.BuildingBlocks.Application.Paginacao;
 using Funeraria.BuildingBlocks.Application.Validation;
 using Funeraria.BuildingBlocks.Domain.Results;
+using Funeraria.Modules.Contratos.Contracts;
 
 namespace Funeraria.Modules.Clientes.Application.Queries.Gestao;
 
 /// <summary>
 /// Busca de clientes pela equipe da funerária (CLI-03), por nome (parte do nome) ou CPF, com paginação (INF-17).
 /// O CPF é cifrado no banco (SEG-01): a busca usa o hash e a listagem mostra o CPF mascarado.
-/// O filtro por status do contrato entra quando o módulo Contratos existir.
+/// O filtro <c>status_contrato</c> traz quem tem pelo menos um contrato no status, ou <c>SEM_CONTRATO</c> quem não tem nenhum.
 /// </summary>
-public sealed record BuscarClientesQuery(PaginaRequest Pagina, string? Nome, string? Cpf, OrdenacaoRequest? Ordenacao = null)
-    : IQuery<PaginaResult<ClienteResumoResponse>>;
+public sealed record BuscarClientesQuery(
+    PaginaRequest Pagina,
+    string? Nome,
+    string? Cpf,
+    OrdenacaoRequest? Ordenacao = null,
+    string? StatusContrato = null)
+    : IQuery<PaginaResult<ClienteResumoResponse>>
+{
+    public const string SemContrato = "SEM_CONTRATO";
+}
+
+internal sealed class BuscarClientesQueryValidator : AbstractValidator<BuscarClientesQuery>
+{
+    public BuscarClientesQueryValidator()
+    {
+        RuleFor(q => q.StatusContrato)
+            .Must(s => s is null || s.Equals(BuscarClientesQuery.SemContrato, StringComparison.OrdinalIgnoreCase)
+                || StatusContratoApi.Todos.Contains(s, StringComparer.OrdinalIgnoreCase))
+            .WithMessage($"Status do contrato inválido. Use {string.Join(", ", StatusContratoApi.Todos)} ou {BuscarClientesQuery.SemContrato}.");
+    }
+}
 
 public sealed record ClienteResumoResponse
 {
@@ -39,7 +60,8 @@ public sealed record ClienteResumoResponse
 public sealed class BuscarClientesQueryHandler(
     IDbConnectionFactory connectionFactory,
     ITenantContext tenantContext,
-    ICriptografiaDados criptografia)
+    ICriptografiaDados criptografia,
+    IContratosApi contratos)
     : IQueryHandler<BuscarClientesQuery, PaginaResult<ClienteResumoResponse>>
 {
     // Dapper não passa pelo filtro global do EF Core: o id_tenant é obrigatório no WHERE (TEN-01).
@@ -59,6 +81,8 @@ public sealed class BuscarClientesQueryHandler(
         WHERE c.id_tenant = @IdTenant
           AND (@Nome IS NULL OR c.nome ILIKE @Nome)
           AND (@CpfHash::text IS NULL OR c.cpf_hash = @CpfHash)
+          AND (@Incluir::uuid[] IS NULL OR c.id_cliente = ANY(@Incluir))
+          AND (@Excluir::uuid[] IS NULL OR c.id_cliente <> ALL(@Excluir))
         /*ORDENACAO*/
         LIMIT @Tamanho OFFSET @Deslocamento
         """;
@@ -87,10 +111,35 @@ public sealed class BuscarClientesQueryHandler(
             : $"%{query.Nome.Trim().Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_")}%";
         string? cpf = string.IsNullOrWhiteSpace(query.Cpf) ? null : DocumentosBrasileiros.Normalizar(query.Cpf);
 
+        // Os contratos são de outro módulo (INF-03): a lista de titulares vem pela API pública do Contratos.
+        Guid[]? incluir = null, excluir = null;
+        if (query.StatusContrato is not null)
+        {
+            bool semContrato = query.StatusContrato.Equals(BuscarClientesQuery.SemContrato, StringComparison.OrdinalIgnoreCase);
+            Guid[] ids = [.. await contratos.ClientesComContratoAsync(semContrato ? null : query.StatusContrato.ToUpperInvariant(), cancellationToken)];
+            if (semContrato)
+            {
+                excluir = ids;
+            }
+            else
+            {
+                incluir = ids;
+            }
+        }
+
         await using DbConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         List<Linha> linhas = (await connection.QueryAsync<Linha>(new CommandDefinition(
             Sql.Replace("/*ORDENACAO*/", orderBy.Value, StringComparison.Ordinal),
-            new { IdTenant = tenantContext.RequiredTenantId, Nome = nome, CpfHash = cpf is null ? null : criptografia.Hash(cpf), pagina.Tamanho, pagina.Deslocamento },
+            new
+            {
+                IdTenant = tenantContext.RequiredTenantId,
+                Nome = nome,
+                CpfHash = cpf is null ? null : criptografia.Hash(cpf),
+                Incluir = incluir,
+                Excluir = excluir,
+                pagina.Tamanho,
+                pagina.Deslocamento
+            },
             cancellationToken: cancellationToken))).ToList();
 
         long total = linhas.Count > 0 ? linhas[0].Total : 0;

@@ -107,12 +107,16 @@ public static class Cenarios
         return new FunerariaDeTeste(factory, tenant, slug);
     }
 
-    public static async Task AlterarCobrancaAsync(this FunerariaApiFactory factory, Guid tenant, Func<ParametrosCobranca, ParametrosCobranca> alterar)
+    public static Task AlterarCobrancaAsync(this FunerariaApiFactory factory, Guid tenant, Func<ParametrosCobranca, ParametrosCobranca> alterar) =>
+        factory.AlterarParametrosAsync(tenant, p => p with { Cobranca = alterar(p.Cobranca) });
+
+    /// <summary>Muda os parâmetros da funerária direto no banco (TEN-03), sem montar o corpo inteiro das configurações.</summary>
+    public static async Task AlterarParametrosAsync(this FunerariaApiFactory factory, Guid tenant, Func<ParametrosFuneraria, ParametrosFuneraria> alterar)
     {
         await using AsyncServiceScope scope = factory.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<TenantsDbContext>();
         FunerariaEntity funeraria = await context.Set<FunerariaEntity>().SingleAsync(f => f.Id == tenant);
-        funeraria.AtualizarConfiguracoes(funeraria.IdentidadeVisual, funeraria.Parametros with { Cobranca = alterar(funeraria.Parametros.Cobranca) });
+        funeraria.AtualizarConfiguracoes(funeraria.IdentidadeVisual, alterar(funeraria.Parametros));
         await context.SaveChangesAsync();
     }
 

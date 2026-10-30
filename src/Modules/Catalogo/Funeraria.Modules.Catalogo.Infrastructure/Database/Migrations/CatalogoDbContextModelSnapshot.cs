@@ -158,6 +158,10 @@ namespace Funeraria.Modules.Catalogo.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id_categoria");
 
+                    b.Property<Guid?>("IdTerceiroFornecedor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_terceiro_fornecedor");
+
                     b.Property<string>("ImagemChave")
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)")

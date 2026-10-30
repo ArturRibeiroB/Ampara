@@ -10,6 +10,7 @@ using Funeraria.Modules.Clientes.Application.Queries.ObterMeusDados;
 using Mediator;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
 namespace Funeraria.Modules.Clientes.Endpoints;
@@ -91,15 +92,16 @@ internal sealed class ClientesEndpoints : IEndpoint
                 CancellationToken ct,
                 string? nome = null,
                 string? cpf = null,
+                [FromQuery(Name = "status_contrato")] string? statusContrato = null,
                 int pagina = 1,
                 int tamanho = PaginaRequest.TamanhoPadrao,
                 string? ordenarPor = null,
                 string? direcao = null) =>
                 (await sender.Send(new BuscarClientesQuery(
-                    new PaginaRequest(pagina, tamanho), nome, cpf, new OrdenacaoRequest(ordenarPor, direcao)), ct)).Match(Results.Ok))
+                    new PaginaRequest(pagina, tamanho), nome, cpf, new OrdenacaoRequest(ordenarPor, direcao), statusContrato), ct)).Match(Results.Ok))
             .WithName("BuscarClientes")
-            .WithSummary("Busca clientes da funerária por nome ou CPF")
-            .WithDescription("Ordenação: ordenarPor = nome (padrão), cidade ou cadastrado_em; direcao = asc ou desc. O CPF da listagem vem mascarado.")
+            .WithSummary("Busca clientes da funerária por nome, CPF ou status do contrato")
+            .WithDescription("status_contrato = ATIVO, A_PAGAR, SUSPENSO, CANCELADO (tem pelo menos um contrato no status) ou SEM_CONTRATO. Ordenação: ordenarPor = nome (padrão), cidade ou cadastrado_em; direcao = asc ou desc. O CPF da listagem vem mascarado.")
             .ProducesValidationProblem()
             .Produces<PaginaResult<ClienteResumoResponse>>();
 

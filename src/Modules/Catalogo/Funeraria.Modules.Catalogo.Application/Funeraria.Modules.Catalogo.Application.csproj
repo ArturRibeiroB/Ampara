@@ -9,6 +9,7 @@
     <ProjectReference Include="..\Funeraria.Modules.Catalogo.Contracts\Funeraria.Modules.Catalogo.Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Funeraria.BuildingBlocks.Application\Funeraria.BuildingBlocks.Application.csproj" />
     <ProjectReference Include="..\..\Tenants\Funeraria.Modules.Tenants.Contracts\Funeraria.Modules.Tenants.Contracts.csproj" />
+    <ProjectReference Include="..\..\Terceiros\Funeraria.Modules.Terceiros.Contracts\Funeraria.Modules.Terceiros.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

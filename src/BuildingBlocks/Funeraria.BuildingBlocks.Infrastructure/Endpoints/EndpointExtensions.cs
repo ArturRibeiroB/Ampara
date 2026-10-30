@@ -28,4 +28,12 @@ public static class EndpointExtensions
 
         return app;
     }
+
+    /// <summary>
+    /// Marca o endpoint como obsoleto (<c>deprecated</c> no OpenAPI) antes de removê-lo numa versão maior (INF-21).
+    /// Registre também no CHANGELOG, em "Obsoleto", com o que usar no lugar.
+    /// </summary>
+    public static TBuilder MarcarObsoleto<TBuilder>(this TBuilder builder, string useNoLugar)
+        where TBuilder : IEndpointConventionBuilder =>
+        builder.WithMetadata(new ObsoleteAttribute($"Obsoleto. Use {useNoLugar}."));
 }

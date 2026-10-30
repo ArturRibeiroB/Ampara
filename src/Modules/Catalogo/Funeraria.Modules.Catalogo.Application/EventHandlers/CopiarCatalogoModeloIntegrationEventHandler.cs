@@ -2,6 +2,7 @@ using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Application.Events;
 using Funeraria.Modules.Catalogo.Application.Abstractions;
 using Funeraria.Modules.Catalogo.Domain.Itens;
+using Funeraria.Modules.Tenants.Contracts;
 using Funeraria.Modules.Tenants.Contracts.IntegrationEvents;
 
 namespace Funeraria.Modules.Catalogo.Application.EventHandlers;
@@ -35,7 +36,7 @@ internal sealed class CopiarCatalogoModeloIntegrationEventHandler(
             foreach (ItemModelo modelo in modelos)
             {
                 var item = ItemCatalogo.Criar(
-                    evento.IdTenant, categoria.Id, new DadosItem(modelo.Nome, modelo.Descricao, modelo.Preco, false, null), ativo: false);
+                    evento.IdTenant, categoria.Id, new DadosItem(modelo.Nome, modelo.Descricao, modelo.Preco, false, null), ativo: FunerariaDemonstracao.E(evento.Slug));
                 foreach ((string nome, decimal acrescimo) in modelo.Variacoes)
                 {
                     item.AdicionarVariacao(nome, acrescimo);
