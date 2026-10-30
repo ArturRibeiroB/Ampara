@@ -222,9 +222,9 @@ public sealed class ReservarLocalCommandHandler(
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        catch (ViolacaoDeUnicidadeException)
+        catch (Exception e) when (e is ViolacaoDeUnicidadeException or ImpasseNoBancoException)
         {
-            // Duas reservas ao mesmo tempo: a restrição de exclusão do banco recusa a segunda.
+            // Duas reservas ao mesmo tempo: a restrição de exclusão do banco recusa a segunda, às vezes com um deadlock.
             return LocalErros.HorarioOcupado;
         }
 
