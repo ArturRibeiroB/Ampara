@@ -8,7 +8,9 @@ Seções de cada versão: **Adicionado**, **Alterado**, **Obsoleto** (com o que 
 
 ## [Não publicado]
 
-Primeira versão do contrato. Será publicada como `v0.1.0`.
+## [0.1.0] - 2026-10-30
+
+Primeira versão do contrato.
 
 ### Adicionado
 
