@@ -2,6 +2,7 @@ using Funeraria.BuildingBlocks.Infrastructure.Jobs;
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.Modules.Financeiro.Application.Abstractions;
 using Funeraria.Modules.Financeiro.Application.Cobrancas;
+using Funeraria.Modules.Financeiro.Contracts;
 using Funeraria.Modules.Financeiro.Domain.Cobranca;
 using Funeraria.Modules.Financeiro.Infrastructure.Database;
 using Funeraria.Modules.Financeiro.Infrastructure.Stripe;
@@ -27,6 +28,7 @@ public static class FinanceiroModule
         services.AddScoped<IEventoStripeRepository, EventoStripeRepository>();
 
         services.AddScoped<EspelhoDeFaturas>();
+        services.AddScoped<IFinanceiroApi, FinanceiroApi>();
         services.AddScoped<ProvisionamentoAssinaturas>();
         services.AddScoped<ApresentacaoDeFaturas>();
         services.AddScoped<AvisosDeCobranca>();

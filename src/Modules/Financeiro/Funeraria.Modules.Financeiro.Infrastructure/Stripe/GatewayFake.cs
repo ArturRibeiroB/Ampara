@@ -43,6 +43,9 @@ public sealed class GatewayFake : IPagamentoGateway
         return paga;
     }
 
+    /// <summary>Muda o vencimento, para o teste simular uma fatura em atraso.</summary>
+    public void Vencer(string idInvoice, DateOnly vencimento) => _faturas[idInvoice] = _faturas[idInvoice] with { DataVencimento = vencimento };
+
     public FaturaGateway? Fatura(string idInvoice) => _faturas.GetValueOrDefault(idInvoice);
 
     public Task<string> CriarContaConectadaAsync(Guid idTenant, string nomeFantasia, CancellationToken cancellationToken)
@@ -129,7 +132,7 @@ public sealed class GatewayFake : IPagamentoGateway
         _extras.Enqueue(cobranca);
         var fatura = new FaturaGateway(
             $"in_{Interlocked.Increment(ref _sequencia)}", null, cobranca.IdContrato, DateOnly.FromDateTime(DateTime.Now), null, cobranca.Valor,
-            DateOnly.FromDateTime(DateTime.Now).AddDays(CicloCobranca.DiasDeAntecedencia), SituacaoFaturaStripe.Aberta, "https://pagar.stripe.test/avulsa", null, null);
+            DateOnly.FromDateTime(DateTime.Now).AddDays(CicloCobranca.DiasDeAntecedencia), SituacaoFaturaStripe.Aberta, "https://pagar.stripe.test/avulsa", null, null, cobranca.ForaDaInadimplencia);
         _faturas[fatura.IdInvoice] = fatura;
         return Task.FromResult(fatura);
     }

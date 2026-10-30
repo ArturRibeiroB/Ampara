@@ -175,7 +175,7 @@ public sealed class EspelhoDeFaturas(
 
         var espelhada = new FaturaEspelhada(
             dados.IdInvoice, dados.Competencia, dados.Valor, dados.DataVencimento, dados.Situacao, dados.LinkPagamento, dados.PagaEm,
-            dados.FormaPagamento, Avulsa: dados.IdSubscription is null);
+            dados.FormaPagamento, Avulsa: dados.IdSubscription is null, dados.ForaDaInadimplencia);
 
         Fatura? fatura = await faturas.ObterPorStripeAsync(dados.IdInvoice, cancellationToken);
         if (fatura is null)
@@ -285,7 +285,7 @@ internal sealed class FaturaPagaDomainEventHandler(
 {
     public async Task Handle(FaturaPagaDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        if (await faturas.ObterAsync(domainEvent.IdFatura, cancellationToken) is not Fatura fatura
+        if (await faturas.ObterAsync(domainEvent.IdFatura, cancellationToken) is not { ForaDaInadimplencia: false } fatura
             || await assinaturas.ObterDoContratoAsync(fatura.IdContrato, cancellationToken) is not Assinatura assinatura)
         {
             return;
@@ -294,7 +294,7 @@ internal sealed class FaturaPagaDomainEventHandler(
         await LancarEncargosAsync(fatura, assinatura, cancellationToken);
 
         IReadOnlyList<Fatura> doContrato = await faturas.ListarDoContratoAsync(fatura.IdContrato, cancellationToken);
-        if (doContrato.Any(f => f.Status == StatusFatura.Vencida))
+        if (doContrato.Any(f => f.Status == StatusFatura.Vencida && !f.ForaDaInadimplencia))
         {
             return;
         }

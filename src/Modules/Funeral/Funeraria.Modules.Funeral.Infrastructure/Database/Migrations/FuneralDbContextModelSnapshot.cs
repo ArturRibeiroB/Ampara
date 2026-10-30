@@ -482,6 +482,71 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                     b.ToTable("funerais_equipe", "funeral");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.Orcamento", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_orcamento");
+
+                    b.Property<DateTime?>("AprovadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("aprovado_em");
+
+                    b.Property<string>("AprovadoPor")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("aprovado_por");
+
+                    b.Property<DateTime>("GeradoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("gerado_em");
+
+                    b.Property<Guid?>("IdFatura")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_fatura");
+
+                    b.Property<Guid?>("IdFuneral")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_funeral");
+
+                    b.Property<Guid?>("IdUsuarioAprovacao")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario_aprovacao");
+
+                    b.Property<Guid?>("IdUsuarioGeracao")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario_geracao");
+
+                    b.Property<string>("Itens")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("itens");
+
+                    b.Property<string>("LinkPagamento")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("link_pagamento");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("total");
+
+                    b.HasKey("Id")
+                        .HasName("pk_orcamentos");
+
+                    b.HasIndex("IdFuneral")
+                        .HasDatabaseName("ix_orcamentos_id_funeral");
+
+                    b.ToTable("orcamentos", "funeral");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Locais.Local", b =>
                 {
                     b.Property<Guid>("Id")
@@ -856,6 +921,15 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                         .HasConstraintName("fk_funerais_equipe_funerais_id_funeral");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Funerais.Orcamento", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Funeral.Domain.Funerais.Funeral", null)
+                        .WithMany("Orcamentos")
+                        .HasForeignKey("IdFuneral")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_orcamentos_funerais_id_funeral");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Locais.Reserva", b =>
                 {
                     b.HasOne("Funeraria.Modules.Funeral.Domain.Locais.Local", null)
@@ -873,6 +947,8 @@ namespace Funeraria.Modules.Funeral.Infrastructure.Database.Migrations
                     b.Navigation("Historico");
 
                     b.Navigation("Itens");
+
+                    b.Navigation("Orcamentos");
                 });
 
             modelBuilder.Entity("Funeraria.Modules.Funeral.Domain.Pedidos.Pedido", b =>

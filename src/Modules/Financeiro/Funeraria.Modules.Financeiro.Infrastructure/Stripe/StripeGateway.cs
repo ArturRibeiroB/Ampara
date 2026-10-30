@@ -214,7 +214,11 @@ internal sealed class StripeGateway(IStripeClient cliente, IOptions<StripeOption
                 {
                     PaymentMethodTypes = opcoes.Value.PixHabilitado ? ["card", "boleto", "pix"] : ["card", "boleto"]
                 },
-                Metadata = new Dictionary<string, string> { ["id_contrato"] = c.IdContrato.ToString() }
+                Metadata = new Dictionary<string, string>
+                {
+                    ["id_contrato"] = c.IdContrato.ToString(),
+                    [MetadadoForaDaInadimplencia] = c.ForaDaInadimplencia ? "true" : "false"
+                }
             },
             Opcoes(idConta, $"{c.ChaveIdempotencia}-fatura"),
             cancellationToken);
@@ -231,6 +235,8 @@ internal sealed class StripeGateway(IStripeClient cliente, IOptions<StripeOption
             : atual;
         return await MapearAsync(idConta, finalizada, cancellationToken);
     }
+
+    private const string MetadadoForaDaInadimplencia = "fora_da_inadimplencia";
 
     private static RequestOptions Opcoes(string idConta, string? chaveIdempotencia = null) =>
         new() { StripeAccount = idConta, IdempotencyKey = chaveIdempotencia };
@@ -294,7 +300,8 @@ internal sealed class StripeGateway(IStripeClient cliente, IOptions<StripeOption
             situacao,
             i.HostedInvoiceUrl,
             i.StatusTransitions?.PaidAt,
-            situacao == SituacaoFaturaStripe.Paga ? await FormaDoPagamentoAsync(idConta, i.Id, cancellationToken) : null);
+            situacao == SituacaoFaturaStripe.Paga ? await FormaDoPagamentoAsync(idConta, i.Id, cancellationToken) : null,
+            i.Metadata is not null && i.Metadata.TryGetValue(MetadadoForaDaInadimplencia, out string? fora) && fora == "true");
     }
 
     private async Task<FormaPagamento?> FormaDoPagamentoAsync(string idConta, string idInvoice, CancellationToken cancellationToken)

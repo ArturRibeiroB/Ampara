@@ -290,6 +290,9 @@ public sealed class Fatura : AggregateRoot<Guid>, ITenantEntity, IAuditableEntit
     /// <summary>Fatura fora do ciclo (primeira cobrança, multa e juros do anual, itens do funeral): não gera novo encargo.</summary>
     public bool Avulsa { get; private set; }
 
+    /// <summary>Itens do funeral (FUN-04): atrasar não suspende o plano nem impede a reativação.</summary>
+    public bool ForaDaInadimplencia { get; private set; }
+
     public string? ObservacaoBaixa { get; private set; }
 
     public bool EmAberto => Status is StatusFatura.Pendente or StatusFatura.Vencida or StatusFatura.Processando;
@@ -302,7 +305,8 @@ public sealed class Fatura : AggregateRoot<Guid>, ITenantEntity, IAuditableEntit
             IdCliente = idCliente,
             IdStripeInvoice = dados.IdStripeInvoice,
             Status = StatusFatura.Pendente,
-            Avulsa = dados.Avulsa
+            Avulsa = dados.Avulsa,
+            ForaDaInadimplencia = dados.ForaDaInadimplencia
         };
 
         fatura.Atualizar(dados);
@@ -403,7 +407,8 @@ public sealed record FaturaEspelhada(
     string? LinkPagamento,
     DateTime? PagaEm,
     FormaPagamento? FormaPagamento,
-    bool Avulsa);
+    bool Avulsa,
+    bool ForaDaInadimplencia = false);
 
 /// <summary>Evento recebido do Stripe (COB-06). O id do evento é único: o mesmo evento só é processado uma vez.</summary>
 public sealed class EventoStripe : Entity<Guid>

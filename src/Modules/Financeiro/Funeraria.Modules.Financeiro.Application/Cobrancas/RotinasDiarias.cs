@@ -93,7 +93,7 @@ public sealed partial class RotinasDeCobranca(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        foreach (IGrouping<Guid, Fatura> doContrato in abertas.Where(f => f.Status == StatusFatura.Vencida).GroupBy(f => f.IdContrato))
+        foreach (IGrouping<Guid, Fatura> doContrato in abertas.Where(f => f.Status == StatusFatura.Vencida && !f.ForaDaInadimplencia).GroupBy(f => f.IdContrato))
         {
             if (await assinaturas.ObterDoContratoAsync(doContrato.Key, cancellationToken) is not { Status: not StatusAssinatura.Cancelada } assinatura)
             {

@@ -375,6 +375,10 @@ namespace Funeraria.Modules.Financeiro.Infrastructure.Database.Migrations
                         .HasColumnType("date")
                         .HasColumnName("data_vencimento");
 
+                    b.Property<bool>("ForaDaInadimplencia")
+                        .HasColumnType("boolean")
+                        .HasColumnName("fora_da_inadimplencia");
+
                     b.Property<string>("FormaPagamento")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")

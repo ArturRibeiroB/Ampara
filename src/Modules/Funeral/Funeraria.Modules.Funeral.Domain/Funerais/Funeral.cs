@@ -16,6 +16,7 @@ public sealed class Funeral : AgregadoComStatus<StatusFuneral, AcaoFuneral>, ITe
 {
     private readonly List<MembroEquipeFuneral> _equipe = [];
     private readonly List<FuneralItem> _itens = [];
+    private readonly List<Orcamento> _orcamentos = [];
 
     private Funeral(Guid id, Guid tenantId)
         : base(id, StatusFuneral.Registrado)
@@ -51,6 +52,9 @@ public sealed class Funeral : AgregadoComStatus<StatusFuneral, AcaoFuneral>, ITe
 
     /// <summary>Quem da funerária cuida do atendimento e em qual função (FUN-08).</summary>
     public IReadOnlyList<MembroEquipeFuneral> Equipe => _equipe;
+
+    /// <summary>Orçamentos dos itens adicionais (FUN-04). Cada um cobre só o que os aprovados antes dele não cobriram.</summary>
+    public IReadOnlyList<Orcamento> Orcamentos => _orcamentos;
 
     protected override MaquinaDeEstados<StatusFuneral, AcaoFuneral> Maquina => EstadosFuneral.Maquina;
 
@@ -103,6 +107,7 @@ public sealed class Funeral : AgregadoComStatus<StatusFuneral, AcaoFuneral>, ITe
 
         var item = FuneralItem.Criar(escolhido, agora);
         _itens.Add(item);
+        SubstituirOrcamentoPendente();
         return item;
     }
 
@@ -120,8 +125,98 @@ public sealed class Funeral : AgregadoComStatus<StatusFuneral, AcaoFuneral>, ITe
             return FuneralErros.ItemNaoEncontrado;
         }
 
+        if (_orcamentos.Any(o => o.Status == StatusOrcamento.Aprovado && o.Itens.Any(l => l.IdFuneralItem == idFuneralItem)))
+        {
+            return FuneralErros.ItemJaAprovado;
+        }
+
         _itens.Remove(item);
+        SubstituirOrcamentoPendente();
         return item;
+    }
+
+    /// <summary>Orçamento com os adicionais que ainda não foram aprovados (FUN-04). Substitui o pendente, que ficou velho.</summary>
+    /// <param name="adicionais">Os adicionais de agora, com a cobertura do plano já aplicada.</param>
+    /// <param name="agora">Data da geração.</param>
+    /// <param name="idUsuario">Quem gerou.</param>
+    public Result<Orcamento> GerarOrcamento(IReadOnlyList<LinhaOrcamento> adicionais, DateTime agora, Guid? idUsuario)
+    {
+        if (Encerrado)
+        {
+            return FuneralErros.Encerrado;
+        }
+
+        var jaAprovados = _orcamentos.Where(o => o.Status == StatusOrcamento.Aprovado).SelectMany(o => o.Itens)
+            .GroupBy(l => (l.IdFuneralItem, l.SomenteDiferencaVariacao))
+            .ToDictionary(g => g.Key, g => g.Sum(l => l.Quantidade));
+
+        List<LinhaOrcamento> linhas = [];
+        foreach (LinhaOrcamento linha in adicionais)
+        {
+            int falta = linha.Quantidade - jaAprovados.GetValueOrDefault((linha.IdFuneralItem, linha.SomenteDiferencaVariacao));
+            if (falta > 0)
+            {
+                linhas.Add(linha with { Quantidade = falta, Subtotal = linha.PrecoUnitario * falta });
+            }
+        }
+
+        if (linhas.Sum(l => l.Subtotal) <= 0)
+        {
+            return FuneralErros.SemAdicionais;
+        }
+
+        SubstituirOrcamentoPendente();
+        var orcamento = Orcamento.Criar(linhas, agora, idUsuario);
+        _orcamentos.Add(orcamento);
+        return orcamento;
+    }
+
+    /// <summary>Registra o aceite da família (FUN-04). Aprovar de novo não muda nada: serve para tentar a fatura outra vez.</summary>
+    public Result<Orcamento> AprovarOrcamento(Guid idOrcamento, string nomeResponsavel, DateTime agora, Guid? idUsuario)
+    {
+        Orcamento? orcamento = _orcamentos.FirstOrDefault(o => o.Id == idOrcamento);
+        if (orcamento is null)
+        {
+            return FuneralErros.OrcamentoNaoEncontrado;
+        }
+
+        if (orcamento.Status == StatusOrcamento.Aprovado)
+        {
+            return orcamento;
+        }
+
+        if (orcamento.Status != StatusOrcamento.Pendente)
+        {
+            return FuneralErros.OrcamentoDesatualizado;
+        }
+
+        if (Encerrado)
+        {
+            return FuneralErros.Encerrado;
+        }
+
+        orcamento.Aprovar(nomeResponsavel, agora, idUsuario);
+        return orcamento;
+    }
+
+    /// <summary>Funeral cancelado: o pendente perde o efeito.</summary>
+    /// <returns>As faturas dos aprovados, para cancelar as que ainda estão em aberto.</returns>
+    public IReadOnlyList<Guid> CancelarOrcamentos()
+    {
+        foreach (Orcamento pendente in _orcamentos.Where(o => o.Status == StatusOrcamento.Pendente))
+        {
+            pendente.MudarPara(StatusOrcamento.Cancelado);
+        }
+
+        return [.. _orcamentos.Where(o => o.IdFatura is not null).Select(o => o.IdFatura!.Value)];
+    }
+
+    private void SubstituirOrcamentoPendente()
+    {
+        foreach (Orcamento pendente in _orcamentos.Where(o => o.Status == StatusOrcamento.Pendente))
+        {
+            pendente.MudarPara(StatusOrcamento.Substituido);
+        }
     }
 
     /// <summary>Funeral cancelado: os itens ficam no histórico, mas o estoque baixado volta ao catálogo (FUN-03).</summary>
@@ -244,6 +339,83 @@ public sealed class FuneralItem : Entity<Guid>
     internal void EstoqueDevolvido() => EstoqueBaixado = false;
 }
 
+/// <summary>
+/// Orçamento dos itens adicionais (FUN-04). As linhas são uma cópia: mudar os itens depois não muda o que a família viu, e
+/// qualquer mudança nos itens tira o efeito do pendente.
+/// </summary>
+public sealed class Orcamento : Entity<Guid>
+{
+    private Orcamento(Guid id)
+        : base(id)
+    {
+    }
+
+    private Orcamento()
+    {
+    }
+
+    public StatusOrcamento Status { get; private set; }
+
+    public IReadOnlyList<LinhaOrcamento> Itens { get; private set; } = [];
+
+    public decimal Total { get; private set; }
+
+    public DateTime GeradoEm { get; private set; }
+
+    public Guid? IdUsuarioGeracao { get; private set; }
+
+    /// <summary>Responsável pela família que aprovou.</summary>
+    public string? AprovadoPor { get; private set; }
+
+    public DateTime? AprovadoEm { get; private set; }
+
+    /// <summary>Conta que registrou a aprovação: a da equipe ou a do próprio titular.</summary>
+    public Guid? IdUsuarioAprovacao { get; private set; }
+
+    public Guid? IdFatura { get; private set; }
+
+    public string? LinkPagamento { get; private set; }
+
+    internal static Orcamento Criar(IReadOnlyList<LinhaOrcamento> linhas, DateTime agora, Guid? idUsuario) =>
+        new(Guid.CreateVersion7())
+        {
+            Status = StatusOrcamento.Pendente,
+            Itens = linhas,
+            Total = linhas.Sum(l => l.Subtotal),
+            GeradoEm = agora,
+            IdUsuarioGeracao = idUsuario
+        };
+
+    internal void Aprovar(string nomeResponsavel, DateTime agora, Guid? idUsuario)
+    {
+        Status = StatusOrcamento.Aprovado;
+        AprovadoPor = nomeResponsavel.Trim();
+        AprovadoEm = agora;
+        IdUsuarioAprovacao = idUsuario;
+    }
+
+    internal void MudarPara(StatusOrcamento status) => Status = status;
+
+    public void RegistrarFatura(Guid idFatura, string? linkPagamento)
+    {
+        IdFatura = idFatura;
+        LinkPagamento = linkPagamento;
+    }
+}
+
+public sealed record LinhaOrcamento(
+    Guid IdFuneralItem, string Nome, string? Variacao, int Quantidade, decimal PrecoUnitario, decimal Subtotal, bool SomenteDiferencaVariacao);
+
+public enum StatusOrcamento
+{
+    Pendente = 1,
+    Aprovado = 2,
+
+    /// <summary>Os itens mudaram, ou saiu um orçamento mais novo.</summary>
+    Substituido = 3,
+    Cancelado = 4
+}
+
 public sealed record ItemEscolhido(
     Guid IdItemCatalogo,
     Guid? IdVariacao,
@@ -326,6 +498,18 @@ public static class FuneralErros
 
     public static readonly Error Encerrado =
         Error.Conflito("Funeral.Encerrado", "Funeral concluído ou cancelado não pode ser alterado.");
+
+    public static readonly Error ItemJaAprovado =
+        Error.Conflito("Funeral.ItemJaAprovado", "Este item está em um orçamento aprovado e não pode ser retirado.");
+
+    public static readonly Error SemAdicionais =
+        Error.Conflito("Funeral.SemAdicionais", "Não há itens adicionais a orçar.");
+
+    public static readonly Error OrcamentoNaoEncontrado =
+        Error.NaoEncontrado("Funeral.OrcamentoNaoEncontrado", "Orçamento não encontrado neste funeral.");
+
+    public static readonly Error OrcamentoDesatualizado =
+        Error.Conflito("Funeral.OrcamentoDesatualizado", "Os itens mudaram depois deste orçamento. Gere e apresente um novo.");
 
     public static Error TransicaoInvalida(StatusFuneral atual, StatusFuneral destino) =>
         Error.Validacao("Estado.TransicaoInvalida",
