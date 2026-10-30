@@ -207,6 +207,8 @@ As decisões de negócio do grupo (certidão, Stripe Connect, translado, consult
 | INF-10 | **Mapeamento manual**, sem Mapster | Os DTOs são `record` com um método `De(entidade)`. Fica explícito o que sai na API (nunca vaza senha ou campo interno), o compilador acusa campo esquecido e não há configuração de mapeamento para testar |
 | INF-04 | EF Core para escrita, **Dapper** para listagens e buscas | Consultas Dapper filtram `id_tenant` à mão e só leem o schema do próprio módulo |
 | INF-08 | Serilog: console e arquivo JSON (`logs/`), Seq opcional em desenvolvimento | Correlation id por requisição (`X-Correlation-Id`); senha, tokens e CPF mascarados nos logs |
+| INF-12 | Chamadas externas por `AddClienteExterno` (Microsoft.Extensions.Http.Resilience): retry exponencial com jitter, circuit breaker e timeout, com tentativas e aberturas de circuito no log | Uma API fora do ar não derruba a nossa nem prende threads; os valores ficam na seção `Resiliencia` |
+| ARQ-01 | Máquina de estados própria (`MaquinaDeEstados`, `AgregadoComStatus`), sem a biblioteca Stateless | Uma tabela de transições basta; histórico e evento a cada mudança, concorrência otimista contra transições simultâneas |
 | INF-18 | Armazenamento compatível com S3: **SeaweedFS** em desenvolvimento | A MinIO deixou de publicar imagens públicas |
 
 ## E-mails

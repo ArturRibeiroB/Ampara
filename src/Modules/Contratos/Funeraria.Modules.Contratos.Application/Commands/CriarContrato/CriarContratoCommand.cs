@@ -60,7 +60,8 @@ public sealed class CriarContratoCommandHandler(
     ITenantsApi tenants,
     ITenantContext tenantContext,
     ICurrentUser usuario,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IAuditoria auditoria)
     : ICommandHandler<CriarContratoCommand, ContratoResponse>
 {
     public async ValueTask<Result<ContratoResponse>> Handle(CriarContratoCommand command, CancellationToken cancellationToken)
@@ -139,6 +140,17 @@ public sealed class CriarContratoCommandHandler(
                 ? ContratoErros.DependenteEmContratoVigente
                 : ContratoErros.ContratoVigenteNoPlano;
         }
+
+        await auditoria.RegistrarAsync(new RegistroAuditoria(
+            AcoesAuditadas.ContratoCriado, "Contrato", contrato.Id, ValoresNovos: new
+            {
+                contrato.IdCliente,
+                contrato.IdPlano,
+                tipo_cobertura = contrato.TipoCobertura.ToString(),
+                periodicidade = contrato.Periodicidade.ToString(),
+                contrato.ValorTotal,
+                pessoas_cobertas = contrato.PessoasCobertas.Count
+            }), cancellationToken);
 
         return ContratoResponse.De(contrato);
     }

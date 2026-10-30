@@ -142,7 +142,8 @@ public sealed class CadastrarTerceiroCommandHandler(
     ITerceirosUnitOfWork unitOfWork,
     ITenantContext tenantContext,
     IIdentidadeApi identidade,
-    ICatalogoConsultas catalogo)
+    ICatalogoConsultas catalogo,
+    IAuditoria auditoria)
     : ICommandHandler<CadastrarTerceiroCommand, TerceiroResponse>
 {
     public async ValueTask<Result<TerceiroResponse>> Handle(CadastrarTerceiroCommand command, CancellationToken cancellationToken)
@@ -169,7 +170,15 @@ public sealed class CadastrarTerceiroCommandHandler(
 
         var terceiro = Terceiro.Cadastrar(idTenant, command.Tipo!.Value, email, dados.Value);
         terceiros.Adicionar(terceiro);
-        return await RegrasTerceiro.SalvarAsync(unitOfWork, terceiro, cancellationToken);
+        Result<TerceiroResponse> salvo = await RegrasTerceiro.SalvarAsync(unitOfWork, terceiro, cancellationToken);
+        if (salvo.IsSuccess)
+        {
+            await auditoria.RegistrarAsync(new RegistroAuditoria(
+                AcoesAuditadas.TerceiroCadastrado, "Terceiro", terceiro.Id,
+                ValoresNovos: new { tipo = terceiro.Tipo.ToString(), terceiro.NomeRazaoSocial, terceiro.Email }), cancellationToken);
+        }
+
+        return salvo;
     }
 }
 
@@ -203,7 +212,7 @@ public sealed class AtualizarTerceiroCommandHandler(
     }
 }
 
-public sealed class AlterarStatusTerceiroCommandHandler(ITerceiroRepository terceiros, ITerceirosUnitOfWork unitOfWork)
+public sealed class AlterarStatusTerceiroCommandHandler(ITerceiroRepository terceiros, ITerceirosUnitOfWork unitOfWork, IAuditoria auditoria)
     : ICommandHandler<AlterarStatusTerceiroCommand>
 {
     public async ValueTask<Result> Handle(AlterarStatusTerceiroCommand command, CancellationToken cancellationToken)
@@ -214,8 +223,12 @@ public sealed class AlterarStatusTerceiroCommandHandler(ITerceiroRepository terc
             return TerceiroErros.NaoEncontrado;
         }
 
+        StatusTerceiro anterior = terceiro.Status;
         terceiro.AlterarStatus(command.Ativo!.Value);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await auditoria.RegistrarAsync(new RegistroAuditoria(
+            AcoesAuditadas.TerceiroStatusAlterado, "Terceiro", terceiro.Id,
+            new { status = anterior.ToString() }, new { status = terceiro.Status.ToString() }), cancellationToken);
         return Result.Success();
     }
 }

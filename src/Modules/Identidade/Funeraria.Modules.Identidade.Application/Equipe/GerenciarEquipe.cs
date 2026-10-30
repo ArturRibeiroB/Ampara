@@ -73,7 +73,8 @@ public sealed class AlterarStatusMembroCommandHandler(
     IIdentidadeUnitOfWork unitOfWork,
     ITenantContext tenantContext,
     ICurrentUser usuarioAtual,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IAuditoria auditoria)
     : ICommandHandler<AlterarStatusMembroCommand>
 {
     public async ValueTask<Result> Handle(AlterarStatusMembroCommand command, CancellationToken cancellationToken)
@@ -106,8 +107,11 @@ public sealed class AlterarStatusMembroCommandHandler(
             }
         }
 
+        bool anterior = vinculo.Ativo;
         vinculo.AlterarStatus(ativo);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await auditoria.RegistrarAsync(new RegistroAuditoria(
+            AcoesAuditadas.UsuarioStatusAlterado, "Usuario", vinculo.IdUsuario, new { ativo = anterior }, new { ativo }), cancellationToken);
         return Result.Success();
     }
 }
@@ -115,7 +119,8 @@ public sealed class AlterarStatusMembroCommandHandler(
 public sealed class AlterarPerfilMembroCommandHandler(
     IVinculoRepository vinculos,
     IIdentidadeUnitOfWork unitOfWork,
-    ITenantContext tenantContext)
+    ITenantContext tenantContext,
+    IAuditoria auditoria)
     : ICommandHandler<AlterarPerfilMembroCommand>
 {
     public async ValueTask<Result> Handle(AlterarPerfilMembroCommand command, CancellationToken cancellationToken)
@@ -135,8 +140,12 @@ public sealed class AlterarPerfilMembroCommandHandler(
         }
 
         // O novo perfil vale na próxima renovação da sessão, que relê o vínculo (AUT-03).
+        PerfilVinculo anterior = vinculo.Perfil;
         vinculo.AlterarPerfil(perfil);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await auditoria.RegistrarAsync(new RegistroAuditoria(
+            AcoesAuditadas.UsuarioPerfilAlterado, "Usuario", vinculo.IdUsuario,
+            new { perfil = anterior.ToString() }, new { perfil = perfil.ToString() }), cancellationToken);
         return Result.Success();
     }
 }

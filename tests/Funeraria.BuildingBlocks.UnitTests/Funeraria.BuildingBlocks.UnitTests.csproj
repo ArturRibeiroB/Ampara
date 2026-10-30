@@ -12,6 +12,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\BuildingBlocks\Funeraria.BuildingBlocks.Application\Funeraria.BuildingBlocks.Application.csproj" />
     <ProjectReference Include="..\..\src\BuildingBlocks\Funeraria.BuildingBlocks.Infrastructure\Funeraria.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Funeral\Funeraria.Modules.Funeral.Domain\Funeraria.Modules.Funeral.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Translado\Funeraria.Modules.Translado.Domain\Funeraria.Modules.Translado.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Documentos\Funeraria.Modules.Documentos.Domain\Funeraria.Modules.Documentos.Domain.csproj" />
   </ItemGroup>
 
 </Project>
