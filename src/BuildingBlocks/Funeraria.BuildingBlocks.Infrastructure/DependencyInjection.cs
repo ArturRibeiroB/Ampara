@@ -8,6 +8,7 @@ using Funeraria.BuildingBlocks.Infrastructure.Events;
 using Funeraria.BuildingBlocks.Infrastructure.Identity;
 using Funeraria.BuildingBlocks.Infrastructure.Outbox;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
+using Funeraria.BuildingBlocks.Infrastructure.Seguranca;
 using Funeraria.BuildingBlocks.Infrastructure.Tenancy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
         services.AddScoped<ICurrentUser, CurrentUser>();
+        services.AddScoped<IOrigemRequisicao, OrigemRequisicao>();
 
         // Um único pool de conexões para todos os DbContexts e para o Dapper (INF-03, INF-04).
         services.AddSingleton(_ =>
@@ -49,6 +51,13 @@ public static class DependencyInjection
         services.AddArmazenamentoArquivos(configuration);
         services.AddOptions<ApiPublicaOptions>().Bind(configuration.GetSection(ApiPublicaOptions.Section));
         services.AddSingleton<IUrlPublicaApi, UrlPublicaApi>();
+
+        // Dados pessoais cifrados em repouso (SEG-01). As chaves do Data Protection ficam no banco (módulo Identidade).
+        services.AddOptions<CriptografiaOptions>()
+            .Bind(configuration.GetSection(CriptografiaOptions.Section))
+            .Validate(CriptografiaOptions.Valida, "Seguranca:ChaveHash não configurada ou com menos de 32 bytes (base64). Configure via user-secrets.")
+            .ValidateOnStart();
+        services.AddSingleton<ICriptografiaDados, CriptografiaDados>();
 
         return services;
     }

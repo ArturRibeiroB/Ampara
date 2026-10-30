@@ -15,7 +15,9 @@ internal sealed class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         builder.Property(c => c.Id).HasColumnName("id_cliente").ValueGeneratedNever();
 
         builder.Property(c => c.Nome).HasMaxLength(150);
-        builder.Property(c => c.Cpf).HasMaxLength(11).IsFixedLength();
+        // Cifrado em repouso (SEG-01); a conversão fica no ClientesDbContext.
+        builder.Property(c => c.Cpf).HasMaxLength(500);
+        builder.Property<string?>(ClientesDbContext.CpfHash).HasMaxLength(64);
         builder.Property(c => c.Email).HasMaxLength(254);
         builder.Property(c => c.Telefone).HasMaxLength(20);
         builder.Property(c => c.Endereco).HasMaxLength(200);
@@ -24,7 +26,7 @@ internal sealed class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         builder.Property(c => c.Estado).HasMaxLength(2).IsFixedLength();
 
         // CPF único dentro da funerária: a mesma pessoa pode ser cliente de várias funerárias (DEC-02, TEN-01).
-        builder.HasIndex(c => new { c.TenantId, c.Cpf }).IsUnique();
+        builder.HasIndex(nameof(Cliente.TenantId), ClientesDbContext.CpfHash).IsUnique();
         builder.HasIndex(c => c.IdUsuario);
     }
 }
@@ -39,7 +41,8 @@ internal sealed class DependenteConfiguration : IEntityTypeConfiguration<Depende
         builder.Property(d => d.Id).HasColumnName("id_dependente").ValueGeneratedNever();
 
         builder.Property(d => d.Nome).HasMaxLength(150);
-        builder.Property(d => d.Cpf).HasMaxLength(11).IsFixedLength();
+        builder.Property(d => d.Cpf).HasMaxLength(500);
+        builder.Property<string?>(ClientesDbContext.CpfHash).HasMaxLength(64);
         builder.Property(d => d.Parentesco).HasMaxLength(50);
         builder.Property(d => d.Telefone).HasMaxLength(20);
         builder.Property(d => d.Email).HasMaxLength(254);
@@ -47,6 +50,6 @@ internal sealed class DependenteConfiguration : IEntityTypeConfiguration<Depende
         builder.HasOne<Cliente>().WithMany().HasForeignKey(d => d.IdCliente).OnDelete(DeleteBehavior.Restrict);
 
         // O mesmo dependente não entra duas vezes para o mesmo titular; removidos não contam (soft delete).
-        builder.HasIndex(d => new { d.IdCliente, d.Cpf }).IsUnique().HasFilter("removido_em IS NULL");
+        builder.HasIndex(nameof(Dependente.IdCliente), ClientesDbContext.CpfHash).IsUnique().HasFilter("removido_em IS NULL");
     }
 }

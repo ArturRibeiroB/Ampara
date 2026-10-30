@@ -21,6 +21,7 @@ public static class ClientesModule
         services.AddScoped<IDependenteRepository, DependenteRepository>();
         services.AddScoped<IModuleSeeder, ClientesSeed>();
         services.AddScoped<IClientesApi, ClientesApi>();
+        services.AddHostedService<CifrarCpfsLegados>();
 
         return services;
     }

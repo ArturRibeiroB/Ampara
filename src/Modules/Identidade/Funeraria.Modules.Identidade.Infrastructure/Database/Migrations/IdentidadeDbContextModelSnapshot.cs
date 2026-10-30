@@ -318,6 +318,46 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
                     b.ToTable("refresh_tokens", "identidade");
                 });
 
+            modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Termos.AceiteTermos", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_aceite");
+
+                    b.Property<DateTime>("AceitoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("aceito_em");
+
+                    b.Property<string>("Documento")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("documento");
+
+                    b.Property<Guid>("IdUsuario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<string>("Ip")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip");
+
+                    b.Property<string>("Versao")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("versao");
+
+                    b.HasKey("Id")
+                        .HasName("pk_aceites_termos");
+
+                    b.HasIndex("IdUsuario")
+                        .HasDatabaseName("ix_aceites_termos_id_usuario");
+
+                    b.ToTable("aceites_termos", "identidade");
+                });
+
             modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Vinculos.UsuarioVinculo", b =>
                 {
                     b.Property<Guid>("Id")
@@ -480,6 +520,29 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("usuarios", "identidade");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("text")
+                        .HasColumnName("friendly_name");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("text")
+                        .HasColumnName("xml");
+
+                    b.HasKey("Id")
+                        .HasName("pk_chaves_protecao_dados");
+
+                    b.ToTable("chaves_protecao_dados", "identidade");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -672,6 +735,16 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_refresh_tokens_usuarios_id_usuario");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Termos.AceiteTermos", b =>
+                {
+                    b.HasOne("Funeraria.Modules.Identidade.Infrastructure.Usuarios.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_aceites_termos_usuarios_id_usuario");
                 });
 
             modelBuilder.Entity("Funeraria.Modules.Identidade.Domain.Vinculos.UsuarioVinculo", b =>

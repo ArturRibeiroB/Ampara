@@ -19,6 +19,7 @@ internal sealed class ArmazenamentoS3(ClientesS3 clientes, IOptions<Armazenament
     : IArmazenamentoArquivos
 {
     private readonly string _bucket = options.Value.S3.Bucket;
+    private readonly bool _cifrarNoServidor = options.Value.S3.CifrarNoServidor;
 
     public async Task<Result<ArquivoSalvo>> SalvarAsync(
         Guid idTenant,
@@ -43,7 +44,10 @@ internal sealed class ArmazenamentoS3(ClientesS3 clientes, IOptions<Armazenament
             Key = chave,
             InputStream = conteudo,
             ContentType = validado.ContentType,
-            AutoCloseStream = false
+            AutoCloseStream = false,
+
+            // Cifra no servidor (SEG-01): na AWS, AES-256 gerenciado pelo S3. Desligado no SeaweedFS do desenvolvimento.
+            ServerSideEncryptionMethod = _cifrarNoServidor ? ServerSideEncryptionMethod.AES256 : ServerSideEncryptionMethod.None
         }, cancellationToken);
 
         return new ArquivoSalvo(chave, validado.ContentType, validado.Conteudo.LongLength, validado.Hash);
@@ -189,6 +193,9 @@ public sealed class S3Options
     public string? AccessKey { get; set; }
 
     public string? SecretKey { get; set; }
+
+    /// <summary>Pede ao S3 para gravar os arquivos cifrados (SSE-S3). Ligue na AWS; serviços compatíveis podem não suportar.</summary>
+    public bool CifrarNoServidor { get; set; }
 }
 
 public static class ArmazenamentoExtensions

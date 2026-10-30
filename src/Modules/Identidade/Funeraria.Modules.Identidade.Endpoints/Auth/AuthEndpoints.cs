@@ -10,6 +10,7 @@ using Funeraria.Modules.Identidade.Application.Commands.RenovarSessao;
 using Funeraria.Modules.Identidade.Application.Commands.SolicitarRedefinicaoSenha;
 using Funeraria.Modules.Identidade.Application.Queries.MinhasFunerarias;
 using Funeraria.Modules.Identidade.Application.Sessoes;
+using Funeraria.Modules.Identidade.Application.Termos;
 using Mediator;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -128,6 +129,26 @@ internal sealed class AuthEndpoints : IEndpoint
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status423Locked);
 
+        group.MapGet("termos", async (ISender sender, CancellationToken ct) =>
+                (await sender.Send(new SituacaoTermosQuery(), ct)).Match(Results.Ok))
+            .RequireAuthorization()
+            .WithName("SituacaoTermos")
+            .WithSummary("Versões vigentes dos termos de uso e da política de privacidade e o que o usuário já aceitou")
+            .WithDescription("Quando pendente = true, o frontend mostra os textos e pede o aceite (SEG-01).")
+            .Produces<SituacaoTermosResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("termos/aceite", async (AceitarTermosRequest request, ISender sender, CancellationToken ct) =>
+                (await sender.Send(new AceitarTermosCommand(
+                    request.VersaoTermosDeUso ?? string.Empty, request.VersaoPoliticaDePrivacidade ?? string.Empty), ct)).Match(Results.Ok))
+            .RequireAuthorization()
+            .WithName("AceitarTermos")
+            .WithSummary("Registra o aceite das versões vigentes, com data e IP")
+            .Produces<SituacaoTermosResponse>()
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         group.MapGet("minhas-funerarias", async (ISender sender, CancellationToken ct) =>
                 (await sender.Send(new MinhasFunerariasQuery(), ct)).Match(Results.Ok))
             .RequireAuthorization()
@@ -160,6 +181,9 @@ public sealed record DefinirSenhaRequest(string? Token, string? Senha);
 
 /// <summary>Corpo de PUT /auth/senha.</summary>
 public sealed record AlterarSenhaRequest(string? SenhaAtual, string? NovaSenha);
+
+/// <summary>Corpo de POST /auth/termos/aceite: as versões que o usuário leu.</summary>
+public sealed record AceitarTermosRequest(string? VersaoTermosDeUso, string? VersaoPoliticaDePrivacidade);
 
 /// <summary>Corpo de POST /auth/esqueci-senha.</summary>
 public sealed record EsqueciSenhaRequest(string? Email);

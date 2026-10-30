@@ -11,7 +11,27 @@ public interface IContratosApi
     /// não existir na funerária atual.
     /// </summary>
     Task<ElegibilidadeDto?> VerificarElegibilidadeAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Plano do contrato que cobre a pessoa hoje (titular, ou o dependente informado), para mostrar o que está coberto
+    /// (FUN-02). Com mais de um contrato, vale o ativo mais recente. Nulo se ninguém cobre a pessoa.
+    /// </summary>
+    Task<Guid?> PlanoQueCobreAsync(Guid idCliente, Guid? idDependente, CancellationToken cancellationToken = default);
+
+    /// <summary>Contratos do cliente, para a exportação dos dados pelo titular (SEG-01).</summary>
+    Task<IReadOnlyList<ContratoDoClienteDto>> ListarDoClienteAsync(Guid idCliente, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Contrato do cliente. Status: ATIVO, A_PAGAR, SUSPENSO ou CANCELADO; periodicidade: MENSAL ou ANUAL.</summary>
+public sealed record ContratoDoClienteDto(
+    Guid IdContrato,
+    string NomePlano,
+    string Status,
+    string Periodicidade,
+    decimal ValorTotal,
+    DateOnly DataContratacao,
+    DateOnly? DataFim,
+    int QuantidadePessoas);
 
 /// <param name="IdPessoaCoberta">Pessoa no contrato.</param>
 /// <param name="IdContrato">Contrato da pessoa.</param>

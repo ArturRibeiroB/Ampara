@@ -44,8 +44,7 @@ public sealed class MaquinaDeEstados<TEstado, TAcao>
 
     /// <summary>Nome no formato da API: EmTransito → EM_TRANSITO.</summary>
     public static string Nome<T>(T valor)
-        where T : struct, Enum =>
-        string.Concat(valor.ToString().Select((c, i) => i > 0 && char.IsUpper(c) ? $"_{c}" : c.ToString())).ToUpperInvariant();
+        where T : struct, Enum => NomeApi.De(valor);
 }
 
 /// <summary>Registro de uma transição: quem, quando, de onde para onde e por quê (ARQ-01).</summary>

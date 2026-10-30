@@ -3,6 +3,7 @@ using Funeraria.Modules.Identidade.Application.Abstractions;
 using Funeraria.Modules.Identidade.Domain.Sessoes;
 using Funeraria.Modules.Identidade.Domain.Vinculos;
 using Funeraria.Modules.Identidade.Infrastructure.Usuarios;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +16,7 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database;
 /// Não tem filtro de tenant: as contas são da plataforma e os vínculos são lidos por usuário.
 /// </summary>
 public sealed class IdentidadeDbContext(DbContextOptions<IdentidadeDbContext> options)
-    : IdentityDbContext<Usuario, IdentityRole<Guid>, Guid>(options), IModuleDbContext, IIdentidadeUnitOfWork
+    : IdentityDbContext<Usuario, IdentityRole<Guid>, Guid>(options), IModuleDbContext, IIdentidadeUnitOfWork, IDataProtectionKeyContext
 {
     public const string SchemaName = "identidade";
 
@@ -25,12 +26,16 @@ public sealed class IdentidadeDbContext(DbContextOptions<IdentidadeDbContext> op
 
     internal DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    /// <summary>Chaves do Data Protection, que cifram os dados pessoais em repouso (SEG-01). Ficam no banco, fora do código.</summary>
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.HasDefaultSchema(SchemaName);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IdentidadeDbContext).Assembly);
+        modelBuilder.Entity<DataProtectionKey>().ToTable("chaves_protecao_dados");
         modelBuilder.ApplyOutbox();
         modelBuilder.ApplyConcurrencyTokens();
         modelBuilder.ApplyAuditProperties();

@@ -21,7 +21,8 @@ public sealed record CadastrarClienteCommand(
     string? Endereco,
     string? Cep,
     string? Cidade,
-    string? Estado)
+    string? Estado,
+    bool AceiteTermos = false)
     : ICommand<ClienteResponse>;
 
 internal sealed class CadastrarClienteCommandValidator : AbstractValidator<CadastrarClienteCommand>

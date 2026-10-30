@@ -1,3 +1,4 @@
+using Funeraria.Modules.Clientes.Application.Queries.ExportarMeusDados;
 using Funeraria.BuildingBlocks.Application.Authorization;
 using Funeraria.BuildingBlocks.Application.Paginacao;
 using Funeraria.BuildingBlocks.Infrastructure.Endpoints;
@@ -32,7 +33,8 @@ internal sealed class ClientesEndpoints : IEndpoint
                     r.Endereco,
                     r.Cep,
                     r.Cidade,
-                    r.Estado);
+                    r.Estado,
+                    r.AceiteTermos ?? false);
 
                 return (await sender.Send(command, ct)).Match(c => Results.Created("/api/v1/clientes/me", c));
             })
@@ -56,6 +58,13 @@ internal sealed class ClientesEndpoints : IEndpoint
             .WithTags(Tag)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden);
+
+        me.MapGet("exportacao", async (ISender sender, CancellationToken ct) =>
+                (await sender.Send(new ExportarMeusDadosQuery(), ct)).Match(Results.Ok))
+            .WithName("ExportarMeusDados")
+            .WithSummary("Todos os dados do titular nesta funerária, para download (LGPD)")
+            .WithDescription("Cadastro, dependentes, contratos e histórico de aceite dos termos (SEG-01).")
+            .Produces<ExportacaoDadosResponse>();
 
         me.MapGet(string.Empty, async (ISender sender, CancellationToken ct) =>
                 (await sender.Send(new ObterMeusDadosQuery(), ct)).Match(Results.Ok))
@@ -90,7 +99,7 @@ internal sealed class ClientesEndpoints : IEndpoint
                     new PaginaRequest(pagina, tamanho), nome, cpf, new OrdenacaoRequest(ordenarPor, direcao)), ct)).Match(Results.Ok))
             .WithName("BuscarClientes")
             .WithSummary("Busca clientes da funerária por nome ou CPF")
-            .WithDescription("Ordenação: ordenarPor = nome (padrão), cpf, cidade ou cadastrado_em; direcao = asc ou desc.")
+            .WithDescription("Ordenação: ordenarPor = nome (padrão), cidade ou cadastrado_em; direcao = asc ou desc. O CPF da listagem vem mascarado.")
             .ProducesValidationProblem()
             .Produces<PaginaResult<ClienteResumoResponse>>();
 

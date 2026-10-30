@@ -175,7 +175,8 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Contratos | `contratos` | Contratação pelo cliente (`POST /contratos`) e pela equipe (`POST /gestao/contratos`), com pessoas cobertas, valor e periodicidade da contratação; consulta pelo cliente e busca pela equipe (Criar Contrato, CON-01) |
 | Catalogo | `catalogo` | Categorias, itens, variações e imagens; catálogo modelo copiado para cada funerária nova; `ICatalogoConsultas` para os outros módulos (FUN-01) |
 | Terceiros | `terceiros` | Cadastro de parceiros (frota, despachante/cartório, fornecedor) com convite e acesso pela Identidade; portal do terceiro com a lista única de atribuições, aceite e recusa (TER-01, TER-02) |
-| Financeiro, Funeral, Documentos, Translado, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso |
+| Funeral | `funeral` | Preferências de funeral em vida (FUN-02), com crença religiosa cifrada; máquina de estados do funeral (ARQ-01) |
+| Financeiro, Documentos, Translado, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso (Documentos e Translado já têm as tabelas de status do ARQ-01) |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 
@@ -197,6 +198,8 @@ Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
   auditoria (`created_at`, `updated_at`, `created_by`) preenchida por interceptor.
 
 ## Decisões técnicas
+
+Os cuidados com dados pessoais (LGPD) estão em [docs/lgpd.md](docs/lgpd.md).
 
 As decisões de negócio do grupo (certidão, Stripe Connect, translado, consultor, multa e juros) estão em
 [docs/decisoes.md](docs/decisoes.md).
@@ -248,7 +251,7 @@ dotnet ef migrations add <Nome> \
   --output-dir Database/Migrations
 ```
 
-Troque `Planos` pelo módulo. Contextos existentes: `IdentidadeDbContext`, `TenantsDbContext`, `PlanosDbContext`, `ClientesDbContext`, `ContratosDbContext`, `CatalogoDbContext`, `TerceirosDbContext`.
+Troque `Planos` pelo módulo. Contextos existentes: `IdentidadeDbContext`, `TenantsDbContext`, `PlanosDbContext`, `ClientesDbContext`, `ContratosDbContext`, `CatalogoDbContext`, `TerceirosDbContext`, `FuneralDbContext`.
 
 ## Criando um módulo novo ou um caso de uso
 

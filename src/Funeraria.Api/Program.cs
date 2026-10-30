@@ -19,7 +19,8 @@ if (OpenApiExtensions.GerandoDocumentoNoBuild)
     // Só para o host montar ao gerar o openapi.json no build: a API não atende requisições nesse modo.
     builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
     {
-        ["Jwt:ChaveAssinatura"] = Convert.ToBase64String(new byte[64])
+        ["Jwt:ChaveAssinatura"] = Convert.ToBase64String(new byte[64]),
+        ["Seguranca:ChaveHash"] = Convert.ToBase64String(new byte[32])
     });
 }
 

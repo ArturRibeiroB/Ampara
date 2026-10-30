@@ -13,7 +13,8 @@ public sealed record CadastrarClienteRequest(
     string? Endereco,
     string? Cep,
     string? Cidade,
-    string? Estado);
+    string? Estado,
+    bool? AceiteTermos = null);
 
 /// <summary>Corpo de PUT /clientes/me (CLI-01). CPF, data de nascimento e e-mail não são alterados aqui.</summary>
 public sealed record AtualizarMeusDadosRequest(
