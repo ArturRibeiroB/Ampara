@@ -244,7 +244,7 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Documentos | `documentos` | Documentos do falecido com download por link temporário (CER-01); certidão de óbito no modo manual assistido ou simulado, com despachante pelo portal, alerta de prazo e aviso ao titular (CER-02 a CER-04) |
 | Financeiro | `financeiro` | Stripe com Connect: cadastro de pagamentos da funerária, assinatura e faturas, webhook, reconciliação, suspensão por atraso, baixa manual, lembretes, reajuste anual, multa e juros (COB-01 a COB-09) |
 | Translado | `translado` | Registro por funeral com tipo calculado, distância pelo OpenRouteService (ou km informados), tabela de preços por faixa e km do plano; documentos exigidos por tipo; empresa de frota pelo portal, com motorista e veículo; status com histórico e tempo real em `/hubs/translados` (TRA-01 a TRA-06) |
-| Relatorios | `relatorios` | Projeto criado, ainda sem casos de uso |
+| Relatorios | `relatorios` (só views) | Lê com Dapper as views que cada módulo publica na própria migration: painel da funerária com cache de um minuto (REL-01), relatórios com CSV (REL-02) e painel do ADMIN, auditado (REL-03) |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 

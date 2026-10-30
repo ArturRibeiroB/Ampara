@@ -14,6 +14,10 @@ Seções de cada versão: **Adicionado**, **Alterado**, **Obsoleto** (com o que 
   (`/translados/simular`), tabela de preços por faixa de km e documentos exigidos por tipo (`/gestao/translados/...`),
   empresa de frota (`/translados/{id}/terceiro`, `/empresas-disponiveis`), status com histórico e portal da empresa
   (`/terceiros/translados`), com motorista e veículo. Status em tempo real pelo SignalR em `/hubs/translados`.
+- Orçamento dos itens adicionais do funeral (`/funerais/{id}/orcamento`, `/orcamento/aprovar`), com registro de quem aprovou e
+  fatura avulsa, que não suspende o plano nem gera multa e juros.
+- Relatórios: painel da funerária (`/gestao/dashboard`), relatórios de faturas, contratos e funerais com exportação em CSV
+  (`/gestao/relatorios/...`) e painel da plataforma (`/admin/dashboard`).
 
 ## [0.1.0] - 2026-10-30
 
