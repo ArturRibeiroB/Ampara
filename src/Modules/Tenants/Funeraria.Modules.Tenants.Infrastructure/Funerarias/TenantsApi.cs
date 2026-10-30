@@ -80,7 +80,13 @@ internal sealed class TenantsApi(TenantsDbContext context, IMemoryCache cache) :
             cobranca.ModoVencimento == ModoVencimento.EscolhaCliente,
             cobranca.DiaVencimentoFixo,
             cobranca.DiasVencimentoPermitidos,
-            cobranca.EstaCompleta());
+            cobranca.EstaCompleta(),
+            cobranca.ToleranciaDias,
+            cobranca.MultaPercentual,
+            cobranca.JurosMensalPercentual,
+            cobranca.ReajusteAnualPercentual,
+            parametros.Lembretes.DiasAntes,
+            parametros.Lembretes.DiasDepois);
     }
 
     public async Task<IReadOnlyList<FunerariaResumoDto>> ListarAsync(

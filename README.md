@@ -137,6 +137,27 @@ Gerar o openapi.json localmente:
 dotnet build src/Funeraria.Api -p:OpenApiGenerateDocumentsOnBuild=true
 ```
 
+## Pagamentos (Stripe)
+
+As chaves ficam em secrets, nunca no repositório. Em desenvolvimento:
+
+```bash
+dotnet user-secrets set "Stripe:SecretKey" "<sk_test_...>" --project src/Funeraria.Api
+dotnet user-secrets set "Stripe:WebhookSecret" "<whsec_...>" --project src/Funeraria.Api
+```
+
+- **Sem chave**, em desenvolvimento e nos testes, a API usa um gateway fake em memória (`Stripe:PermitirFake`). Em produção, a falta da chave é erro.
+- **Connect precisa estar ativo** na conta da plataforma (dashboard do Stripe → Connect), com a conta brasileira (DEC-09).
+- **Cadastro da funerária:** `POST /api/v1/gestao/pagamentos/conta/cadastro` devolve o link da página do Stripe. Até aprovar, os contratos ficam sem cobrança e as assinaturas são criadas depois.
+- **Webhook:** `POST /api/v1/webhooks/stripe`, validado pelo cabeçalho `Stripe-Signature`. Marque "eventos de contas conectadas" ao cadastrar o endpoint. Eventos: `invoice.*` (`created`, `finalized`, `updated`, `paid`, `payment_failed`, `voided`), `customer.subscription.deleted`, `account.updated`, `payment_intent.processing`, `payment_intent.payment_failed`.
+- **Primeira cobrança:** é uma fatura própria, emitida na contratação. As faturas de ciclo saem 5 dias antes do vencimento.
+- **Pix:** desligado por padrão (`Stripe:PixHabilitado`). Pedir Pix sem ele estar ativo na conta faz o Stripe recusar a fatura.
+- **Teste contra o Stripe real** (modo de teste; sem a variável, é pulado):
+
+```bash
+STRIPE_TEST_SECRET_KEY=<sk_test_...> dotnet test --project tests/Modules/Funeraria.Modules.Financeiro.IntegrationTests
+```
+
 ## Banco em produção
 
 - A migration de reservas (FUN-05) cria a extensão `btree_gist` (restrição de exclusão que impede duas reservas
@@ -211,7 +232,8 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Terceiros | `terceiros` | Cadastro de parceiros (frota, despachante/cartório, fornecedor) com convite e acesso pela Identidade; portal do terceiro com a lista única de atribuições, aceite e recusa (TER-01, TER-02) |
 | Funeral | `funeral` | Preferências de funeral em vida (FUN-02), com crença religiosa cifrada; beneficiário (falecido, com elegibilidade do CON-04), funeral com etapas e histórico, aviso à família, acompanhamento e equipe responsável (Gerar Beneficiário, Registrar Funeral, FUN-06 a FUN-08); locais e reserva de salas sem conflito de horário (FUN-05); itens do funeral com coberto x adicional, estoque e importação das preferências (FUN-03); pedidos aos fornecedores pelo portal do terceiro (FUN-09) |
 | Documentos | `documentos` | Documentos do falecido com download por link temporário (CER-01); certidão de óbito no modo manual assistido ou simulado, com despachante pelo portal, alerta de prazo e aviso ao titular (CER-02 a CER-04) |
-| Financeiro, Translado, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso (Translado já tem a máquina de estados do ARQ-01) |
+| Financeiro | `financeiro` | Stripe com Connect: cadastro de pagamentos da funerária, assinatura e faturas, webhook, reconciliação, suspensão por atraso, baixa manual, lembretes, reajuste anual, multa e juros (COB-01 a COB-09) |
+| Translado, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso (Translado já tem a máquina de estados do ARQ-01) |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 

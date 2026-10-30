@@ -1,0 +1,6 @@
+Olá, {{nome}}.
+
+Sua fatura da {{nome_funeraria}} de R$ {{valor}} {{quando}} (vencimento em {{vencimento}}).
+Pague pelo link abaixo. Se você já pagou, pode desconsiderar esta mensagem.
+
+{{link}}

@@ -79,7 +79,10 @@ public sealed class RenderizadorEmailTests
             ["papel"] = "gestor(a)",
             ["link"] = "https://exemplo/link",
             ["horas"] = "72",
-            ["minutos"] = "30"
+            ["minutos"] = "30",
+            ["valor"] = "89,90",
+            ["vencimento"] = "10/11/2026",
+            ["quando"] = "vence hoje"
         });
 
     private sealed class TenantsFalso(MarcaFunerariaDto marca) : ITenantsApi

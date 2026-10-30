@@ -29,11 +29,28 @@ public interface ITenantsApi
 /// <param name="DiaVencimentoFixo">Dia do vencimento no modo FIXO.</param>
 /// <param name="DiasVencimentoPermitidos">Dias que o cliente pode escolher no modo ESCOLHA_CLIENTE.</param>
 /// <param name="ContratacaoLiberada">Multa, juros e desconto anual preenchidos (TEN-03).</param>
+/// <param name="ToleranciaDias">Dias úteis depois do vencimento antes de suspender (COB-03).</param>
+/// <param name="MultaPercentual">Multa por atraso (COB-09).</param>
+/// <param name="JurosMensalPercentual">Juros de mora ao mês (COB-09).</param>
+/// <param name="ReajusteAnualPercentual">Reajuste no aniversário do contrato (COB-08).</param>
+/// <param name="LembretesAntes">Dias antes do vencimento em que o lembrete sai (COB-04).</param>
+/// <param name="LembretesDepois">Dias depois do vencimento em que o lembrete sai (COB-04).</param>
 public sealed record ParametrosCobrancaDto(
     bool VencimentoEscolhidoPeloCliente,
     int DiaVencimentoFixo,
     IReadOnlyList<int> DiasVencimentoPermitidos,
-    bool ContratacaoLiberada);
+    bool ContratacaoLiberada,
+    int ToleranciaDias = 1,
+    decimal? MultaPercentual = null,
+    decimal? JurosMensalPercentual = null,
+    decimal ReajusteAnualPercentual = 0,
+    IReadOnlyList<int>? LembretesAntes = null,
+    IReadOnlyList<int>? LembretesDepois = null)
+{
+    public IReadOnlyList<int> LembretesDiasAntes => LembretesAntes ?? [];
+
+    public IReadOnlyList<int> LembretesDiasDepois => LembretesDepois ?? [];
+}
 
 public sealed record FunerariaResumoDto(Guid IdTenant, string Slug, string NomeFantasia, bool Suspensa);
 

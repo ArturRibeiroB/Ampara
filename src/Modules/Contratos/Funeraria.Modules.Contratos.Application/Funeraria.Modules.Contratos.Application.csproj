@@ -12,6 +12,7 @@
     <ProjectReference Include="..\..\Planos\Funeraria.Modules.Planos.Contracts\Funeraria.Modules.Planos.Contracts.csproj" />
     <ProjectReference Include="..\..\Tenants\Funeraria.Modules.Tenants.Contracts\Funeraria.Modules.Tenants.Contracts.csproj" />
     <ProjectReference Include="..\..\Funeral\Funeraria.Modules.Funeral.Contracts\Funeraria.Modules.Funeral.Contracts.csproj" />
+    <ProjectReference Include="..\..\Financeiro\Funeraria.Modules.Financeiro.Contracts\Funeraria.Modules.Financeiro.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

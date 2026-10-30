@@ -14,7 +14,7 @@
       Versão da API e do contrato OpenAPI (INF-21). Na tag vX.Y.Z o CI passa -p:Version=X.Y.Z; fora dela fica
       <próxima versão>-dev. Depois de cada release, suba o VersionPrefix para a próxima versão planejada.
     -->
-    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionPrefix>0.2.0</VersionPrefix>
     <VersionSuffix>dev</VersionSuffix>
   </PropertyGroup>
 </Project>
