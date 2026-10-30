@@ -8,6 +8,13 @@ Seções de cada versão: **Adicionado**, **Alterado**, **Obsoleto** (com o que 
 
 ## [Não publicado]
 
+### Adicionado
+
+- Translado: registro por funeral com tipo e valor calculados (`/funerais/{id}/translados`), simulação
+  (`/translados/simular`), tabela de preços por faixa de km e documentos exigidos por tipo (`/gestao/translados/...`),
+  empresa de frota (`/translados/{id}/terceiro`, `/empresas-disponiveis`), status com histórico e portal da empresa
+  (`/terceiros/translados`), com motorista e veículo. Status em tempo real pelo SignalR em `/hubs/translados`.
+
 ## [0.1.0] - 2026-10-30
 
 Primeira versão do contrato.

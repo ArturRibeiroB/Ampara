@@ -158,6 +158,16 @@ dotnet user-secrets set "Stripe:WebhookSecret" "<whsec_...>" --project src/Funer
 STRIPE_TEST_SECRET_KEY=<sk_test_...> dotnet test --project tests/Modules/Funeraria.Modules.Financeiro.IntegrationTests
 ```
 
+## Distância do translado (OpenRouteService)
+
+A chave fica em secrets, nunca no repositório:
+
+```bash
+dotnet user-secrets set "OpenRouteService:ApiKey" "<chave>" --project src/Funeraria.Api
+```
+
+**Sem chave**, ou se o endereço não for encontrado ou a API falhar, o translado pede os km ao funcionário (`distancia_km`). Nada trava.
+
 ## Banco em produção
 
 - A migration de reservas (FUN-05) cria a extensão `btree_gist` (restrição de exclusão que impede duas reservas
@@ -233,7 +243,8 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Funeral | `funeral` | Preferências de funeral em vida (FUN-02), com crença religiosa cifrada; beneficiário (falecido, com elegibilidade do CON-04), funeral com etapas e histórico, aviso à família, acompanhamento e equipe responsável (Gerar Beneficiário, Registrar Funeral, FUN-06 a FUN-08); locais e reserva de salas sem conflito de horário (FUN-05); itens do funeral com coberto x adicional, estoque e importação das preferências (FUN-03); pedidos aos fornecedores pelo portal do terceiro (FUN-09) |
 | Documentos | `documentos` | Documentos do falecido com download por link temporário (CER-01); certidão de óbito no modo manual assistido ou simulado, com despachante pelo portal, alerta de prazo e aviso ao titular (CER-02 a CER-04) |
 | Financeiro | `financeiro` | Stripe com Connect: cadastro de pagamentos da funerária, assinatura e faturas, webhook, reconciliação, suspensão por atraso, baixa manual, lembretes, reajuste anual, multa e juros (COB-01 a COB-09) |
-| Translado, Relatorios | um por módulo | Projetos criados, ainda sem casos de uso (Translado já tem a máquina de estados do ARQ-01) |
+| Translado | `translado` | Registro por funeral com tipo calculado, distância pelo OpenRouteService (ou km informados), tabela de preços por faixa e km do plano; documentos exigidos por tipo; empresa de frota pelo portal, com motorista e veículo; status com histórico e tempo real em `/hubs/translados` (TRA-01 a TRA-06) |
+| Relatorios | `relatorios` | Projeto criado, ainda sem casos de uso |
 
 Quem criar ou alterar um módulo atualiza esta tabela no mesmo pull request.
 
