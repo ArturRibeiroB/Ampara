@@ -4,6 +4,7 @@ using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.Modules.Documentos.Application.Certidoes;
 using Funeraria.Modules.Documentos.Domain.Certidoes;
 using Funeraria.Modules.Documentos.Application.Documentos;
+using Funeraria.Modules.Documentos.Contracts;
 using Funeraria.Modules.Documentos.Domain.Documentos;
 using Funeraria.Modules.Documentos.Infrastructure.Database;
 using Microsoft.Extensions.Configuration;
@@ -27,6 +28,7 @@ public static class DocumentosModule
         services.AddScoped<AcessoAosDocumentos>();
         services.AddScoped<GravacaoDeDocumentos>();
         services.AddScoped<LinksDeDocumentos>();
+        services.AddScoped<IDocumentosApi, DocumentosApi>();
 
         // Certidão de óbito (CER-02 a CER-04). Novos modos (e-Óbito, segunda via) entram como outro ICertidaoObitoGateway.
         services.AddScoped<ISolicitacaoCertidaoRepository, SolicitacaoCertidaoRepository>();

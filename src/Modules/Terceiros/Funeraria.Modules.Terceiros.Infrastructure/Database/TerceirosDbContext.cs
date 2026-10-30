@@ -103,6 +103,9 @@ internal sealed class TerceiroRepository(TerceirosDbContext context) : ITerceiro
     public Task<Terceiro?> ObterAsync(Guid idTerceiro, CancellationToken cancellationToken = default) =>
         context.Terceiros.FirstOrDefaultAsync(t => t.Id == idTerceiro, cancellationToken);
 
+    public async Task<IReadOnlyList<Terceiro>> ListarPorTipoAsync(TipoTerceiro tipo, CancellationToken cancellationToken = default) =>
+        await context.Terceiros.AsNoTracking().Where(t => t.Tipo == tipo).OrderBy(t => t.NomeRazaoSocial).ToListAsync(cancellationToken);
+
     public Task<bool> ExisteCpfCnpjAsync(string cpfCnpj, Guid? exceto, CancellationToken cancellationToken = default) =>
         context.Terceiros.AnyAsync(t => t.CpfCnpj == cpfCnpj && t.Id != exceto, cancellationToken);
 

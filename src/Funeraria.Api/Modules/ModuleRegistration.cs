@@ -75,6 +75,7 @@ internal static class ModuleRegistration
     {
         app.MapGroup("/api/v1").MapEndpoints();
         app.MapNotificacoesHub();
+        app.MapTransladosHub();
         return app;
     }
 }

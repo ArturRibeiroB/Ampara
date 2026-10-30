@@ -71,6 +71,20 @@ public sealed class Terceiro : AggregateRoot<Guid>, ITenantEntity, IAuditableEnt
         CategoriasAtendidas = Tipo == TipoTerceiro.Fornecedor ? [.. dados.CategoriasAtendidas.Distinct()] : [];
     }
 
+    /// <summary>Atende a cidade pela UF inteira ou pela cidade. Sem área informada, atende todo o Brasil (TRA-04).</summary>
+    public bool Atende(string cidade, string uf)
+    {
+        if (AreaAtuacao.Ufs.Count == 0 && AreaAtuacao.Cidades.Count == 0)
+        {
+            return true;
+        }
+
+        return AreaAtuacao.Ufs.Contains(uf, StringComparer.OrdinalIgnoreCase)
+            || AreaAtuacao.Cidades.Any(c => string.Equals(c.Uf, uf, StringComparison.OrdinalIgnoreCase)
+                && string.Compare(c.Nome, cidade, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.CompareOptions.IgnoreCase | System.Globalization.CompareOptions.IgnoreNonSpace) == 0);
+    }
+
     /// <summary>A Identidade criou o vínculo com a conta (TER-01).</summary>
     public void VincularConta(Guid idUsuario, bool contaAtiva)
     {
@@ -168,6 +182,8 @@ public static class TerceiroErros
 public interface ITerceiroRepository
 {
     Task<Terceiro?> ObterAsync(Guid idTerceiro, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Terceiro>> ListarPorTipoAsync(TipoTerceiro tipo, CancellationToken cancellationToken = default);
 
     Task<bool> ExisteCpfCnpjAsync(string cpfCnpj, Guid? exceto, CancellationToken cancellationToken = default);
 
