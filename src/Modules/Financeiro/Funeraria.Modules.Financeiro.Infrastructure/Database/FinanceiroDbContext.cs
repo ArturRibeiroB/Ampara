@@ -2,6 +2,7 @@ using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
 using Funeraria.Modules.Financeiro.Application.Abstractions;
 using Funeraria.Modules.Financeiro.Domain.Cobranca;
+using Funeraria.Modules.Financeiro.Domain.Plataforma;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -26,6 +27,10 @@ public sealed class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> op
 
     internal DbSet<EventoStripe> Eventos => Set<EventoStripe>();
 
+    internal DbSet<MensalidadePlataforma> Mensalidades => Set<MensalidadePlataforma>();
+
+    internal DbSet<ConfiguracaoPlataforma> ConfiguracoesPlataforma => Set<ConfiguracaoPlataforma>();
+
     protected override void ConfigureModel(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FinanceiroDbContext).Assembly);
 }
@@ -38,6 +43,7 @@ internal sealed class ContaPagamentoConfiguration : IEntityTypeConfiguration<Con
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).HasColumnName("id_conta_pagamento").ValueGeneratedNever();
         builder.Property(c => c.IdStripeAccount).HasMaxLength(100);
+        builder.Property(c => c.TaxaPlataformaPercentual).HasPrecision(5, 2);
         builder.HasIndex(c => c.IdStripeAccount).IsUnique();
         builder.HasIndex(c => c.TenantId).IsUnique();
     }
@@ -155,7 +161,61 @@ internal sealed class ContaPagamentoRepository(FinanceiroDbContext context) : IC
     public Task<ContaPagamento?> ObterPorIdStripeAsync(string idStripeAccount, CancellationToken cancellationToken = default) =>
         context.Contas.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.IdStripeAccount == idStripeAccount, cancellationToken);
 
+    public Task<ContaPagamento?> ObterPorFunerariaAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
+        context.Contas.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.TenantId == idTenant, cancellationToken);
+
+    public async Task<IReadOnlyList<ContaPagamento>> ListarProntasAsync(CancellationToken cancellationToken = default) =>
+        await context.Contas.IgnoreQueryFilters().Where(c => c.CobrancasHabilitadas).ToListAsync(cancellationToken);
+
     public void Adicionar(ContaPagamento conta) => context.Contas.Add(conta);
+}
+
+internal sealed class MensalidadePlataformaConfiguration : IEntityTypeConfiguration<MensalidadePlataforma>
+{
+    public void Configure(EntityTypeBuilder<MensalidadePlataforma> builder)
+    {
+        builder.ToTable("mensalidades_plataforma");
+        builder.HasKey(m => m.Id);
+        builder.Property(m => m.Id).HasColumnName("id_mensalidade").ValueGeneratedNever();
+        builder.Property(m => m.IdStripeCustomer).HasMaxLength(100);
+        builder.Property(m => m.IdStripeSubscription).HasMaxLength(100);
+        builder.Property(m => m.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(m => m.SituacaoUltimaFatura).HasConversion<string>().HasMaxLength(20);
+        builder.Property(m => m.IdUltimaFatura).HasMaxLength(100);
+        builder.Property(m => m.LinkPagamento).HasMaxLength(500);
+        builder.HasIndex(m => m.TenantId).IsUnique();
+        builder.HasIndex(m => m.IdStripeSubscription).IsUnique();
+    }
+}
+
+internal sealed class ConfiguracaoPlataformaConfiguration : IEntityTypeConfiguration<ConfiguracaoPlataforma>
+{
+    public void Configure(EntityTypeBuilder<ConfiguracaoPlataforma> builder)
+    {
+        builder.ToTable("configuracao_plataforma");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Id).HasColumnName("id_configuracao").ValueGeneratedNever();
+        builder.Property(c => c.TaxaPercentual).HasPrecision(5, 2);
+    }
+}
+
+internal sealed class MensalidadeRepository(FinanceiroDbContext context) : IMensalidadeRepository
+{
+    public Task<MensalidadePlataforma?> ObterDaFunerariaAsync(CancellationToken cancellationToken = default) =>
+        context.Mensalidades.FirstOrDefaultAsync(cancellationToken);
+
+    public Task<MensalidadePlataforma?> ObterPorSubscriptionAsync(string idSubscription, CancellationToken cancellationToken = default) =>
+        context.Mensalidades.IgnoreQueryFilters().FirstOrDefaultAsync(m => m.IdStripeSubscription == idSubscription, cancellationToken);
+
+    public async Task<IReadOnlyList<MensalidadePlataforma>> ListarTodasAsync(CancellationToken cancellationToken = default) =>
+        await context.Mensalidades.IgnoreQueryFilters().OrderBy(m => m.Id).ToListAsync(cancellationToken);
+
+    public void Adicionar(MensalidadePlataforma mensalidade) => context.Mensalidades.Add(mensalidade);
+
+    public Task<ConfiguracaoPlataforma?> ObterConfiguracaoAsync(CancellationToken cancellationToken = default) =>
+        context.ConfiguracoesPlataforma.OrderBy(c => c.Id).FirstOrDefaultAsync(cancellationToken);
+
+    public void AdicionarConfiguracao(ConfiguracaoPlataforma configuracao) => context.ConfiguracoesPlataforma.Add(configuracao);
 }
 
 internal sealed class AssinaturaRepository(FinanceiroDbContext context) : IAssinaturaRepository

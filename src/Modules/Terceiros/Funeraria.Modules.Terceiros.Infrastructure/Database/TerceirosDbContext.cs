@@ -9,22 +9,47 @@ using Funeraria.Modules.Terceiros.Domain.Terceiros;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Funeraria.Modules.Terceiros.Infrastructure.Database;
 
-public sealed class TerceirosDbContext(DbContextOptions<TerceirosDbContext> options, ITenantContext tenantContext)
+/// <summary>
+/// O CPF/CNPJ dos terceiros é gravado cifrado (SEG-01): parceiro pessoa física tem CPF. Como a cifra é aleatória, unicidade
+/// e busca usam a coluna <c>cpf_cnpj_hash</c> (<see cref="CpfCnpjHash"/>), preenchida aqui ao salvar.
+/// </summary>
+public sealed class TerceirosDbContext(DbContextOptions<TerceirosDbContext> options, ITenantContext tenantContext, ICriptografiaDados criptografia)
     : ModuleDbContext(options, tenantContext), ITerceirosUnitOfWork
 {
     public const string SchemaName = "terceiros";
 
+    /// <summary>Propriedade de sombra com o HMAC do CPF/CNPJ.</summary>
+    public const string CpfCnpjHash = nameof(CpfCnpjHash);
+
     public override string Schema => SchemaName;
+
+    /// <summary>Hash para buscar pelo CPF/CNPJ (já normalizado, só dígitos).</summary>
+    internal string HashCpfCnpj(string cpfCnpj) => criptografia.Hash(cpfCnpj);
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        foreach (var entrada in ChangeTracker.Entries<Terceiro>().Where(e => e.State is EntityState.Added or EntityState.Modified))
+        {
+            entrada.Property(CpfCnpjHash).CurrentValue = criptografia.Hash(entrada.Entity.CpfCnpj);
+        }
+
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
 
     internal DbSet<Terceiro> Terceiros => Set<Terceiro>();
 
     internal DbSet<Atribuicao> Atribuicoes => Set<Atribuicao>();
 
-    protected override void ConfigureModel(ModelBuilder modelBuilder) =>
+    protected override void ConfigureModel(ModelBuilder modelBuilder)
+    {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TerceirosDbContext).Assembly);
+        modelBuilder.Entity<Terceiro>().Property(t => t.CpfCnpj).HasConversion(
+            new ValueConverter<string, string>(v => criptografia.Cifrar(v), v => criptografia.Decifrar(v)));
+    }
 }
 
 internal sealed class TerceiroConfiguration : IEntityTypeConfiguration<Terceiro>
@@ -38,7 +63,9 @@ internal sealed class TerceiroConfiguration : IEntityTypeConfiguration<Terceiro>
         builder.Property(t => t.Tipo).HasConversion<string>().HasMaxLength(30);
         builder.Property(t => t.Status).HasConversion<string>().HasMaxLength(20);
         builder.Property(t => t.NomeRazaoSocial).HasMaxLength(150);
-        builder.Property(t => t.CpfCnpj).HasMaxLength(14);
+        // Cifrado em repouso (SEG-01); a conversão fica no TerceirosDbContext.
+        builder.Property(t => t.CpfCnpj).HasMaxLength(500);
+        builder.Property<string?>(TerceirosDbContext.CpfCnpjHash).HasMaxLength(64);
         builder.Property(t => t.Telefone).HasMaxLength(20);
         builder.Property(t => t.Email).HasMaxLength(254);
 
@@ -55,7 +82,7 @@ internal sealed class TerceiroConfiguration : IEntityTypeConfiguration<Terceiro>
                 (a, b) => a!.SequenceEqual(b!), v => v.Aggregate(0, (h, g) => HashCode.Combine(h, g)), v => v.ToList()));
 
         // CPF/CNPJ e e-mail únicos na funerária (TER-01): o mesmo parceiro pode atender várias funerárias.
-        builder.HasIndex(t => new { t.TenantId, t.CpfCnpj }).IsUnique();
+        builder.HasIndex(nameof(Terceiro.TenantId), TerceirosDbContext.CpfCnpjHash).IsUnique();
         builder.HasIndex(t => new { t.TenantId, t.Email }).IsUnique();
         builder.HasIndex(t => t.IdUsuario);
     }
@@ -95,6 +122,9 @@ internal sealed class AtribuicaoRepository(TerceirosDbContext context) : IAtribu
             .OrderByDescending(a => a.Id)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Atribuicao>> ListarDasOrigensAsync(IReadOnlyCollection<Guid> idsOrigem, CancellationToken cancellationToken = default) =>
+        await context.Atribuicoes.Where(a => idsOrigem.Contains(a.IdOrigem)).ToListAsync(cancellationToken);
+
     public void Adicionar(Atribuicao atribuicao) => context.Atribuicoes.Add(atribuicao);
 }
 
@@ -106,8 +136,11 @@ internal sealed class TerceiroRepository(TerceirosDbContext context) : ITerceiro
     public async Task<IReadOnlyList<Terceiro>> ListarPorTipoAsync(TipoTerceiro tipo, CancellationToken cancellationToken = default) =>
         await context.Terceiros.AsNoTracking().Where(t => t.Tipo == tipo).OrderBy(t => t.NomeRazaoSocial).ToListAsync(cancellationToken);
 
-    public Task<bool> ExisteCpfCnpjAsync(string cpfCnpj, Guid? exceto, CancellationToken cancellationToken = default) =>
-        context.Terceiros.AnyAsync(t => t.CpfCnpj == cpfCnpj && t.Id != exceto, cancellationToken);
+    public Task<bool> ExisteCpfCnpjAsync(string cpfCnpj, Guid? exceto, CancellationToken cancellationToken = default)
+    {
+        string hash = context.HashCpfCnpj(cpfCnpj);
+        return context.Terceiros.AnyAsync(t => EF.Property<string>(t, TerceirosDbContext.CpfCnpjHash) == hash && t.Id != exceto, cancellationToken);
+    }
 
     public Task<bool> ExisteEmailAsync(string email, CancellationToken cancellationToken = default) =>
         context.Terceiros.AnyAsync(t => t.Email.ToLower() == email.ToLower(), cancellationToken);

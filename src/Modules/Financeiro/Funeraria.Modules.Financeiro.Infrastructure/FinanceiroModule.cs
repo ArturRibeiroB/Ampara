@@ -2,8 +2,10 @@ using Funeraria.BuildingBlocks.Infrastructure.Jobs;
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.Modules.Financeiro.Application.Abstractions;
 using Funeraria.Modules.Financeiro.Application.Cobrancas;
+using Funeraria.Modules.Financeiro.Application.Plataforma;
 using Funeraria.Modules.Financeiro.Contracts;
 using Funeraria.Modules.Financeiro.Domain.Cobranca;
+using Funeraria.Modules.Financeiro.Domain.Plataforma;
 using Funeraria.Modules.Financeiro.Infrastructure.Database;
 using Funeraria.Modules.Financeiro.Infrastructure.Stripe;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +28,7 @@ public static class FinanceiroModule
         services.AddScoped<IAssinaturaRepository, AssinaturaRepository>();
         services.AddScoped<IFaturaRepository, FaturaRepository>();
         services.AddScoped<IEventoStripeRepository, EventoStripeRepository>();
+        services.AddScoped<IMensalidadeRepository, MensalidadeRepository>();
 
         services.AddScoped<EspelhoDeFaturas>();
         services.AddScoped<IFinanceiroApi, FinanceiroApi>();
@@ -39,9 +42,22 @@ public static class FinanceiroModule
         services.AddScoped<IFilaEventosStripe, FilaEventosHangfire>();
         services.AddSingleton<ILeitorWebhook, LeitorWebhookStripe>();
 
+        // Cobrança das funerárias pela plataforma: mensalidade e taxa configuráveis pelo ADMIN (DEC-09).
+        services.AddSingleton(sp =>
+        {
+            StripeOptions opcoes = sp.GetRequiredService<IOptions<StripeOptions>>().Value;
+            return new ValoresIniciaisPlataforma(opcoes.MensalidadePlataforma, opcoes.TaxaPlataformaPercentual);
+        });
+        services.AddScoped<ConfiguracaoDaPlataforma>();
+        services.AddScoped<TaxaDaPlataforma>();
+        services.AddScoped<CobrancaDaPlataforma>();
+        services.AddScoped<AvisoContaLiberada>();
+        services.AddScoped<IJobRecorrente, RotinaMensalidadePlataformaJob>();
+
         // Stripe com chave; sem chave, a fake só onde a configuração permite. A falta da chave em produção aparece na primeira
         // cobrança, com a mensagem abaixo, e não derruba o resto da API.
         services.AddSingleton<GatewayFake>();
+        services.AddSingleton<CobrancaPlataformaFake>();
         services.AddSingleton<IStripeClient>(sp => new StripeClient(
             sp.GetRequiredService<IOptions<StripeOptions>>().Value.SecretKey
             ?? throw new InvalidOperationException("Configure Stripe:SecretKey (secret) ou, em desenvolvimento, Stripe:PermitirFake.")));
@@ -50,7 +66,15 @@ public static class FinanceiroModule
             StripeOptions opcoes = sp.GetRequiredService<IOptions<StripeOptions>>().Value;
             return string.IsNullOrWhiteSpace(opcoes.SecretKey) && opcoes.PermitirFake
                 ? sp.GetRequiredService<GatewayFake>()
-                : new StripeGateway(sp.GetRequiredService<IStripeClient>(), sp.GetRequiredService<IOptions<StripeOptions>>());
+                : new StripeGateway(
+                    sp.GetRequiredService<IStripeClient>(), sp.GetRequiredService<IOptions<StripeOptions>>(), sp.GetRequiredService<TaxaDaPlataforma>());
+        });
+        services.AddScoped<ICobrancaPlataformaGateway>(sp =>
+        {
+            StripeOptions opcoes = sp.GetRequiredService<IOptions<StripeOptions>>().Value;
+            return string.IsNullOrWhiteSpace(opcoes.SecretKey) && opcoes.PermitirFake
+                ? sp.GetRequiredService<CobrancaPlataformaFake>()
+                : new CobrancaPlataformaStripe(sp.GetRequiredService<IStripeClient>());
         });
 
         return services;

@@ -15,6 +15,18 @@ public interface IUsuarios
 
     Task<UsuarioInfo?> ObterAsync(Guid idUsuario, CancellationToken cancellationToken = default);
 
+    /// <summary>Marca o acesso da conta (login ou renovação da sessão), para a política de retenção (SEG-01).</summary>
+    Task RegistrarAcessoAsync(Guid idUsuario, CancellationToken cancellationToken = default);
+
+    /// <summary>Último acesso de cada conta; para quem nunca entrou, a data de criação da conta.</summary>
+    Task<IReadOnlyDictionary<Guid, DateTime>> UltimosAcessosAsync(IReadOnlyCollection<Guid> idsUsuario, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Anonimiza a conta (SEG-01): nome e e-mail trocados por valores sem relação com a pessoa, sem senha, inativa e
+    /// bloqueada. O IP dos aceites de termos também sai. A linha continua existindo para não quebrar referências.
+    /// </summary>
+    Task AnonimizarAsync(Guid idUsuario, CancellationToken cancellationToken = default);
+
     Task<UsuarioInfo?> ObterPorEmailAsync(string email, CancellationToken cancellationToken = default);
 
     /// <summary>

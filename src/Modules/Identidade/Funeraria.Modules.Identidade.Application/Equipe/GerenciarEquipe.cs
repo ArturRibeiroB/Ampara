@@ -150,7 +150,7 @@ public sealed class AlterarPerfilMembroCommandHandler(
     }
 }
 
-public sealed class ListarEquipeQueryHandler(IDbConnectionFactory connectionFactory, ITenantContext tenantContext)
+public sealed class ListarEquipeQueryHandler(IDbConnectionFactory connectionFactory, ITenantContext tenantContext, ICriptografiaDados criptografia)
     : IQueryHandler<ListarEquipeQuery, PaginaResult<MembroEquipeResponse>>
 {
     // Os vínculos não usam o filtro global de tenant: o id_tenant vai explícito no WHERE (TEN-01).
@@ -202,7 +202,7 @@ public sealed class ListarEquipeQueryHandler(IDbConnectionFactory connectionFact
             cancellationToken: cancellationToken))).ToList();
 
         long total = linhas.Count > 0 ? linhas[0].Total : 0;
-        return new PaginaResult<MembroEquipeResponse>([.. linhas.Select(l => l.Membro)], pagina.Pagina, pagina.Tamanho, total);
+        return new PaginaResult<MembroEquipeResponse>([.. linhas.Select(l => l.Membro(criptografia))], pagina.Pagina, pagina.Tamanho, total);
     }
 
     private sealed record Linha
@@ -227,7 +227,9 @@ public sealed class ListarEquipeQueryHandler(IDbConnectionFactory connectionFact
 
         public long Total { get; init; }
 
-        public MembroEquipeResponse Membro => new(
-            IdUsuario, IdFuncionario, Nome, Email, Enum.Parse<PerfilVinculo>(Perfil), Ativo, Cpf?.Trim(), Cargo, Telefone);
+        // O CPF vem cifrado do banco (SEG-01).
+        public MembroEquipeResponse Membro(ICriptografiaDados criptografia) => new(
+            IdUsuario, IdFuncionario, Nome, Email, Enum.Parse<PerfilVinculo>(Perfil), Ativo,
+            Cpf is null ? null : criptografia.Decifrar(Cpf).Trim(), Cargo, Telefone);
     }
 }

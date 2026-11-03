@@ -27,6 +27,12 @@ public interface IContratosApi
     /// <summary>Plano do contrato, para calcular o que o funeral tem coberto (FUN-03). Nulo se o contrato não existir.</summary>
     Task<Guid?> PlanoDoContratoAsync(Guid idContrato, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Titulares da funerária atual que tiveram contrato e não têm mais nenhum vigente: todos cancelados, o último com fim
+    /// antes de <paramref name="limite"/>. Usado na política de retenção da LGPD (SEG-01).
+    /// </summary>
+    Task<IReadOnlyList<Guid>> TitularesSemContratoVigenteDesdeAsync(DateOnly limite, CancellationToken cancellationToken = default);
+
     /// <summary>Contratos do cliente, para a exportação dos dados pelo titular (SEG-01).</summary>
     Task<IReadOnlyList<ContratoDoClienteDto>> ListarDoClienteAsync(Guid idCliente, CancellationToken cancellationToken = default);
 }

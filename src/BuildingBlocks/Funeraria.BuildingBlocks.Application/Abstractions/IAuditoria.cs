@@ -39,6 +39,8 @@ public static class AcoesAuditadas
     public const string ContratoReativado = "CONTRATO_REATIVADO";
     public const string ContratoReajustado = "CONTRATO_REAJUSTADO";
     public const string FaturaBaixaManual = "FATURA_BAIXA_MANUAL";
+    public const string CobrancaPlataformaAlterada = "COBRANCA_PLATAFORMA_ALTERADA";
+    public const string TaxaFunerariaAlterada = "TAXA_FUNERARIA_ALTERADA";
     public const string BeneficiarioRegistrado = "BENEFICIARIO_REGISTRADO";
     public const string FuneralRegistrado = "FUNERAL_REGISTRADO";
     public const string FuneralStatusAlterado = "FUNERAL_STATUS_ALTERADO";

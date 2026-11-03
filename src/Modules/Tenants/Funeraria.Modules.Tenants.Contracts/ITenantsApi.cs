@@ -22,6 +22,9 @@ public interface ITenantsApi
     Task<string?> ObterModoCertidaoAsync(Guid idTenant, CancellationToken cancellationToken = default);
 
     /// <summary>Resumo das funerárias informadas. Ids inexistentes são ignorados.</summary>
+    /// <summary>Razão social e e-mail de contato, para a cobrança da plataforma (DEC-09).</summary>
+    Task<ContatoFunerariaDto?> ObterContatoAsync(Guid idTenant, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<FunerariaResumoDto>> ListarAsync(IReadOnlyCollection<Guid> idsTenant, CancellationToken cancellationToken = default);
 }
 
@@ -53,5 +56,7 @@ public sealed record ParametrosCobrancaDto(
 }
 
 public sealed record FunerariaResumoDto(Guid IdTenant, string Slug, string NomeFantasia, bool Suspensa);
+
+public sealed record ContatoFunerariaDto(Guid IdTenant, string NomeFantasia, string RazaoSocial, string EmailContato);
 
 public sealed record MarcaFunerariaDto(Guid IdTenant, string Slug, string NomeExibicao, string? LogoUrl, string CorPrimaria);

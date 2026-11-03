@@ -21,6 +21,12 @@ public interface ITerceirosAtribuicoes
 
     /// <summary>O serviço terminou ou foi cancelado no módulo de origem: sai da lista de pendências do terceiro.</summary>
     Task<Result> EncerrarAsync(Guid idAtribuicao, bool concluida, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Política de retenção (SEG-01): os resumos das atribuições dessas origens perdem nome do falecido, contato, endereços
+    /// e documentos. Vale para todas as atribuições da origem, inclusive as recusadas por outros terceiros. Idempotente.
+    /// </summary>
+    Task AnonimizarResumosAsync(IReadOnlyCollection<Guid> idsOrigem, CancellationToken cancellationToken = default);
 }
 
 /// <param name="IdTerceiro">Terceiro que recebe o serviço.</param>

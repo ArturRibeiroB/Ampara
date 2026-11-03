@@ -1,6 +1,7 @@
 using Funeraria.BuildingBlocks.Domain.Entities;
 using Funeraria.BuildingBlocks.Domain.Estados;
 using Funeraria.BuildingBlocks.Domain.Events;
+using Funeraria.BuildingBlocks.Domain.Lgpd;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.BuildingBlocks.Domain.Tenancy;
 using Funeraria.Modules.Funeral.Domain.Beneficiarios;
@@ -60,6 +61,13 @@ public sealed class Funeral : AgregadoComStatus<StatusFuneral, AcaoFuneral>, ITe
 
     /// <summary>Encerrado: concluído ou cancelado. Itens, salas e pedidos não mudam mais (FUN-03).</summary>
     public bool Encerrado => Status is StatusFuneral.Concluido or StatusFuneral.Cancelado;
+
+    /// <summary>Política de retenção (SEG-01), junto com o beneficiário: tira a cópia do nome e as observações livres.</summary>
+    public void AnonimizarFalecido()
+    {
+        NomeFalecido = Anonimizacao.Nome;
+        Observacoes = null;
+    }
 
     /// <summary>A data do funeral não pode ser anterior ao falecimento (que já não pode ser anterior ao nascimento).</summary>
     public static Result<Funeral> Registrar(

@@ -85,7 +85,7 @@ public sealed class CadastrarFuncionarioCommandHandler(
         catch (ViolacaoDeUnicidadeException e)
         {
             // Dois cadastros ao mesmo tempo: os índices únicos garantem a regra.
-            return e.Restricao?.Contains("funcionarios", StringComparison.Ordinal) == true
+            return e.Restricao?.Contains("cpf", StringComparison.Ordinal) == true
                 ? EquipeErros.CpfDuplicado
                 : EquipeErros.JaEhDaEquipe;
         }

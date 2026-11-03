@@ -6,6 +6,7 @@ using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Funeral.Contracts.IntegrationEvents;
 using Funeraria.Modules.Identidade.Contracts;
 using Funeraria.Modules.Notificacoes.Contracts;
+using Funeraria.Modules.Notificacoes.Application.WhatsApp;
 using Funeraria.Modules.Notificacoes.Domain.Notificacoes;
 using Funeraria.Modules.Terceiros.Contracts.IntegrationEvents;
 
@@ -41,11 +42,15 @@ public sealed record MarcarNotificacaoLidaCommand(Guid IdNotificacao) : ICommand
 
 public sealed record MarcarTodasLidasCommand : ICommand;
 
-/// <summary>Grava uma notificação por destinatário e entrega na hora para quem está conectado.</summary>
+/// <summary>
+/// Grava uma notificação por destinatário e entrega na hora para quem está conectado. Os tipos configurados vão também pelo
+/// WhatsApp, para quem deu consentimento na funerária (NOT-03).
+/// </summary>
 public sealed class ServicoNotificacoes(
     INotificacaoRepository notificacoes,
     INotificacoesUnitOfWork unitOfWork,
     IEntregaTempoReal tempoReal,
+    EnvioWhatsApp whatsApp,
     TimeProvider timeProvider)
     : INotificacoes
 {
@@ -65,6 +70,10 @@ public sealed class ServicoNotificacoes(
         foreach (Notificacao n in criadas)
         {
             await tempoReal.EnviarAsync(n.IdUsuario, NotificacaoResponse.De(n), cancellationToken);
+            if (n.IdTenant is Guid idTenant)
+            {
+                await whatsApp.DaNotificacaoAsync(n.IdUsuario, idTenant, n.Tipo, n.Titulo, n.Mensagem, cancellationToken);
+            }
         }
     }
 }

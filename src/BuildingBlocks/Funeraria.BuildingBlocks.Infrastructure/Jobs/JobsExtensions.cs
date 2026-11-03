@@ -1,3 +1,4 @@
+using Funeraria.BuildingBlocks.Application.Lgpd;
 using Funeraria.BuildingBlocks.Infrastructure.Observabilidade;
 using Hangfire;
 using Hangfire.AspNetCore;
@@ -54,6 +55,8 @@ public static class JobsExtensions
 
         services.AddScoped<ExecutorJobRecorrente>();
         services.AddScoped<IJobRecorrente, LimpezaOutboxJob>();
+        services.AddOptions<RetencaoOptions>().Bind(configuration.GetSection(RetencaoOptions.Section));
+        services.AddScoped<IJobRecorrente, RetencaoDadosJob>();
         return services;
     }
 

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Funeraria.Modules.Financeiro.Application.Abstractions;
+using Funeraria.Modules.Financeiro.Application.Plataforma;
 using Funeraria.Modules.Financeiro.Domain.Cobranca;
 using Microsoft.Extensions.Options;
 using Stripe;
@@ -19,8 +20,14 @@ public sealed class StripeOptions
     /// <summary>Sem chave, usa o gateway fake. Só em desenvolvimento e testes: em produção, a falta da chave é erro.</summary>
     public bool PermitirFake { get; set; }
 
-    /// <summary>Taxa da plataforma retida em cada pagamento (DEC-09).</summary>
+    /// <summary>
+    /// Taxa da plataforma retida em cada pagamento (DEC-09). É só o valor inicial: depois de gravada, vale a da configuração
+    /// da plataforma, alterada pelo ADMIN (<c>PUT /admin/plataforma/cobranca</c>), ou a própria da funerária.
+    /// </summary>
     public decimal TaxaPlataformaPercentual { get; set; } = 2;
+
+    /// <summary>Mensalidade que a plataforma cobra de cada funerária (DEC-09). Valor inicial, como a taxa.</summary>
+    public decimal MensalidadePlataforma { get; set; } = 149m;
 
     /// <summary>
     /// Aceita Pix nas faturas fora do ciclo (DEC-09). Só ligar com o Pix ativo nas contas: pedir um meio indisponível faz o
@@ -33,7 +40,7 @@ public sealed class StripeOptions
 /// Stripe Billing com Connect (COB-05, DEC-09): tudo na conta conectada da funerária, com a taxa da plataforma na assinatura.
 /// A retentativa é a embutida no Stripe.net, e toda criação leva chave de idempotência.
 /// </summary>
-internal sealed class StripeGateway(IStripeClient cliente, IOptions<StripeOptions> opcoes) : IPagamentoGateway
+internal sealed class StripeGateway(IStripeClient cliente, IOptions<StripeOptions> opcoes, TaxaDaPlataforma taxas) : IPagamentoGateway
 {
     private const string Moeda = "brl";
 
@@ -99,7 +106,7 @@ internal sealed class StripeGateway(IStripeClient cliente, IOptions<StripeOption
                 ProrationBehavior = "none",
                 CollectionMethod = "send_invoice",
                 DaysUntilDue = CicloCobranca.DiasDeAntecedencia,
-                ApplicationFeePercent = opcoes.Value.TaxaPlataformaPercentual,
+                ApplicationFeePercent = await taxas.DaContaAsync(idConta, cancellationToken),
                 PaymentSettings = new SubscriptionPaymentSettingsOptions { PaymentMethodTypes = ["card", "boleto"] },
                 Metadata = new Dictionary<string, string> { ["id_contrato"] = a.IdContrato.ToString() }
             },
@@ -201,6 +208,7 @@ internal sealed class StripeGateway(IStripeClient cliente, IOptions<StripeOption
     public async Task<FaturaGateway> CriarFaturaAvulsaAsync(string idConta, CobrancaExtra c, CancellationToken cancellationToken)
     {
         var faturas = new InvoiceService(cliente);
+        decimal taxa = await taxas.DaContaAsync(idConta, cancellationToken);
         Invoice invoice = await faturas.CreateAsync(
             new InvoiceCreateOptions
             {
@@ -209,7 +217,7 @@ internal sealed class StripeGateway(IStripeClient cliente, IOptions<StripeOption
                 CollectionMethod = "send_invoice",
                 DaysUntilDue = CicloCobranca.DiasDeAntecedencia,
                 Description = c.Descricao,
-                ApplicationFeeAmount = Centavos(c.Valor * opcoes.Value.TaxaPlataformaPercentual / 100m),
+                ApplicationFeeAmount = Centavos(c.Valor * taxa / 100m),
                 PaymentSettings = new InvoicePaymentSettingsOptions
                 {
                     PaymentMethodTypes = opcoes.Value.PixHabilitado ? ["card", "boleto", "pix"] : ["card", "boleto"]

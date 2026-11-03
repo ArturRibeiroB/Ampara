@@ -271,6 +271,11 @@ namespace Funeraria.Modules.Financeiro.Infrastructure.Database.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("id_stripe_account");
 
+                    b.Property<decimal?>("TaxaPlataformaPercentual")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("taxa_plataforma_percentual");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("id_tenant");
@@ -529,6 +534,133 @@ namespace Funeraria.Modules.Financeiro.Infrastructure.Database.Migrations
                         .HasDatabaseName("ix_faturas_lembretes_id_fatura_dias_do_vencimento");
 
                     b.ToTable("faturas_lembretes", "financeiro");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Financeiro.Domain.Plataforma.ConfiguracaoPlataforma", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_configuracao");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<decimal>("TaxaPercentual")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("taxa_percentual");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<decimal>("ValorMensalidade")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("valor_mensalidade");
+
+                    b.HasKey("Id")
+                        .HasName("pk_configuracao_plataforma");
+
+                    b.ToTable("configuracao_plataforma", "financeiro");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Financeiro.Domain.Plataforma.MensalidadePlataforma", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_mensalidade");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("IdStripeCustomer")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("id_stripe_customer");
+
+                    b.Property<string>("IdStripeSubscription")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("id_stripe_subscription");
+
+                    b.Property<string>("IdUltimaFatura")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("id_ultima_fatura");
+
+                    b.Property<string>("LinkPagamento")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("link_pagamento");
+
+                    b.Property<string>("SituacaoUltimaFatura")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("situacao_ultima_fatura");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_tenant");
+
+                    b.Property<DateTime?>("UltimoPagamentoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ultimo_pagamento_em");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("valor");
+
+                    b.Property<decimal?>("ValorUltimaFatura")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("valor_ultima_fatura");
+
+                    b.Property<DateOnly?>("VencimentoUltimaFatura")
+                        .HasColumnType("date")
+                        .HasColumnName("vencimento_ultima_fatura");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_mensalidades_plataforma");
+
+                    b.HasIndex("IdStripeSubscription")
+                        .IsUnique()
+                        .HasDatabaseName("ix_mensalidades_plataforma_id_stripe_subscription");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_mensalidades_plataforma_tenant_id");
+
+                    b.ToTable("mensalidades_plataforma", "financeiro");
                 });
 
             modelBuilder.Entity("Funeraria.Modules.Financeiro.Domain.Cobranca.HistoricoValorAssinatura", b =>

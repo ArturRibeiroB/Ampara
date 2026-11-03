@@ -204,6 +204,10 @@ namespace Funeraria.Modules.Translado.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id_translado");
 
+                    b.Property<DateTime?>("AnonimizadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("anonimizado_em");
+
                     b.Property<string>("ContatoNome")
                         .IsRequired()
                         .HasMaxLength(150)

@@ -1,4 +1,5 @@
 using FluentValidation.Results;
+using Funeraria.BuildingBlocks.Application.Lgpd;
 using Funeraria.Modules.Clientes.Application.Commands.CadastrarCliente;
 using Funeraria.Modules.Clientes.Application.Commands.Dependentes;
 
@@ -12,7 +13,7 @@ public sealed class ValidadoresTests
     [Fact]
     public void Cliente_valido_passa()
     {
-        Assert.True(new CadastrarClienteCommandValidator(Relogio).Validate(Cliente()).IsValid);
+        Assert.True(new CadastrarClienteCommandValidator(Relogio, new ConsentimentoOptions()).Validate(Cliente()).IsValid);
     }
 
     [Fact]
@@ -20,7 +21,7 @@ public sealed class ValidadoresTests
     {
         var vazio = new CadastrarClienteCommand("", "", null, "", "", null, null, null, null, null);
 
-        Dictionary<string, string> erros = Mensagens(new CadastrarClienteCommandValidator(Relogio).Validate(vazio));
+        Dictionary<string, string> erros = Mensagens(new CadastrarClienteCommandValidator(Relogio, new ConsentimentoOptions()).Validate(vazio));
 
         Assert.Equal("Nome não informado.", erros["Nome"]);
         Assert.Equal("CPF não informado ou em formato inválido.", erros["Cpf"]);
@@ -41,13 +42,25 @@ public sealed class ValidadoresTests
             DataNascimento = DateOnly.FromDateTime(DateTime.Today.AddDays(1))
         };
 
-        Dictionary<string, string> erros = Mensagens(new CadastrarClienteCommandValidator(Relogio).Validate(invalido));
+        Dictionary<string, string> erros = Mensagens(new CadastrarClienteCommandValidator(Relogio, new ConsentimentoOptions()).Validate(invalido));
 
         Assert.Equal("CPF não informado ou em formato inválido.", erros["Cpf"]);
         Assert.Equal("E-mail em formato inválido.", erros["Email"]);
         Assert.Equal("Telefone em formato inválido.", erros["Telefone"]);
         Assert.Equal("CEP em formato inválido.", erros["Cep"]);
         Assert.Equal("Data de nascimento inválida.", erros["DataNascimento"]);
+    }
+
+    [Fact]
+    public void Aceite_dos_termos_so_e_exigido_quando_a_configuracao_liga()
+    {
+        CadastrarClienteCommand semAceite = Cliente() with { AceiteTermos = false };
+        var obrigatorio = new ConsentimentoOptions { AceiteTermosObrigatorio = true };
+
+        Assert.True(new CadastrarClienteCommandValidator(Relogio, new ConsentimentoOptions()).Validate(semAceite).IsValid);
+        Dictionary<string, string> erros = Mensagens(new CadastrarClienteCommandValidator(Relogio, obrigatorio).Validate(semAceite));
+        Assert.Equal("É preciso aceitar os termos de uso e a política de privacidade.", erros["AceiteTermos"]);
+        Assert.True(new CadastrarClienteCommandValidator(Relogio, obrigatorio).Validate(semAceite with { AceiteTermos = true }).IsValid);
     }
 
     [Fact]

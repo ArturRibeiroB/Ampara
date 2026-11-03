@@ -99,6 +99,9 @@ public sealed class RenderizadorEmailTests
         public Task<TimeSpan?> ObterPrazoAceiteTerceiroAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
+        public Task<ContatoFunerariaDto?> ObterContatoAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
         public Task<FunerariaResumoDto?> ObterPorSlugAsync(string slug, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 

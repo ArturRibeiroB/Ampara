@@ -128,6 +128,10 @@ namespace Funeraria.Modules.Documentos.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id_solicitacao");
 
+                    b.Property<DateTime?>("AnonimizadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("anonimizado_em");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");

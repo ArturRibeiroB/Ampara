@@ -3,6 +3,7 @@ using System.Text;
 using Funeraria.BuildingBlocks.Domain.Entities;
 using Funeraria.BuildingBlocks.Domain.Estados;
 using Funeraria.BuildingBlocks.Domain.Events;
+using Funeraria.BuildingBlocks.Domain.Lgpd;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.BuildingBlocks.Domain.Tenancy;
 
@@ -76,6 +77,32 @@ public sealed class Translado : AgregadoComStatus<StatusTranslado, AcaoTranslado
     public string? VeiculoPlaca { get; private set; }
 
     public string? VeiculoModelo { get; private set; }
+
+    /// <summary>Quando nomes, contatos e endereços foram anonimizados junto com o falecido (SEG-01).</summary>
+    public DateTime? AnonimizadoEm { get; private set; }
+
+    /// <summary>
+    /// Política de retenção (SEG-01): tira nome do falecido, contato da família, motorista e a rua dos endereços. Cidade, UF e
+    /// país ficam, com distância e valores, para os relatórios. Idempotente.
+    /// </summary>
+    public void Anonimizar(DateTime agora)
+    {
+        if (AnonimizadoEm is not null)
+        {
+            return;
+        }
+
+        NomeFalecido = Anonimizacao.Nome;
+        ContatoNome = Anonimizacao.Nome;
+        ContatoTelefone = string.Empty;
+        MotoristaNome = null;
+        MotoristaTelefone = null;
+        Origem = SoCidade(Origem);
+        Destino = SoCidade(Destino);
+        AnonimizadoEm = agora;
+    }
+
+    private static Endereco SoCidade(Endereco endereco) => endereco with { Logradouro = Anonimizacao.Texto };
 
     protected override MaquinaDeEstados<StatusTranslado, AcaoTranslado> Maquina => EstadosTranslado.Maquina;
 
@@ -432,6 +459,8 @@ public interface ITransladoRepository
     Task<Translado?> ObterAsync(Guid idTranslado, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Translado>> ListarDoFuneralAsync(Guid idFuneral, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Translado>> ListarDoBeneficiarioAsync(Guid idBeneficiario, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Translado>> ListarDaFrotaAsync(Guid idTerceiro, CancellationToken cancellationToken = default);
 

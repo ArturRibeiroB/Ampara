@@ -1,4 +1,5 @@
 using Funeraria.BuildingBlocks.Domain.Entities;
+using Funeraria.BuildingBlocks.Domain.Lgpd;
 using Funeraria.BuildingBlocks.Domain.Tenancy;
 
 namespace Funeraria.Modules.Clientes.Domain.Dependentes;
@@ -41,6 +42,9 @@ public sealed class Dependente : AggregateRoot<Guid>, ITenantEntity, IAuditableE
 
     public bool Removido => RemovidoEm is not null;
 
+    /// <summary>Quando os dados pessoais foram anonimizados junto com os do titular (SEG-01).</summary>
+    public DateTime? AnonimizadoEm { get; private set; }
+
     public static Dependente Criar(
         Guid tenantId,
         Guid idCliente,
@@ -69,6 +73,22 @@ public sealed class Dependente : AggregateRoot<Guid>, ITenantEntity, IAuditableE
         Parentesco = parentesco.Trim();
         Telefone = string.IsNullOrWhiteSpace(telefone) ? null : telefone.Trim();
         Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+    }
+
+    /// <summary>Política de retenção (SEG-01): mesmos valores sem relação com a pessoa usados no titular. Idempotente.</summary>
+    public void Anonimizar(DateTime agora)
+    {
+        if (AnonimizadoEm is not null)
+        {
+            return;
+        }
+
+        Nome = Anonimizacao.Nome;
+        Cpf = Anonimizacao.Documento(Id);
+        DataNascimento = Anonimizacao.DataDeNascimento(DataNascimento);
+        Telefone = null;
+        Email = null;
+        AnonimizadoEm = agora;
     }
 
     /// <summary>Remoção lógica (CLI-02). Quem chama confere antes se há contrato ativo.</summary>

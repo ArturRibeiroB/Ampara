@@ -141,6 +141,9 @@ internal sealed class TransladoRepository(TransladoDbContext context) : ITransla
     public async Task<IReadOnlyList<TransladoEntity>> ListarDoFuneralAsync(Guid idFuneral, CancellationToken cancellationToken = default) =>
         await context.Translados.Where(t => t.IdFuneral == idFuneral).OrderBy(t => t.DataPrevista).ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<TransladoEntity>> ListarDoBeneficiarioAsync(Guid idBeneficiario, CancellationToken cancellationToken = default) =>
+        await context.Translados.Where(t => t.IdBeneficiario == idBeneficiario).ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<TransladoEntity>> ListarDaFrotaAsync(Guid idTerceiro, CancellationToken cancellationToken = default) =>
         await context.Translados.AsNoTracking().Where(t => t.IdTerceiroFrota == idTerceiro).OrderBy(t => t.DataPrevista).ToListAsync(cancellationToken);
 

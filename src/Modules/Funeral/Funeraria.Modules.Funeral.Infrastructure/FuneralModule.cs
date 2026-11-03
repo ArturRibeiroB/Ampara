@@ -1,3 +1,4 @@
+using Funeraria.BuildingBlocks.Application.Lgpd;
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.Modules.Funeral.Application;
 using Funeraria.Modules.Funeral.Application.Abstractions;
@@ -30,6 +31,10 @@ public static class FuneralModule
         services.AddScoped<PessoasDoTitular>();
         services.AddScoped<MontagemPreferencia>();
         services.AddScoped<IFuneralApi, FuneralApi>();
+
+        // Política de retenção da LGPD (SEG-01).
+        services.AddScoped<IPoliticaRetencao, RetencaoPreferencias>();
+        services.AddScoped<IPoliticaRetencao, RetencaoObitos>();
 
         // Beneficiário, funeral e etapas (Gerar Beneficiário, Registrar Funeral, FUN-06, FUN-07).
         services.AddScoped<IBeneficiarioRepository, BeneficiarioRepository>();

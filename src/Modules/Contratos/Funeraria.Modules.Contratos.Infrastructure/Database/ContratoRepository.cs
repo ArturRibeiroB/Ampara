@@ -39,6 +39,20 @@ internal sealed class ContratoRepository(ContratosDbContext context) : IContrato
             .Distinct()
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Guid>> TitularesComContratosEncerradosAntesDeAsync(DateOnly limite, CancellationToken cancellationToken = default)
+    {
+        // Basta um contrato vigente, ou encerrado há pouco, para o titular ficar de fora.
+        IQueryable<Guid> comContratoRecente = context.Contratos
+            .Where(c => c.Status != StatusContrato.Cancelado || c.DataFim == null || c.DataFim >= limite)
+            .Select(c => c.IdCliente);
+
+        return await context.Contratos
+            .Where(c => !comContratoRecente.Contains(c.IdCliente))
+            .Select(c => c.IdCliente)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
+
     public Task<Contrato?> ObterPorPessoaCobertaAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default) =>
         context.Contratos
             .Include(c => c.PessoasCobertas)

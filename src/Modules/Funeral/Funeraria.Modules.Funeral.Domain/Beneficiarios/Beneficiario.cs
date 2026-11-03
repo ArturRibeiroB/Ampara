@@ -1,4 +1,6 @@
 using Funeraria.BuildingBlocks.Domain.Entities;
+using Funeraria.BuildingBlocks.Domain.Events;
+using Funeraria.BuildingBlocks.Domain.Lgpd;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.BuildingBlocks.Domain.Tenancy;
 
@@ -44,6 +46,31 @@ public sealed class Beneficiario : AggregateRoot<Guid>, ITenantEntity, IAuditabl
     /// <summary>Quem responde pela família no atendimento (contato dos terceiros no translado, TER-02).</summary>
     public ResponsavelFamilia Responsavel { get; private set; } = null!;
 
+    /// <summary>Quando os dados do falecido e do responsável foram anonimizados (SEG-01). Nulo enquanto valem.</summary>
+    public DateTime? AnonimizadoEm { get; private set; }
+
+    /// <summary>
+    /// Política de retenção (SEG-01): troca nome, local do falecimento e contato do responsável por valores sem relação com
+    /// as pessoas. A data do falecimento fica, para os relatórios. Os outros módulos apagam documentos e cópias do nome pelo
+    /// evento. Idempotente.
+    /// </summary>
+    /// <param name="agora">Momento da anonimização (UTC).</param>
+    /// <param name="idsFunerais">Funerais do beneficiário, já anonimizados por quem chama.</param>
+    public void Anonimizar(DateTime agora, IReadOnlyList<Guid> idsFunerais)
+    {
+        if (AnonimizadoEm is not null)
+        {
+            return;
+        }
+
+        Nome = Anonimizacao.Nome;
+        DataNascimento = Anonimizacao.DataDeNascimento(DataNascimento);
+        LocalFalecimento = Anonimizacao.Texto;
+        Responsavel = new ResponsavelFamilia(Anonimizacao.Nome, string.Empty, Responsavel.Parentesco);
+        AnonimizadoEm = agora;
+        Raise(new BeneficiarioAnonimizadoDomainEvent(Id, idsFunerais));
+    }
+
     /// <summary>
     /// Registra o falecimento. A elegibilidade (CON-04) e a pessoa já foram conferidas pelo caso de uso; aqui ficam as
     /// regras das datas: o falecimento não pode ser no futuro nem antes do nascimento.
@@ -85,6 +112,8 @@ public sealed class Beneficiario : AggregateRoot<Guid>, ITenantEntity, IAuditabl
         };
     }
 }
+
+public sealed record BeneficiarioAnonimizadoDomainEvent(Guid IdBeneficiario, IReadOnlyList<Guid> IdsFunerais) : DomainEvent;
 
 /// <summary>A pessoa coberta como está no contrato e no cadastro do cliente.</summary>
 public sealed record PessoaFalecida(

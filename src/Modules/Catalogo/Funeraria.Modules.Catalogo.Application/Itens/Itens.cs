@@ -295,9 +295,18 @@ public sealed class EnviarImagemItemCommandHandler(
     }
 }
 
-public sealed class ListarItensQueryHandler(ICatalogoLeitura leitura) : IQueryHandler<ListarItensQuery, IReadOnlyList<ItemResponse>>
+/// <remarks>
+/// A lista pública fica em cache por funerária (INF-19). Ela não mostra estoque, então a baixa de estoque não precisa invalidar;
+/// a do gestor é sempre lida do banco.
+/// </remarks>
+public sealed class ListarItensQueryHandler(ICatalogoLeitura leitura, ICacheDaFuneraria cache) : IQueryHandler<ListarItensQuery, IReadOnlyList<ItemResponse>>
 {
     public async ValueTask<Result<IReadOnlyList<ItemResponse>>> Handle(ListarItensQuery query, CancellationToken cancellationToken) =>
+        query.SomenteAtivos
+            ? await cache.ObterAsync(AreasCache.Catalogo, $"itens:{query.IdCategoria?.ToString("N") ?? "todas"}", ct => CarregarAsync(query, ct), cancellationToken)
+            : await CarregarAsync(query, cancellationToken);
+
+    private async ValueTask<List<ItemResponse>> CarregarAsync(ListarItensQuery query, CancellationToken cancellationToken) =>
         (await leitura.ListarItensAsync(query.IdCategoria, query.SomenteAtivos, cancellationToken))
             .Select(i => ItemResponse.De(i, publico: query.SomenteAtivos))
             .ToList();

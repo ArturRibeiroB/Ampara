@@ -25,6 +25,21 @@ public sealed class AtribuicoesTerceiros(
     TimeProvider timeProvider)
     : ITerceirosAtribuicoes
 {
+    public async Task AnonimizarResumosAsync(IReadOnlyCollection<Guid> idsOrigem, CancellationToken cancellationToken = default)
+    {
+        if (idsOrigem.Count == 0)
+        {
+            return;
+        }
+
+        foreach (Atribuicao atribuicao in await atribuicoes.ListarDasOrigensAsync(idsOrigem, cancellationToken))
+        {
+            atribuicao.AnonimizarResumo(ResumoAnonimizado.De(atribuicao.Resumo));
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<Result<Guid>> AtribuirAsync(NovaAtribuicao atribuicao, CancellationToken cancellationToken = default)
     {
         TipoAtribuicao tipo = atribuicao.Resumo switch

@@ -1,13 +1,61 @@
 using Funeraria.BuildingBlocks.Application.Authorization;
+using Funeraria.BuildingBlocks.Domain.Lgpd;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Identidade.Application.Abstractions;
 using Funeraria.Modules.Identidade.Domain;
+using Funeraria.Modules.Identidade.Domain.Termos;
+using Funeraria.Modules.Identidade.Infrastructure.Database;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Funeraria.Modules.Identidade.Infrastructure.Usuarios;
 
-internal sealed class UsuariosService(UserManager<Usuario> userManager, TimeProvider timeProvider) : IUsuarios
+internal sealed class UsuariosService(UserManager<Usuario> userManager, IdentidadeDbContext context, TimeProvider timeProvider) : IUsuarios
 {
+    // Atualização direta: não passa pelo carimbo de concorrência do Identity, que faria um login disputar com uma troca de senha.
+    public Task RegistrarAcessoAsync(Guid idUsuario, CancellationToken cancellationToken = default)
+    {
+        DateTime agora = timeProvider.GetUtcNow().UtcDateTime;
+        return context.Users.Where(u => u.Id == idUsuario)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.UltimoAcessoEm, agora), cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, DateTime>> UltimosAcessosAsync(
+        IReadOnlyCollection<Guid> idsUsuario,
+        CancellationToken cancellationToken = default) =>
+        await context.Users.AsNoTracking()
+            .Where(u => idsUsuario.Contains(u.Id))
+            .Select(u => new { u.Id, Acesso = u.UltimoAcessoEm ?? u.CriadoEm })
+            .ToDictionaryAsync(u => u.Id, u => u.Acesso, cancellationToken);
+
+    public async Task AnonimizarAsync(Guid idUsuario, CancellationToken cancellationToken = default)
+    {
+        Usuario? usuario = await userManager.FindByIdAsync(idUsuario.ToString());
+        if (usuario is null)
+        {
+            return;
+        }
+
+        string email = Anonimizacao.Email(usuario.Id);
+        usuario.Nome = Anonimizacao.Nome;
+        usuario.Email = email;
+        usuario.UserName = email;
+        usuario.NormalizedEmail = userManager.NormalizeEmail(email);
+        usuario.NormalizedUserName = userManager.NormalizeName(email);
+        usuario.EmailConfirmed = false;
+        usuario.PhoneNumber = null;
+        usuario.PasswordHash = null;
+        usuario.Ativo = false;
+        usuario.LockoutEnabled = true;
+        usuario.LockoutEnd = DateTimeOffset.MaxValue;
+        Garantir(await userManager.UpdateAsync(usuario));
+        Garantir(await userManager.UpdateSecurityStampAsync(usuario));
+
+        // O aceite continua como prova do consentimento, mas sem o IP de onde foi dado.
+        await context.Set<AceiteTermos>().Where(a => a.IdUsuario == idUsuario)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.Ip, (string?)null), cancellationToken);
+    }
+
     public async Task<VerificacaoCredenciais> VerificarCredenciaisAsync(
         string email,
         string senha,

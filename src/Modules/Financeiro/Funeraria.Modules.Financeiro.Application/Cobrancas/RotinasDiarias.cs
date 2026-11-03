@@ -26,6 +26,7 @@ public sealed partial class RotinasDeCobranca(
     ITenantsApi tenants,
     IClientesApi clientes,
     IEnvioEmail email,
+    IEnvioWhatsApp whatsApp,
     IEventBus eventBus,
     TimeProvider timeProvider,
     ILogger<RotinasDeCobranca> logger)
@@ -151,6 +152,17 @@ public sealed partial class RotinasDeCobranca(
                     ["quando"] = quando,
                     ["link"] = fatura.LinkPagamento ?? string.Empty
                 }),
+                cancellationToken);
+
+            // Também pelo WhatsApp, se o titular aceitou receber (NOT-03); sem consentimento, a chamada não faz nada.
+            await whatsApp.EnfileirarAsync(
+                new MensagemWhatsAppSolicitada(titular.IdUsuario, idTenant, ModelosWhatsApp.LembreteFatura,
+                [
+                    titular.Nome,
+                    fatura.Valor.ToString("N2", CultureInfo.GetCultureInfo("pt-BR")),
+                    fatura.DataVencimento.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
+                    fatura.LinkPagamento ?? string.Empty
+                ]),
                 cancellationToken);
 
             faturas.AdicionarLembrete(LembreteFatura.Criar(idTenant, fatura.Id, diasDoVencimento));

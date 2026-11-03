@@ -11,7 +11,7 @@ public static class ModelBuilderExtensions
 {
     public const string TenantColumn = "id_tenant";
 
-    internal const string CreatedAt = "CreatedAt";
+    public const string CreatedAt = "CreatedAt";
     internal const string UpdatedAt = "UpdatedAt";
     internal const string CreatedBy = "CreatedBy";
 

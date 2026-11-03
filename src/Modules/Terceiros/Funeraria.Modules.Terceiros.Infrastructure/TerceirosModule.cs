@@ -27,6 +27,7 @@ public static class TerceirosModule
         services.AddScoped<ITerceirosAtribuicoes, AtribuicoesTerceiros>();
         services.AddScoped<ITerceirosConsultas, ConsultasTerceiros>();
         services.AddScoped<IModuleSeeder, TerceirosSeed>();
+        services.AddHostedService<CifrarDocumentosLegados>();
 
         return services;
     }

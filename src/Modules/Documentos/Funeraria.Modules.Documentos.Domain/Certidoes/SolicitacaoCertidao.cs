@@ -1,6 +1,7 @@
 using Funeraria.BuildingBlocks.Domain.Entities;
 using Funeraria.BuildingBlocks.Domain.Estados;
 using Funeraria.BuildingBlocks.Domain.Events;
+using Funeraria.BuildingBlocks.Domain.Lgpd;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.BuildingBlocks.Domain.Tenancy;
 
@@ -58,6 +59,29 @@ public sealed class SolicitacaoCertidao : AgregadoComStatus<StatusCertidao, Acao
 
     /// <summary>PDF da certidão, guardado como documento do beneficiário (CERTIDAO_OBITO).</summary>
     public Guid? IdDocumentoCertidao { get; private set; }
+
+    /// <summary>Quando os dados do falecido e do registro foram anonimizados (SEG-01).</summary>
+    public DateTime? AnonimizadoEm { get; private set; }
+
+    /// <summary>
+    /// Política de retenção (SEG-01): tira o nome do falecido e do responsável, o protocolo, a matrícula e a pendência. O
+    /// arquivo da certidão é excluído por quem chama. O status e as datas ficam, para os relatórios. Idempotente.
+    /// </summary>
+    public void Anonimizar(DateTime agora)
+    {
+        if (AnonimizadoEm is not null)
+        {
+            return;
+        }
+
+        NomeFalecido = Anonimizacao.Nome;
+        NomeResponsavel = NomeResponsavel is null ? null : Anonimizacao.Nome;
+        Protocolo = null;
+        Pendencia = null;
+        NumeroMatricula = null;
+        IdDocumentoCertidao = null;
+        AnonimizadoEm = agora;
+    }
 
     protected override MaquinaDeEstados<StatusCertidao, AcaoCertidao> Maquina => EstadosCertidao.Maquina;
 
