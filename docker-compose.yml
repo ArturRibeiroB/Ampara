@@ -51,6 +51,10 @@ services:
       Seed__SenhaDemo: ${SEED_SENHA_DEMO:-}
       # Traces e métricas no Aspire Dashboard (INF-20): OTLP_ENDPOINT=http://aspire-dashboard:18889 no .env
       Observabilidade__OtlpEndpoint: ${OTLP_ENDPOINT:-}
+      # Stripe em modo de teste (COB-05): sem chave, a API usa o gateway fake. O segredo do webhook vem do
+      # "stripe listen --print-secret" (Stripe CLI), que repassa os eventos para /api/v1/webhooks/stripe.
+      Stripe__SecretKey: ${STRIPE_SECRET_KEY:-}
+      Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET:-}
     ports:
       # Swagger em http://localhost:5080/swagger
       - "${API_PORTA:-5080}:8080"
