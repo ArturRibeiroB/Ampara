@@ -152,6 +152,13 @@ dotnet user-secrets set "Stripe:WebhookSecret" "<whsec_...>" --project src/Funer
 - **Webhook:** `POST /api/v1/webhooks/stripe`, validado pelo cabeçalho `Stripe-Signature`. Marque "eventos de contas conectadas" ao cadastrar o endpoint. Eventos: `invoice.*` (`created`, `finalized`, `updated`, `paid`, `payment_failed`, `voided`), `customer.subscription.deleted`, `account.updated`, `payment_intent.processing`, `payment_intent.payment_failed`.
 - **Primeira cobrança:** é uma fatura própria, emitida na contratação. As faturas de ciclo saem 5 dias antes do vencimento.
 - **Pix:** desligado por padrão (`Stripe:PixHabilitado`). Pedir Pix sem ele estar ativo na conta faz o Stripe recusar a fatura.
+- **Mensalidade da plataforma (DEC-09):** quando a conta da funerária é liberada, a funerária PENDENTE fica ATIVA (DEC-11) e
+  começa a mensalidade, cobrada na conta **da própria plataforma** (Customer da funerária, fatura enviada por e-mail, cartão
+  ou boleto). `Stripe:MensalidadePlataforma` (149) e `Stripe:TaxaPlataformaPercentual` (2) são só os valores iniciais:
+  depois o ADMIN muda em `PUT /api/v1/admin/plataforma/cobranca` e dá taxa própria em
+  `PUT /api/v1/admin/tenants/{id}/taxa-plataforma`. A rotina diária `financeiro-mensalidade-plataforma` cria as que faltaram,
+  aplica o valor novo e marca as vencidas. No webhook, marque também os eventos da **própria conta** (`invoice.*`,
+  `customer.subscription.deleted`): sem o campo `account`, eles vão para a mensalidade.
 - **Teste contra o Stripe real** (modo de teste; sem a variável, é pulado):
 
 ```bash
@@ -236,13 +243,13 @@ Os testes de arquitetura quebram o build se alguma regra for violada.
 | Tenants | `tenants` | Auto-cadastro e cadastro pelo ADMIN, aprovação/suspensão, configurações da funerária (TEN-01 a TEN-03) |
 | Clientes | `clientes` | Cadastro do cliente (conta + vínculo CLIENTE), meus dados, dependentes e busca pela equipe (Criar Cliente, Criar Dependente, CLI-01 a CLI-03) |
 | Planos | `planos` | Gestão de planos, configurações em jsonb, coberturas com itens do catálogo e planos modelo copiados para cada funerária nova (PLA-01, PLA-02, PLA-03) |
-| Notificacoes | `notificacoes` | Envio de e-mail por SMTP (Mailpit em desenvolvimento; provider de produção pendente, NOT-01); central de notificações e entrega em tempo real pelo SignalR em `/hubs/notificacoes` (NOT-02) |
+| Notificacoes | `notificacoes` | Envio de e-mail por SMTP (Mailpit em desenvolvimento; provider de produção pendente, NOT-01); central de notificações e entrega em tempo real pelo SignalR em `/hubs/notificacoes` (NOT-02); WhatsApp com consentimento, fila e status de entrega (NOT-03) |
 | Contratos | `contratos` | Contratação pelo cliente (`POST /contratos`) e pela equipe (`POST /gestao/contratos`), com pessoas cobertas, valor e periodicidade da contratação; consulta pelo cliente e busca pela equipe; dependentes depois da contratação e cancelamento com motivo (Criar Contrato, CON-01 a CON-04) |
 | Catalogo | `catalogo` | Categorias, itens, variações e imagens; catálogo modelo copiado para cada funerária nova; `ICatalogoConsultas` para os outros módulos (FUN-01) |
 | Terceiros | `terceiros` | Cadastro de parceiros (frota, despachante/cartório, fornecedor) com convite e acesso pela Identidade; portal do terceiro com a lista única de atribuições, aceite e recusa (TER-01, TER-02) |
 | Funeral | `funeral` | Preferências de funeral em vida (FUN-02), com crença religiosa cifrada; beneficiário (falecido, com elegibilidade do CON-04), funeral com etapas e histórico, aviso à família, acompanhamento e equipe responsável (Gerar Beneficiário, Registrar Funeral, FUN-06 a FUN-08); locais e reserva de salas sem conflito de horário (FUN-05); itens do funeral com coberto x adicional, estoque e importação das preferências (FUN-03); pedidos aos fornecedores pelo portal do terceiro (FUN-09) |
 | Documentos | `documentos` | Documentos do falecido com download por link temporário (CER-01); certidão de óbito no modo manual assistido ou simulado, com despachante pelo portal, alerta de prazo e aviso ao titular (CER-02 a CER-04) |
-| Financeiro | `financeiro` | Stripe com Connect: cadastro de pagamentos da funerária, assinatura e faturas, webhook, reconciliação, suspensão por atraso, baixa manual, lembretes, reajuste anual, multa e juros (COB-01 a COB-09) |
+| Financeiro | `financeiro` | Stripe com Connect: cadastro de pagamentos da funerária, assinatura e faturas, webhook, reconciliação, suspensão por atraso, baixa manual, lembretes, reajuste anual, multa e juros (COB-01 a COB-09); mensalidade e taxa da plataforma (DEC-09) |
 | Translado | `translado` | Registro por funeral com tipo calculado, distância pelo OpenRouteService (ou km informados), tabela de preços por faixa e km do plano; documentos exigidos por tipo; empresa de frota pelo portal, com motorista e veículo; status com histórico e tempo real em `/hubs/translados` (TRA-01 a TRA-06) |
 | Relatorios | `relatorios` (só views) | Lê com Dapper as views que cada módulo publica na própria migration: painel da funerária com cache de um minuto (REL-01), relatórios com CSV (REL-02) e painel do ADMIN, auditado (REL-03) |
 
@@ -302,7 +309,36 @@ Cada destinatário ganha uma linha em `notificacoes.notificacoes` e, se estiver 
 - Central: `GET /api/v1/notificacoes?nao_lidas=true`, `PATCH /api/v1/notificacoes/{id}/lida`, `PATCH /api/v1/notificacoes/lidas`.
 - Tempo real: conecte em `/hubs/notificacoes?access_token=<jwt>` e escute o evento `notificacao` (mesmo JSON da central).
 - Já avisam: terceiro ao receber um serviço; gestores da funerária no aceite e na recusa (TER-02).
-- Com mais de uma instância da API é preciso o backplane Redis do SignalR (INF-19).
+- Com mais de uma instância da API, configure `ConnectionStrings:Redis`: o Redis vira o backplane do SignalR (INF-19).
+
+## Cache (INF-19)
+
+`ICacheDaFuneraria` guarda leituras frequentes separadas por funerária (`tenant:{id}:{area}:{chave}`), com HybridCache:
+memória local sempre e, com `ConnectionStrings:Redis` (ex.: `localhost:6379`), o Redis como segundo nível. Sem Redis a API
+funciona igual. Hoje ficam em cache as listas públicas de planos e do catálogo; `PlanosDbContext` e `CatalogoDbContext`
+invalidam a área da funerária a cada gravação. A memória local vale 1 minuto, porque a invalidação feita numa instância não
+chega na hora à memória das outras.
+
+## WhatsApp (NOT-03)
+
+Desligado por padrão. Provedor: **WhatsApp Cloud API** (oficial da Meta), atrás de `IGatewayWhatsApp`; sem token, com
+`WhatsApp:PermitirFake`, usa a fake.
+
+- **Consentimento (LGPD):** `PUT /api/v1/notificacoes/whatsapp` com `telefone` e `aceite: true` grava número, data e IP, por
+  funerária; `DELETE` revoga. Sem consentimento ativo, nada é enviado (conferido de novo na hora do envio).
+- **O que vai:** o lembrete de vencimento (`lembrete_fatura`) e os tipos da central listados em `WhatsApp:TiposNotificacao`
+  (ex.: `FUNERAL_STATUS`, `CONTRATO_SUSPENSO`), pelo modelo `notificacao` (título e mensagem).
+- **Templates:** mensagem iniciada pela empresa precisa de template aprovado no WhatsApp Business Manager.
+  `WhatsApp:Templates` liga o modelo interno ao nome do template; modelo sem template não é enviado.
+- **Envio:** fila `integracoes` do Hangfire, com retry; recusa definitiva (número ou template) marca a mensagem como falha.
+- **Status de entrega:** webhook `GET/POST /api/v1/webhooks/whatsapp` (verificação por `WhatsApp:TokenVerificacao`, assinatura
+  `X-Hub-Signature-256` com `WhatsApp:SegredoApp`). O status só avança: enviada → entregue → lida; falha vale sempre.
+
+```bash
+dotnet user-secrets set "WhatsApp:TokenAcesso" "<token>" --project src/Funeraria.Api
+dotnet user-secrets set "WhatsApp:SegredoApp" "<segredo do app>" --project src/Funeraria.Api
+dotnet user-secrets set "WhatsApp:TokenVerificacao" "<token combinado no webhook>" --project src/Funeraria.Api
+```
 
 ## Arquivos
 

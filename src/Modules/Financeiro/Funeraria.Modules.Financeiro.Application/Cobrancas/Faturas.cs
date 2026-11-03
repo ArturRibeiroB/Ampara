@@ -280,7 +280,8 @@ internal sealed class FaturaPagaDomainEventHandler(
     IPagamentoGateway gateway,
     IFinanceiroUnitOfWork unitOfWork,
     ITenantsApi tenants,
-    IEventBus eventBus)
+    IEventBus eventBus,
+    TimeProvider timeProvider)
     : IDomainEventHandler<FaturaPagaDomainEvent>
 {
     public async Task Handle(FaturaPagaDomainEvent domainEvent, CancellationToken cancellationToken)
@@ -317,7 +318,10 @@ internal sealed class FaturaPagaDomainEventHandler(
             return;
         }
 
-        DateOnly dataPagamento = DateOnly.FromDateTime(pagaEm);
+        // O pagamento vem em UTC; o dia que conta é o do calendário local, como o vencimento. Sem isso, um boleto pago às 22h de
+        // Brasília no dia do vencimento caía no dia seguinte e pagava multa e um dia de juros.
+        DateOnly dataPagamento = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.SpecifyKind(pagaEm, DateTimeKind.Utc), timeProvider.LocalTimeZone));
         ParametrosCobrancaDto? parametros = await tenants.ObterParametrosCobrancaAsync(fatura.TenantId, cancellationToken);
         if (!fatura.AtrasoCobravel(dataPagamento) || parametros is null || assinatura.IdStripeCustomer is null
             || await contas.ObterDaFunerariaAsync(cancellationToken) is not ContaPagamento conta)

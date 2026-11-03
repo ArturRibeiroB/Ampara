@@ -1,7 +1,7 @@
 using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Application.Events;
-using Funeraria.Modules.Funeral.Application.Abstractions;
 using Funeraria.Modules.Clientes.Contracts.IntegrationEvents;
+using Funeraria.Modules.Funeral.Application.Abstractions;
 using Funeraria.Modules.Funeral.Contracts.IntegrationEvents;
 using Funeraria.Modules.Funeral.Domain.Beneficiarios;
 using Funeraria.Modules.Funeral.Domain.Pedidos;

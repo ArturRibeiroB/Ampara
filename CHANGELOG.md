@@ -18,6 +18,25 @@ Seções de cada versão: **Adicionado**, **Alterado**, **Obsoleto** (com o que 
   fatura avulsa, que não suspende o plano nem gera multa e juros.
 - Relatórios: painel da funerária (`/gestao/dashboard`), relatórios de faturas, contratos e funerais com exportação em CSV
   (`/gestao/relatorios/...`) e painel da plataforma (`/admin/dashboard`).
+- Mensalidade da plataforma (DEC-09): `GET /gestao/pagamentos/mensalidade` para o gestor; `GET/PUT /admin/plataforma/cobranca`
+  (mensalidade e taxa padrão), `PUT /admin/tenants/{id}/taxa-plataforma` (taxa só da funerária) e
+  `GET /admin/plataforma/mensalidades` para o ADMIN.
+- WhatsApp (NOT-03): consentimento do usuário em `GET/PUT/DELETE /notificacoes/whatsapp` (`telefone`, `aceite`). O canal vem
+  desligado; `disponivel` na resposta diz se está ligado.
+- Cadastro do cliente: com `Lgpd:AceiteTermosObrigatorio` ligado, `aceite_termos: true` passa a ser exigido (400 sem ele). Vem
+  desligado: o frontend deve começar a mandar o campo antes de ligarem.
+
+### Alterado
+
+- A funerária PENDENTE passa a ATIVA sozinha quando o Stripe libera a conta de pagamentos (DEC-11).
+- `cpf` na listagem da equipe e `cpf_cnpj` dos terceiros continuam iguais na API; no banco passaram a ser cifrados (SEG-01).
+- Listas públicas de planos (`/planos`) e do catálogo (`/catalogo`) vêm de cache por funerária (INF-19): mudanças aparecem na
+  hora na instância que gravou e em até 1 minuto nas outras.
+
+### Corrigido
+
+- Multa e juros contavam o dia do pagamento em UTC: um pagamento depois das 21h de Brasília no dia do vencimento cobrava
+  multa e um dia de juros a mais.
 
 ## [0.1.0] - 2026-10-30
 
