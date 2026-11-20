@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Funeraria.Modules.Financeiro.Application.Abstractions;
 using Funeraria.Modules.Financeiro.Domain.Cobranca;
+using Microsoft.Extensions.Logging;
 
 namespace Funeraria.Modules.Financeiro.Infrastructure.Stripe;
 
@@ -8,8 +9,11 @@ namespace Funeraria.Modules.Financeiro.Infrastructure.Stripe;
 /// Stripe em memória para testes e desenvolvimento sem chave (COB-05). Emite a primeira fatura ao criar a assinatura e deixa o
 /// teste simular o que viria do Stripe: conta liberada, novas faturas e pagamentos.
 /// </summary>
-public sealed class GatewayFake : IPagamentoGateway
+public sealed partial class GatewayFake : IPagamentoGateway
 {
+    // Sem este aviso, a API sobe sem chave e entrega links de pagamento que não abrem (pagar.stripe.test).
+    public GatewayFake(ILogger<GatewayFake> logger) => LogUsandoFake(logger);
+
     private readonly ConcurrentDictionary<string, SituacaoConta> _contas = new();
     private readonly ConcurrentDictionary<string, FaturaGateway> _faturas = new();
     private readonly ConcurrentDictionary<string, NovaAssinatura> _assinaturas = new();
@@ -136,4 +140,7 @@ public sealed class GatewayFake : IPagamentoGateway
         _faturas[fatura.IdInvoice] = fatura;
         return Task.FromResult(fatura);
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Stripe sem Stripe:SecretKey: usando o gateway fake. Os links de pagamento não abrem; configure STRIPE_SECRET_KEY no .env.")]
+    private static partial void LogUsandoFake(ILogger logger);
 }
