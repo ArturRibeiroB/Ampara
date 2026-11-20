@@ -173,9 +173,14 @@ namespace Funeraria.Modules.Terceiros.Infrastructure.Database.Migrations
 
                     b.Property<string>("CpfCnpj")
                         .IsRequired()
-                        .HasMaxLength(14)
-                        .HasColumnType("character varying(14)")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("cpf_cnpj");
+
+                    b.Property<string>("CpfCnpjHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("cpf_cnpj_hash");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -241,9 +246,9 @@ namespace Funeraria.Modules.Terceiros.Infrastructure.Database.Migrations
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_terceiros_id_tenant");
 
-                    b.HasIndex("TenantId", "CpfCnpj")
+                    b.HasIndex("TenantId", "CpfCnpjHash")
                         .IsUnique()
-                        .HasDatabaseName("ix_terceiros_tenant_id_cpf_cnpj");
+                        .HasDatabaseName("ix_terceiros_tenant_id_cpf_cnpj_hash");
 
                     b.HasIndex("TenantId", "Email")
                         .IsUnique()

@@ -16,6 +16,8 @@ public static class ClienteErros
         Error.NaoEncontrado("Cliente.NaoEncontrado", "Cliente não encontrado.");
 
     public const string MensagemSenha = "Senha não informada ou fora dos critérios definidos.";
+
+    public const string MensagemAceiteTermos = "É preciso aceitar os termos de uso e a política de privacidade.";
 }
 
 /// <summary>Erros do card Criar Dependente e do CLI-02.</summary>

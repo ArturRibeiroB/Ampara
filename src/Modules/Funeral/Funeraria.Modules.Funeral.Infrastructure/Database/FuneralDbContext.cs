@@ -91,4 +91,7 @@ internal sealed class PreferenciaRepository(FuneralDbContext context) : IPrefere
         context.Preferencias.FirstOrDefaultAsync(p => p.IdCliente == idCliente && p.IdPessoa == idPessoa, cancellationToken);
 
     public void Adicionar(PreferenciaFuneral preferencia) => context.Preferencias.Add(preferencia);
+
+    public Task<int> ExcluirDoTitularAsync(Guid idCliente, CancellationToken cancellationToken = default) =>
+        context.Preferencias.Where(p => p.IdCliente == idCliente).ExecuteDeleteAsync(cancellationToken);
 }

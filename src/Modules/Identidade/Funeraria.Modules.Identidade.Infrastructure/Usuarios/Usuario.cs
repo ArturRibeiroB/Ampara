@@ -14,4 +14,7 @@ public sealed class Usuario : IdentityUser<Guid>
     public bool Ativo { get; set; } = true;
 
     public DateTime CriadoEm { get; set; }
+
+    /// <summary>Último login ou renovação de sessão. Usado na política de retenção (SEG-01); nulo em conta que nunca entrou.</summary>
+    public DateTime? UltimoAcessoEm { get; set; }
 }

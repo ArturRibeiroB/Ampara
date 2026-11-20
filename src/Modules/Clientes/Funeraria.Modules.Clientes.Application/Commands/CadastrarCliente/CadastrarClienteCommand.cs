@@ -1,4 +1,5 @@
 using FluentValidation;
+using Funeraria.BuildingBlocks.Application.Lgpd;
 using Funeraria.BuildingBlocks.Application.Messaging;
 using Funeraria.BuildingBlocks.Application.Validation;
 using Funeraria.Modules.Clientes.Application.Validacao;
@@ -27,8 +28,13 @@ public sealed record CadastrarClienteCommand(
 
 internal sealed class CadastrarClienteCommandValidator : AbstractValidator<CadastrarClienteCommand>
 {
-    public CadastrarClienteCommandValidator(TimeProvider timeProvider)
+    public CadastrarClienteCommandValidator(TimeProvider timeProvider, ConsentimentoOptions consentimento)
     {
+        if (consentimento.AceiteTermosObrigatorio)
+        {
+            RuleFor(c => c.AceiteTermos).Equal(true).WithMessage(ClienteErros.MensagemAceiteTermos);
+        }
+
         RuleFor(c => c.Nome)
             .NotEmpty().WithMessage("Nome não informado.")
             .MaximumLength(150).WithMessage("Nome deve ter no máximo 150 caracteres.");

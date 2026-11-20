@@ -38,6 +38,16 @@ public interface IIdentidadeApi
 
     /// <summary>Cria o vínculo CLIENTE da conta com a funerária. Idempotente.</summary>
     Task VincularClienteAsync(Guid idUsuario, Guid idTenant, Guid idCliente, CancellationToken cancellationToken = default);
+
+    /// <summary>Último acesso de cada conta; para quem nunca entrou, a criação da conta (política de retenção, SEG-01).</summary>
+    Task<IReadOnlyDictionary<Guid, DateTime>> UltimosAcessosAsync(IReadOnlyCollection<Guid> idsUsuario, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// O cadastro de cliente da conta nesta funerária foi anonimizado (SEG-01): desativa o vínculo CLIENTE e encerra as
+    /// sessões na funerária. A conta é da plataforma: só é anonimizada quando todos os vínculos dela são de cliente e
+    /// nenhum está ativo, e nunca a do ADMIN. Idempotente.
+    /// </summary>
+    Task EncerrarAcessoDoClienteAnonimizadoAsync(Guid idUsuario, Guid idTenant, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Membro da equipe interna. Perfil: FUNERARIA ou FUNCIONARIO.</summary>

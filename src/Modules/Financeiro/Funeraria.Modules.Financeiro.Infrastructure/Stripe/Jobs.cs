@@ -2,6 +2,7 @@ using Funeraria.BuildingBlocks.Infrastructure.Jobs;
 using Funeraria.BuildingBlocks.Infrastructure.Tenancy;
 using Funeraria.Modules.Financeiro.Application.Abstractions;
 using Funeraria.Modules.Financeiro.Application.Cobrancas;
+using Funeraria.Modules.Financeiro.Application.Plataforma;
 using Funeraria.Modules.Financeiro.Domain.Cobranca;
 using Funeraria.Modules.Financeiro.Infrastructure.Database;
 using Hangfire;
@@ -27,6 +28,7 @@ public sealed partial class ProcessarEventoStripeJob(
     ILeitorWebhook leitor,
     IFinanceiroUnitOfWork unitOfWork,
     ProcessamentoEventosStripe processamento,
+    CobrancaDaPlataforma plataforma,
     TenantContext tenantContext,
     TimeProvider timeProvider,
     ILogger<ProcessarEventoStripeJob> logger)
@@ -40,9 +42,14 @@ public sealed partial class ProcessarEventoStripeJob(
         }
 
         ContaPagamento? conta = evento.IdStripeAccount is null ? null : await contas.ObterPorIdStripeAsync(evento.IdStripeAccount, cancellationToken);
-        if (conta is null)
+        if (evento.IdStripeAccount is null)
         {
-            // Evento da própria plataforma ou de uma conta que não é nossa: fica registrado, sem efeito.
+            // Evento da conta da própria plataforma: a mensalidade das funerárias (DEC-09).
+            await plataforma.ProcessarAsync(leitor.Ler(evento.Conteudo), cancellationToken);
+        }
+        else if (conta is null)
+        {
+            // Conta conectada que não é nossa: fica registrado, sem efeito.
             LogSemConta(logger, evento.IdEvento, evento.Tipo);
         }
         else
@@ -101,4 +108,23 @@ internal sealed partial class RotinaDiariaCobrancaJob(
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Rotina diária da cobrança falhou para a funerária {IdTenant}")]
     private static partial void LogFalha(ILogger logger, Exception e, Guid idTenant);
+}
+
+/// <summary>
+/// Rotina diária da mensalidade da plataforma (DEC-09), às 10:00 UTC: começa a de quem tem a conta pronta e ainda não tem,
+/// aplica o valor atual definido pelo ADMIN e marca as vencidas sem pagamento.
+/// </summary>
+internal sealed class RotinaMensalidadePlataformaJob(IContaPagamentoRepository contas, CobrancaDaPlataforma plataforma) : IJobRecorrente
+{
+    public string Id => "financeiro-mensalidade-plataforma";
+
+    public string Cron => "0 10 * * *";
+
+    public string Fila => FilasJobs.Integracoes;
+
+    public async Task ExecutarAsync(CancellationToken cancellationToken)
+    {
+        IReadOnlyList<ContaPagamento> prontas = await contas.ListarProntasAsync(cancellationToken);
+        await plataforma.SincronizarAsync([.. prontas.Select(c => c.TenantId)], cancellationToken);
+    }
 }

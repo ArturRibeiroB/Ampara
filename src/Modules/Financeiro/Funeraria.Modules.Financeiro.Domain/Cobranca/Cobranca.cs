@@ -29,6 +29,9 @@ public sealed class ContaPagamento : AggregateRoot<Guid>, ITenantEntity, IAudita
 
     public bool CadastroEnviado { get; private set; }
 
+    /// <summary>Taxa da plataforma só desta funerária, definida pelo ADMIN (DEC-09). Nula: vale a padrão da plataforma.</summary>
+    public decimal? TaxaPlataformaPercentual { get; private set; }
+
     public static ContaPagamento Criar(Guid tenantId, string idStripeAccount) =>
         new(Guid.CreateVersion7(), tenantId) { IdStripeAccount = idStripeAccount };
 
@@ -39,6 +42,18 @@ public sealed class ContaPagamento : AggregateRoot<Guid>, ITenantEntity, IAudita
         CobrancasHabilitadas = cobrancasHabilitadas;
         CadastroEnviado = cadastroEnviado;
         return ficouPronta;
+    }
+
+    /// <summary>Nula volta para a taxa padrão. Vale para as assinaturas e faturas criadas daqui em diante.</summary>
+    public Result DefinirTaxa(decimal? taxaPercentual)
+    {
+        if (taxaPercentual is < 0 or > Plataforma.ConfiguracaoPlataforma.TaxaMaxima)
+        {
+            return Plataforma.PlataformaErros.TaxaInvalida;
+        }
+
+        TaxaPlataformaPercentual = taxaPercentual;
+        return Result.Success();
     }
 }
 
@@ -290,6 +305,9 @@ public sealed class Fatura : AggregateRoot<Guid>, ITenantEntity, IAuditableEntit
     /// <summary>Fatura fora do ciclo (primeira cobrança, multa e juros do anual, itens do funeral): não gera novo encargo.</summary>
     public bool Avulsa { get; private set; }
 
+    /// <summary>Itens do funeral (FUN-04): atrasar não suspende o plano nem impede a reativação.</summary>
+    public bool ForaDaInadimplencia { get; private set; }
+
     public string? ObservacaoBaixa { get; private set; }
 
     public bool EmAberto => Status is StatusFatura.Pendente or StatusFatura.Vencida or StatusFatura.Processando;
@@ -302,7 +320,8 @@ public sealed class Fatura : AggregateRoot<Guid>, ITenantEntity, IAuditableEntit
             IdCliente = idCliente,
             IdStripeInvoice = dados.IdStripeInvoice,
             Status = StatusFatura.Pendente,
-            Avulsa = dados.Avulsa
+            Avulsa = dados.Avulsa,
+            ForaDaInadimplencia = dados.ForaDaInadimplencia
         };
 
         fatura.Atualizar(dados);
@@ -403,7 +422,8 @@ public sealed record FaturaEspelhada(
     string? LinkPagamento,
     DateTime? PagaEm,
     FormaPagamento? FormaPagamento,
-    bool Avulsa);
+    bool Avulsa,
+    bool ForaDaInadimplencia = false);
 
 /// <summary>Evento recebido do Stripe (COB-06). O id do evento é único: o mesmo evento só é processado uma vez.</summary>
 public sealed class EventoStripe : Entity<Guid>
@@ -600,6 +620,12 @@ public interface IContaPagamentoRepository
 
     /// <summary>Sem o filtro de tenant: é a conta do evento que diz de qual funerária ele é (COB-06).</summary>
     Task<ContaPagamento?> ObterPorIdStripeAsync(string idStripeAccount, CancellationToken cancellationToken = default);
+
+    /// <summary>Sem o filtro de tenant, para o ADMIN (DEC-09).</summary>
+    Task<ContaPagamento?> ObterPorFunerariaAsync(Guid idTenant, CancellationToken cancellationToken = default);
+
+    /// <summary>Contas prontas para cobrar, de todas as funerárias (rotina da mensalidade da plataforma).</summary>
+    Task<IReadOnlyList<ContaPagamento>> ListarProntasAsync(CancellationToken cancellationToken = default);
 
     void Adicionar(ContaPagamento conta);
 }

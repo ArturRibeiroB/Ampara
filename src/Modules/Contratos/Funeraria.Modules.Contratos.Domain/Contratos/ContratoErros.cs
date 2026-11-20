@@ -83,6 +83,9 @@ public interface IContratoRepository
     /// <summary>Titulares com contrato no status informado (qualquer status se nulo).</summary>
     Task<IReadOnlyList<Guid>> ClientesComContratoAsync(StatusContrato? status, CancellationToken cancellationToken = default);
 
+    /// <summary>Titulares com contrato, todos cancelados e com o fim antes de <paramref name="limite"/> (SEG-01).</summary>
+    Task<IReadOnlyList<Guid>> TitularesComContratosEncerradosAntesDeAsync(DateOnly limite, CancellationToken cancellationToken = default);
+
     /// <summary>Contrato que tem a pessoa coberta informada.</summary>
     Task<Contrato?> ObterPorPessoaCobertaAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default);
 

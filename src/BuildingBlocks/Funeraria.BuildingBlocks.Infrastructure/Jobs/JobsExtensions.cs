@@ -1,3 +1,5 @@
+using Funeraria.BuildingBlocks.Application.Lgpd;
+using Funeraria.BuildingBlocks.Infrastructure.Observabilidade;
 using Hangfire;
 using Hangfire.AspNetCore;
 using Hangfire.PostgreSql;
@@ -20,7 +22,8 @@ public static class JobsExtensions
             .UseRecommendedSerializerSettings()
             .UseStorage(sp.GetRequiredService<JobStorage>())
             // Política de retry padrão: 5 tentativas com espera crescente; depois o job fica como falho no painel.
-            .UseFilter(new AutomaticRetryAttribute { Attempts = opcoes.Tentativas }));
+            .UseFilter(new AutomaticRetryAttribute { Attempts = opcoes.Tentativas })
+            .UseFilter(new RastreamentoDeJobs()));
 
         // Um JobStorage por host, registrado depois do AddHangfire para valer sobre o dele (o JobStorage.Current, que é
         // global). Com o global, dois hosts no mesmo processo (testes com mais de uma factory) trocavam de banco: o job de
@@ -52,6 +55,8 @@ public static class JobsExtensions
 
         services.AddScoped<ExecutorJobRecorrente>();
         services.AddScoped<IJobRecorrente, LimpezaOutboxJob>();
+        services.AddOptions<RetencaoOptions>().Bind(configuration.GetSection(RetencaoOptions.Section));
+        services.AddScoped<IJobRecorrente, RetencaoDadosJob>();
         return services;
     }
 

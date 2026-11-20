@@ -1,3 +1,6 @@
+using System.Text.Json;
+using Funeraria.BuildingBlocks.Application.Serialization;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Funeraria.BuildingBlocks.Domain.Estados;
 using Funeraria.Modules.Funeral.Application.Funerais;
 using Funeraria.Modules.Funeral.Domain.Beneficiarios;
@@ -49,7 +52,9 @@ internal sealed class FuneralConfiguration : IEntityTypeConfiguration<FuneralEnt
         builder.HasMany(f => f.Historico).WithOne().HasForeignKey("IdFuneral").OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(f => f.Equipe).WithOne().HasForeignKey("IdFuneral").OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(f => f.Itens).WithOne().HasForeignKey("IdFuneral").OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(f => f.Orcamentos).WithOne().HasForeignKey("IdFuneral").OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(f => f.Itens).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
+        builder.Navigation(f => f.Orcamentos).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
         builder.Navigation(f => f.Equipe).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
         builder.Navigation(f => f.Historico).UsePropertyAccessMode(PropertyAccessMode.Field).AutoInclude();
 
@@ -57,6 +62,30 @@ internal sealed class FuneralConfiguration : IEntityTypeConfiguration<FuneralEnt
         builder.HasIndex(f => f.IdBeneficiario).IsUnique().HasFilter($"status <> '{nameof(StatusFuneral.Cancelado)}'");
         builder.HasIndex(f => new { f.TenantId, f.Status, f.DataHoraPrevista });
         builder.HasIndex(f => f.IdContrato);
+    }
+}
+
+internal sealed class OrcamentoConfiguration : IEntityTypeConfiguration<Orcamento>
+{
+    public void Configure(EntityTypeBuilder<Orcamento> builder)
+    {
+        builder.ToTable("orcamentos");
+
+        builder.HasKey(o => o.Id);
+        builder.Property(o => o.Id).HasColumnName("id_orcamento").ValueGeneratedNever();
+        builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(o => o.Total).HasPrecision(12, 2);
+        builder.Property(o => o.AprovadoPor).HasMaxLength(150);
+        builder.Property(o => o.LinkPagamento).HasMaxLength(1000);
+
+        // O que a família viu: uma cópia, junta, em jsonb.
+        builder.Property(o => o.Itens)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, JsonbOptions.Default),
+                v => JsonSerializer.Deserialize<List<LinhaOrcamento>>(v, JsonbOptions.Default) ?? new List<LinhaOrcamento>(),
+                new ValueComparer<IReadOnlyList<LinhaOrcamento>>(
+                    (a, b) => a!.SequenceEqual(b!), v => v.Aggregate(0, (h, x) => HashCode.Combine(h, x)), v => v.ToList()));
     }
 }
 

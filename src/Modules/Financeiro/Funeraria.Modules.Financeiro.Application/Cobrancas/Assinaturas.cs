@@ -6,8 +6,10 @@ using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.Modules.Clientes.Contracts;
 using Funeraria.Modules.Contratos.Contracts.IntegrationEvents;
 using Funeraria.Modules.Financeiro.Application.Abstractions;
+using Funeraria.Modules.Financeiro.Application.Plataforma;
 using Funeraria.Modules.Financeiro.Domain.Cobranca;
 using Funeraria.Modules.Tenants.Contracts;
+using Microsoft.Extensions.Logging;
 
 namespace Funeraria.Modules.Financeiro.Application.Cobrancas;
 
@@ -89,8 +91,11 @@ public sealed class ProvisionamentoAssinaturas(
     IFinanceiroUnitOfWork unitOfWork,
     IClientesApi clientes,
     EspelhoDeFaturas espelho,
+    AvisoContaLiberada contaLiberada,
+    CobrancaDaPlataforma plataforma,
     ITenantContext tenantContext,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    ILogger<ProvisionamentoAssinaturas> logger)
 {
     public async Task ProvisionarAsync(Assinatura assinatura, CancellationToken cancellationToken)
     {
@@ -142,6 +147,18 @@ public sealed class ProvisionamentoAssinaturas(
         if (ficouPronta)
         {
             await ProvisionarPendentesAsync(cancellationToken);
+
+            // A funerária PENDENTE fica ATIVA (DEC-11) e começa a mensalidade da plataforma (DEC-09). Se a mensalidade falhar
+            // aqui, a rotina diária cria depois: os clientes da funerária não esperam por isso.
+            await contaLiberada.PublicarAsync(conta.TenantId, cancellationToken);
+            try
+            {
+                await plataforma.AssinarAsync(conta.TenantId, cancellationToken);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                logger.LogError(e, "Mensalidade da plataforma não iniciada para a funerária {IdTenant}; a rotina diária tenta de novo.", conta.TenantId);
+            }
         }
     }
 

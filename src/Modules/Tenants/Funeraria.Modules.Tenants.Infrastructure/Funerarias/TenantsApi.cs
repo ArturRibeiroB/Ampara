@@ -43,6 +43,12 @@ internal sealed class TenantsApi(TenantsDbContext context, IMemoryCache cache) :
         return new MarcaFunerariaDto(funeraria.Id, funeraria.Slug, nome, visual.LogoUrl, visual.CorPrimaria);
     }
 
+    public Task<ContatoFunerariaDto?> ObterContatoAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
+        context.Funerarias.AsNoTracking()
+            .Where(f => f.Id == idTenant)
+            .Select(f => new ContatoFunerariaDto(f.Id, f.NomeFantasia, f.RazaoSocial, f.EmailContato))
+            .FirstOrDefaultAsync(cancellationToken);
+
     public async Task<TimeSpan?> ObterPrazoAceiteTerceiroAsync(Guid idTenant, CancellationToken cancellationToken = default)
     {
         ParametrosFuneraria? parametros = await context.Funerarias

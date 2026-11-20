@@ -95,7 +95,14 @@ public sealed record ReajusteAssinatura(
     int Ano);
 
 /// <summary>Valor fora da recorrência. A chave garante que o mesmo lançamento não é cobrado duas vezes.</summary>
-public sealed record CobrancaExtra(Guid IdContrato, string IdCustomer, string Descricao, decimal Valor, string ChaveIdempotencia);
+/// <param name="IdContrato">Contrato.</param>
+/// <param name="IdCustomer">Cliente no Stripe.</param>
+/// <param name="Descricao">O que aparece na fatura.</param>
+/// <param name="Valor">Valor.</param>
+/// <param name="ChaveIdempotencia">Chave do lançamento.</param>
+/// <param name="ForaDaInadimplencia">Não pagar não suspende o plano (itens do funeral, FUN-04).</param>
+public sealed record CobrancaExtra(
+    Guid IdContrato, string IdCustomer, string Descricao, decimal Valor, string ChaveIdempotencia, bool ForaDaInadimplencia = false);
 
 public sealed record FaturaGateway(
     string IdInvoice,
@@ -108,7 +115,8 @@ public sealed record FaturaGateway(
     SituacaoFaturaStripe Situacao,
     string? LinkPagamento,
     DateTime? PagaEm,
-    FormaPagamento? FormaPagamento);
+    FormaPagamento? FormaPagamento,
+    bool ForaDaInadimplencia = false);
 
 /// <summary>Evento recebido. Tem só o que o sistema usa: a API de fatura é consultada de novo no processamento.</summary>
 public sealed record EventoGateway(string Id, string Tipo, string? IdConta, string? IdObjeto, string? IdSubscription);

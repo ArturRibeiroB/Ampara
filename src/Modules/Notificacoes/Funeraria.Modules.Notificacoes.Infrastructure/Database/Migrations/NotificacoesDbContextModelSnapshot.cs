@@ -125,6 +125,146 @@ namespace Funeraria.Modules.Notificacoes.Infrastructure.Database.Migrations
 
                     b.ToTable("notificacoes", "notificacoes");
                 });
+
+            modelBuilder.Entity("Funeraria.Modules.Notificacoes.Domain.WhatsApp.ConsentimentoWhatsApp", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_consentimento");
+
+                    b.Property<DateTime>("AceitoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("aceito_em");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("IdUsuario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<string>("Ip")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip");
+
+                    b.Property<DateTime?>("RevogadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revogado_em");
+
+                    b.Property<string>("Telefone")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)")
+                        .HasColumnName("telefone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_tenant");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_consentimentos_whatsapp");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_consentimentos_whatsapp_id_tenant");
+
+                    b.HasIndex("TenantId", "IdUsuario")
+                        .IsUnique()
+                        .HasDatabaseName("ix_consentimentos_whatsapp_tenant_id_id_usuario");
+
+                    b.ToTable("consentimentos_whatsapp", "notificacoes");
+                });
+
+            modelBuilder.Entity("Funeraria.Modules.Notificacoes.Domain.WhatsApp.MensagemWhatsApp", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_mensagem");
+
+                    b.Property<DateTime?>("AtualizadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("atualizada_em");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criada_em");
+
+                    b.Property<string>("Erro")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("erro");
+
+                    b.Property<string>("IdExterno")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("id_externo");
+
+                    b.Property<Guid>("IdUsuario")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_usuario");
+
+                    b.Property<string>("Modelo")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("modelo");
+
+                    b.Property<string>("Parametros")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("parametros");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Telefone")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)")
+                        .HasColumnName("telefone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id_tenant");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_mensagens_whatsapp");
+
+                    b.HasIndex("IdExterno")
+                        .HasDatabaseName("ix_mensagens_whatsapp_id_externo");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_mensagens_whatsapp_id_tenant");
+
+                    b.HasIndex("TenantId", "IdUsuario", "CriadaEm")
+                        .HasDatabaseName("ix_mensagens_whatsapp_tenant_id_id_usuario_criada_em");
+
+                    b.ToTable("mensagens_whatsapp", "notificacoes");
+                });
 #pragma warning restore 612, 618
         }
     }

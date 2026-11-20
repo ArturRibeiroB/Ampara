@@ -1,6 +1,7 @@
 using Funeraria.BuildingBlocks.Application.Abstractions;
 using Funeraria.BuildingBlocks.Application.Events;
 using Funeraria.BuildingBlocks.Infrastructure.Arquivos;
+using Funeraria.BuildingBlocks.Infrastructure.Cache;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
 using Funeraria.BuildingBlocks.Infrastructure.Database.Interceptors;
 using Funeraria.BuildingBlocks.Infrastructure.Endpoints;
@@ -58,6 +59,8 @@ public static class DependencyInjection
             .Validate(CriptografiaOptions.Valida, "Seguranca:ChaveHash não configurada ou com menos de 32 bytes (base64). Configure via user-secrets.")
             .ValidateOnStart();
         services.AddSingleton<ICriptografiaDados, CriptografiaDados>();
+
+        services.AddCacheDaFuneraria(configuration);
 
         return services;
     }

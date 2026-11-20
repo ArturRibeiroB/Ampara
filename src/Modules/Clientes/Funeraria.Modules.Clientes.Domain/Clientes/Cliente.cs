@@ -1,5 +1,6 @@
 using Funeraria.BuildingBlocks.Domain.Entities;
 using Funeraria.BuildingBlocks.Domain.Events;
+using Funeraria.BuildingBlocks.Domain.Lgpd;
 using Funeraria.BuildingBlocks.Domain.Tenancy;
 
 namespace Funeraria.Modules.Clientes.Domain.Clientes;
@@ -48,6 +49,9 @@ public sealed class Cliente : AggregateRoot<Guid>, ITenantEntity, IAuditableEnti
     /// <summary>UF com duas letras.</summary>
     public string? Estado { get; private set; }
 
+    /// <summary>Quando os dados pessoais foram anonimizados pela política de retenção (SEG-01). Nulo enquanto valem.</summary>
+    public DateTime? AnonimizadoEm { get; private set; }
+
     public static Cliente Criar(
         Guid tenantId,
         Guid idUsuario,
@@ -79,6 +83,30 @@ public sealed class Cliente : AggregateRoot<Guid>, ITenantEntity, IAuditableEnti
     public void AtualizarDados(string nome, string? telefone, string? endereco, string? cep, string? cidade, string? estado) =>
         DefinirContato(nome, telefone, endereco, cep, cidade, estado);
 
+    /// <summary>
+    /// Política de retenção (SEG-01): troca os dados pessoais por valores sem relação com a pessoa. Os ids continuam, para
+    /// contratos, faturas e relatórios seguirem com os números. Dependentes são anonimizados por quem chama. Idempotente.
+    /// </summary>
+    public void Anonimizar(DateTime agora)
+    {
+        if (AnonimizadoEm is not null)
+        {
+            return;
+        }
+
+        Nome = Anonimizacao.Nome;
+        Cpf = Anonimizacao.Documento(Id);
+        DataNascimento = Anonimizacao.DataDeNascimento(DataNascimento);
+        Email = Anonimizacao.Email(Id);
+        Telefone = null;
+        Endereco = null;
+        Cep = null;
+        Cidade = null;
+        Estado = null;
+        AnonimizadoEm = agora;
+        Raise(new ClienteAnonimizadoDomainEvent(Id, IdUsuario));
+    }
+
     private void DefinirContato(string nome, string? telefone, string? endereco, string? cep, string? cidade, string? estado)
     {
         Nome = nome.Trim();
@@ -91,6 +119,9 @@ public sealed class Cliente : AggregateRoot<Guid>, ITenantEntity, IAuditableEnti
 
     private static string? Limpar(string? valor) => string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
 }
+
+/// <summary>A Identidade encerra o acesso da conta à funerária e os outros módulos apagam o que guardam da pessoa.</summary>
+public sealed record ClienteAnonimizadoDomainEvent(Guid IdCliente, Guid IdUsuario) : DomainEvent;
 
 /// <summary>A Identidade reage criando o vínculo CLIENTE da conta com a funerária.</summary>
 public sealed record ClienteCadastradoDomainEvent(Guid IdCliente, Guid IdUsuario) : DomainEvent;

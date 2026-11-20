@@ -26,6 +26,8 @@ public sealed class SegurancaTests(TenantsApiFactory factory)
         "GET /api/v1/planos",
         "GET /api/v1/planos/{id:guid}",
         "GET /api/v1/tenant/configuracoes",
+        // Verificação do endereço pela Meta: só devolve o desafio com o token combinado (NOT-03).
+        "GET /api/v1/webhooks/whatsapp",
         "POST /api/v1/auth/confirmar-email",
         "POST /api/v1/auth/definir-senha",
         "POST /api/v1/auth/esqueci-senha",
@@ -36,6 +38,8 @@ public sealed class SegurancaTests(TenantsApiFactory factory)
         "POST /api/v1/clientes",
         "POST /api/v1/onboarding/funerarias",
         "POST /api/v1/webhooks/stripe",
+        // Autenticado pela assinatura X-Hub-Signature-256, conferida no caso de uso (NOT-03).
+        "POST /api/v1/webhooks/whatsapp",
         "GET /health",
         "GET /health/ready"
     ];

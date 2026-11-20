@@ -1,6 +1,7 @@
 using Funeraria.BuildingBlocks.Domain.Entities;
 using Funeraria.BuildingBlocks.Domain.Estados;
 using Funeraria.BuildingBlocks.Domain.Events;
+using Funeraria.BuildingBlocks.Domain.Lgpd;
 using Funeraria.BuildingBlocks.Domain.Results;
 using Funeraria.BuildingBlocks.Domain.Tenancy;
 
@@ -43,6 +44,14 @@ public sealed class Pedido : AgregadoComStatus<StatusPedido, AcaoPedido>, ITenan
     public string? Observacoes { get; private set; }
 
     public string? MotivoRecusa { get; private set; }
+
+    /// <summary>Política de retenção (SEG-01), junto com o falecido: tira o nome, o local de entrega e as observações livres.</summary>
+    public void AnonimizarFalecido()
+    {
+        NomeFalecido = Anonimizacao.Nome;
+        LocalEntrega = Anonimizacao.Texto;
+        Observacoes = null;
+    }
 
     protected override MaquinaDeEstados<StatusPedido, AcaoPedido> Maquina => EstadosPedido.Maquina;
 

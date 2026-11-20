@@ -1,4 +1,5 @@
 using Funeraria.BuildingBlocks.Application.Abstractions;
+using Funeraria.BuildingBlocks.Application.Lgpd;
 using Funeraria.BuildingBlocks.Infrastructure.Jobs;
 using Funeraria.Modules.Identidade.Application.Termos;
 using Funeraria.Modules.Identidade.Domain.Termos;
@@ -85,6 +86,8 @@ public static class IdentidadeModule
         services.AddScoped<IIdentidadeApi, IdentidadeApi>();
         services.AddScoped<IModuleSeeder, IdentidadeSeed>();
         services.AddScoped<IJobRecorrente, LimpezaSessoesJob>();
+        services.AddHostedService<CifrarCpfsFuncionariosLegados>();
+        services.AddScoped<IPoliticaRetencao, RetencaoAuditoria>();
 
         return services;
     }

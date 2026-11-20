@@ -12,3 +12,10 @@ public sealed class ViolacaoDeUnicidadeException(string? restricao, Exception in
     /// <summary>Nome do índice no banco (ex.: ix_usuario_vinculos_id_usuario_id_tenant).</summary>
     public string? Restricao { get; } = restricao;
 }
+
+/// <summary>
+/// O banco abortou a gravação por um impasse (deadlock) com outra transação que disputava os mesmos dados. A outra seguiu; esta
+/// perdeu a disputa. Acontece, por exemplo, com duas reservas simultâneas na restrição de exclusão (FUN-05).
+/// </summary>
+public sealed class ImpasseNoBancoException(Exception inner)
+    : Exception("A gravação perdeu a disputa com outra transação (deadlock).", inner);

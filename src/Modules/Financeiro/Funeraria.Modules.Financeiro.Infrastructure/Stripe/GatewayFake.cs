@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Funeraria.Modules.Financeiro.Application.Abstractions;
 using Funeraria.Modules.Financeiro.Domain.Cobranca;
+using Microsoft.Extensions.Logging;
 
 namespace Funeraria.Modules.Financeiro.Infrastructure.Stripe;
 
@@ -8,8 +9,11 @@ namespace Funeraria.Modules.Financeiro.Infrastructure.Stripe;
 /// Stripe em memória para testes e desenvolvimento sem chave (COB-05). Emite a primeira fatura ao criar a assinatura e deixa o
 /// teste simular o que viria do Stripe: conta liberada, novas faturas e pagamentos.
 /// </summary>
-public sealed class GatewayFake : IPagamentoGateway
+public sealed partial class GatewayFake : IPagamentoGateway
 {
+    // Sem este aviso, a API sobe sem chave e entrega links de pagamento que não abrem (pagar.stripe.test).
+    public GatewayFake(ILogger<GatewayFake> logger) => LogUsandoFake(logger);
+
     private readonly ConcurrentDictionary<string, SituacaoConta> _contas = new();
     private readonly ConcurrentDictionary<string, FaturaGateway> _faturas = new();
     private readonly ConcurrentDictionary<string, NovaAssinatura> _assinaturas = new();
@@ -42,6 +46,9 @@ public sealed class GatewayFake : IPagamentoGateway
         _faturas[idInvoice] = paga;
         return paga;
     }
+
+    /// <summary>Muda o vencimento, para o teste simular uma fatura em atraso.</summary>
+    public void Vencer(string idInvoice, DateOnly vencimento) => _faturas[idInvoice] = _faturas[idInvoice] with { DataVencimento = vencimento };
 
     public FaturaGateway? Fatura(string idInvoice) => _faturas.GetValueOrDefault(idInvoice);
 
@@ -129,8 +136,11 @@ public sealed class GatewayFake : IPagamentoGateway
         _extras.Enqueue(cobranca);
         var fatura = new FaturaGateway(
             $"in_{Interlocked.Increment(ref _sequencia)}", null, cobranca.IdContrato, DateOnly.FromDateTime(DateTime.Now), null, cobranca.Valor,
-            DateOnly.FromDateTime(DateTime.Now).AddDays(CicloCobranca.DiasDeAntecedencia), SituacaoFaturaStripe.Aberta, "https://pagar.stripe.test/avulsa", null, null);
+            DateOnly.FromDateTime(DateTime.Now).AddDays(CicloCobranca.DiasDeAntecedencia), SituacaoFaturaStripe.Aberta, "https://pagar.stripe.test/avulsa", null, null, cobranca.ForaDaInadimplencia);
         _faturas[fatura.IdInvoice] = fatura;
         return Task.FromResult(fatura);
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Stripe sem Stripe:SecretKey: usando o gateway fake. Os links de pagamento não abrem; configure STRIPE_SECRET_KEY no .env.")]
+    private static partial void LogUsandoFake(ILogger logger);
 }

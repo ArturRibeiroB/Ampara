@@ -14,3 +14,9 @@ public sealed record AssinaturaEncerradaIntegrationEvent(Guid IdTenant, Guid IdC
 /// <summary>Reajuste anual aplicado (COB-08): o contrato passa a mostrar os novos valores.</summary>
 public sealed record ContratoReajustadoIntegrationEvent(Guid IdTenant, Guid IdContrato, decimal ValorPlano, decimal ValorPorDependente)
     : IntegrationEvent(IdTenant);
+
+/// <summary>
+/// A conta de pagamentos da funerária foi liberada pelo Stripe (DEC-09): o Tenants ativa a funerária que estava PENDENTE
+/// (DEC-11) e o Financeiro começa a mensalidade da plataforma.
+/// </summary>
+public sealed record ContaPagamentosLiberadaIntegrationEvent(Guid IdTenant) : IntegrationEvent(IdTenant);

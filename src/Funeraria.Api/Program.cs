@@ -9,7 +9,9 @@ using Funeraria.BuildingBlocks.Infrastructure;
 using Funeraria.BuildingBlocks.Infrastructure.Database;
 using Funeraria.BuildingBlocks.Infrastructure.Jobs;
 using Funeraria.BuildingBlocks.Infrastructure.Logging;
+using Funeraria.BuildingBlocks.Infrastructure.Observabilidade;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -49,10 +51,17 @@ builder.Services.AddVerificacoesDeSaude();
 builder.Services.AddLimiteDeRequisicoes(builder.Configuration);
 builder.Services.AddSeguranca(builder.Configuration);
 
+builder.Services.AddObservabilidade(builder.Configuration);
 builder.Services.AddBuildingBlocks(builder.Configuration);
 builder.Services.AddModules(builder.Configuration);
 builder.Services.AddJobs(builder.Configuration);
 builder.Services.AddPainelJobs();
+
+if (OpenApiExtensions.GerandoDocumentoNoBuild)
+{
+    // Gerar o openapi.json só precisa dos endpoints. Sem banco no build, nenhum serviço em segundo plano pode subir.
+    builder.Services.RemoveAll<IHostedService>();
+}
 
 WebApplication app = builder.Build();
 

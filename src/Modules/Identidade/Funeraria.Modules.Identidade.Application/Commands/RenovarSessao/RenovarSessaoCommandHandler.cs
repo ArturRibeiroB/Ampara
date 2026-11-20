@@ -76,6 +76,7 @@ public sealed class RenovarSessaoCommandHandler(
 
         SessaoResponse sessao = emissor.Emitir(usuario, vinculo, token);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await usuarios.RegistrarAcessoAsync(usuario.Id, cancellationToken);
 
         return sessao;
     }

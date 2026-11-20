@@ -5,6 +5,12 @@ public interface ITerceirosConsultas
 {
     /// <summary>Terceiro da funerária atual, ou nulo se não existir.</summary>
     Task<TerceiroResumoDto?> ObterAsync(Guid idTerceiro, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Empresas de frota ativas que atendem a cidade (TRA-04): a UF inteira ou a cidade na área de atuação (TER-01). Sem área
+    /// informada, a empresa atende todo o Brasil.
+    /// </summary>
+    Task<IReadOnlyList<TerceiroResumoDto>> ListarFrotasDaRegiaoAsync(string cidade, string uf, CancellationToken cancellationToken = default);
 }
 
 /// <param name="IdTerceiro">Terceiro.</param>

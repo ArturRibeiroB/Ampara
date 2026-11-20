@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Funeraria.Modules.Translado.Application\Funeraria.Modules.Translado.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Funeraria.BuildingBlocks.Infrastructure\Funeraria.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Documentos\Funeraria.Modules.Documentos.Contracts\Funeraria.Modules.Documentos.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

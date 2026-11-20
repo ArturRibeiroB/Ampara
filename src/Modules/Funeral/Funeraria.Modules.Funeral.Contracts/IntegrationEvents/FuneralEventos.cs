@@ -43,3 +43,13 @@ public sealed record PedidoStatusAlteradoIntegrationEvent(
     string StatusAnterior,
     string Status)
     : IntegrationEvent(IdTenant);
+
+/// <summary>
+/// Os dados do falecido e do responsável foram anonimizados pela política de retenção (SEG-01). Documentos apaga os
+/// arquivos do óbito e anonimiza a certidão; Translado tira os nomes e contatos dos translados desses funerais.
+/// </summary>
+/// <param name="IdTenant">Funerária.</param>
+/// <param name="IdBeneficiario">Beneficiário (falecido).</param>
+/// <param name="IdsFunerais">Funerais do beneficiário.</param>
+public sealed record FalecidoAnonimizadoIntegrationEvent(Guid IdTenant, Guid IdBeneficiario, IReadOnlyList<Guid> IdsFunerais)
+    : IntegrationEvent(IdTenant);

@@ -50,6 +50,7 @@ public sealed class LoginCommandHandler(
 
         SessaoResponse sessao = emissor.Emitir(usuario, vinculo, anterior: null);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await usuarios.RegistrarAcessoAsync(usuario.Id, cancellationToken);
 
         return sessao;
     }

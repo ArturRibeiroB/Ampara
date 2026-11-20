@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <PackageReference Include="MailKit" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" />
   </ItemGroup>
 
   <ItemGroup>

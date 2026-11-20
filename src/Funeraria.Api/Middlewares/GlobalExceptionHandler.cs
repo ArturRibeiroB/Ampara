@@ -33,6 +33,13 @@ internal sealed partial class GlobalExceptionHandler(
                 Detail = "Já existe um registro com esses dados. Recarregue e confira antes de tentar de novo.",
                 Extensions = { ["code"] = "Registro.Duplicado", ["errors"] = new Dictionary<string, string[]>() }
             },
+            ImpasseNoBancoException => new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "Conflito",
+                Detail = "Outra operação alterou os mesmos dados ao mesmo tempo. Tente novamente.",
+                Extensions = { ["code"] = "Concorrencia", ["errors"] = new Dictionary<string, string[]>() }
+            },
             DbUpdateConcurrencyException => new ProblemDetails
             {
                 Status = StatusCodes.Status409Conflict,

@@ -9,6 +9,9 @@ internal sealed class VinculoRepository(IdentidadeDbContext context) : IVinculoR
     public Task<UsuarioVinculo?> ObterAsync(Guid idUsuario, Guid idTenant, CancellationToken cancellationToken = default) =>
         context.Vinculos.FirstOrDefaultAsync(v => v.IdUsuario == idUsuario && v.IdTenant == idTenant, cancellationToken);
 
+    public async Task<IReadOnlyList<UsuarioVinculo>> ListarDoUsuarioAsync(Guid idUsuario, CancellationToken cancellationToken = default) =>
+        await context.Vinculos.AsNoTracking().Where(v => v.IdUsuario == idUsuario).ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<UsuarioVinculo>> ListarAtivosDoUsuarioAsync(Guid idUsuario, CancellationToken cancellationToken = default) =>
         await context.Vinculos
             .AsNoTracking()

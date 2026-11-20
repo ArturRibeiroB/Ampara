@@ -121,4 +121,7 @@ public interface IPreferenciaRepository
     Task<PreferenciaFuneral?> ObterDaPessoaAsync(Guid idCliente, Guid idPessoa, CancellationToken cancellationToken = default);
 
     void Adicionar(PreferenciaFuneral preferencia);
+
+    /// <summary>Exclui as preferências do titular e dos dependentes dele (SEG-01). Devolve quantas foram excluídas.</summary>
+    Task<int> ExcluirDoTitularAsync(Guid idCliente, CancellationToken cancellationToken = default);
 }

@@ -148,10 +148,14 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
 
                     b.Property<string>("Cpf")
                         .IsRequired()
-                        .HasMaxLength(11)
-                        .HasColumnType("character(11)")
-                        .HasColumnName("cpf")
-                        .IsFixedLength();
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("cpf");
+
+                    b.Property<string>("CpfHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("cpf_hash");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -196,9 +200,9 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
                     b.HasIndex("IdUsuario")
                         .HasDatabaseName("ix_funcionarios_id_usuario");
 
-                    b.HasIndex("IdTenant", "Cpf")
+                    b.HasIndex("IdTenant", "CpfHash")
                         .IsUnique()
-                        .HasDatabaseName("ix_funcionarios_id_tenant_cpf");
+                        .HasDatabaseName("ix_funcionarios_id_tenant_cpf_hash");
 
                     b.HasIndex("IdTenant", "IdUsuario")
                         .IsUnique()
@@ -502,6 +506,10 @@ namespace Funeraria.Modules.Identidade.Infrastructure.Database.Migrations
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean")
                         .HasColumnName("two_factor_enabled");
+
+                    b.Property<DateTime?>("UltimoAcessoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ultimo_acesso_em");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)

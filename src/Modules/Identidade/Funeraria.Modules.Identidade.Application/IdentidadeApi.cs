@@ -5,6 +5,7 @@ using Funeraria.Modules.Identidade.Application.Sessoes;
 using Funeraria.Modules.Identidade.Application.Termos;
 using Funeraria.Modules.Identidade.Contracts;
 using Funeraria.Modules.Identidade.Domain;
+using Funeraria.Modules.Identidade.Domain.Sessoes;
 using Funeraria.Modules.Identidade.Domain.Vinculos;
 
 namespace Funeraria.Modules.Identidade.Application;
@@ -12,10 +13,40 @@ namespace Funeraria.Modules.Identidade.Application;
 public sealed class IdentidadeApi(
     IUsuarios usuarios,
     IVinculoRepository vinculos,
+    IRefreshTokenRepository refreshTokens,
     IIdentidadeUnitOfWork unitOfWork,
-    RegistroDeAceites aceites)
+    RegistroDeAceites aceites,
+    TimeProvider timeProvider)
     : IIdentidadeApi
 {
+    public Task<IReadOnlyDictionary<Guid, DateTime>> UltimosAcessosAsync(IReadOnlyCollection<Guid> idsUsuario, CancellationToken cancellationToken = default) =>
+        usuarios.UltimosAcessosAsync(idsUsuario, cancellationToken);
+
+    public async Task EncerrarAcessoDoClienteAnonimizadoAsync(Guid idUsuario, Guid idTenant, CancellationToken cancellationToken = default)
+    {
+        DateTime agora = timeProvider.GetUtcNow().UtcDateTime;
+        UsuarioVinculo? vinculo = await vinculos.ObterAsync(idUsuario, idTenant, cancellationToken);
+        if (vinculo is { Perfil: PerfilVinculo.Cliente, Ativo: true })
+        {
+            vinculo.AlterarStatus(false);
+        }
+
+        foreach (RefreshToken sessao in await refreshTokens.ListarAtivosDoUsuarioNaFunerariaAsync(idUsuario, idTenant, agora, cancellationToken))
+        {
+            sessao.Revogar(agora);
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Quem também é equipe, terceiro ou cliente ativo em outra funerária continua com a conta como está.
+        IReadOnlyList<UsuarioVinculo> todos = await vinculos.ListarDoUsuarioAsync(idUsuario, cancellationToken);
+        UsuarioInfo? usuario = await usuarios.ObterAsync(idUsuario, cancellationToken);
+        if (usuario is { Admin: false } && todos.All(v => v.Perfil == PerfilVinculo.Cliente && !v.Ativo))
+        {
+            await usuarios.AnonimizarAsync(idUsuario, cancellationToken);
+        }
+    }
+
     public Task<IReadOnlyList<Guid>> ListarGestoresAtivosAsync(Guid idTenant, CancellationToken cancellationToken = default) =>
         vinculos.ListarGestoresAtivosAsync(idTenant, cancellationToken);
 

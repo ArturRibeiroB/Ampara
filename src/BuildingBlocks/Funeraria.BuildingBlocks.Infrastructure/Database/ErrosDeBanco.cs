@@ -25,5 +25,23 @@ public static class ErrosDeBanco
         {
             throw new ViolacaoDeUnicidadeException(pg.ConstraintName, ex);
         }
+        catch (Exception ex) when (ex is DbUpdateException or InvalidOperationException && EhImpasse(ex))
+        {
+            throw new ImpasseNoBancoException(ex);
+        }
+    }
+
+    /// <summary>O EF Core embrulha o erro transitório numa InvalidOperationException, com o do Postgres mais para dentro.</summary>
+    private static bool EhImpasse(Exception ex)
+    {
+        for (Exception? atual = ex; atual is not null; atual = atual.InnerException)
+        {
+            if (atual is PostgresException { SqlState: PostgresErrorCodes.DeadlockDetected })
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

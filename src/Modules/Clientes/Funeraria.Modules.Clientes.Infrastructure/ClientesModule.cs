@@ -1,3 +1,4 @@
+using Funeraria.BuildingBlocks.Application.Lgpd;
 using Funeraria.BuildingBlocks.Infrastructure.Modules;
 using Funeraria.BuildingBlocks.Infrastructure.Seeding;
 using Funeraria.Modules.Clientes.Application.Abstractions;
@@ -6,6 +7,7 @@ using Funeraria.Modules.Clientes.Domain;
 using Funeraria.Modules.Clientes.Infrastructure.Database;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Funeraria.Modules.Clientes.Infrastructure;
 
@@ -22,6 +24,11 @@ public static class ClientesModule
         services.AddScoped<IModuleSeeder, ClientesSeed>();
         services.AddScoped<IClientesApi, ClientesApi>();
         services.AddHostedService<CifrarCpfsLegados>();
+        // Lida a cada validação: o validador recebe o valor, sem depender de IOptions na Application.
+        services.AddOptions<ConsentimentoOptions>().Bind(configuration.GetSection(ConsentimentoOptions.Section));
+        services.AddTransient(sp => sp.GetRequiredService<IOptionsSnapshot<ConsentimentoOptions>>().Value);
+        services.AddScoped<IPoliticaRetencao, RetencaoClientes>();
+        services.AddScoped<AnonimizacaoDeClientes>();
 
         return services;
     }

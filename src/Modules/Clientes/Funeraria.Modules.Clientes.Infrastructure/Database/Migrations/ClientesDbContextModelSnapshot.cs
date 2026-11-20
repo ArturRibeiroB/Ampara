@@ -78,6 +78,10 @@ namespace Funeraria.Modules.Clientes.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id_cliente");
 
+                    b.Property<DateTime?>("AnonimizadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("anonimizado_em");
+
                     b.Property<string>("Cep")
                         .HasMaxLength(8)
                         .HasColumnType("character(8)")
@@ -179,6 +183,10 @@ namespace Funeraria.Modules.Clientes.Infrastructure.Database.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id_dependente");
+
+                    b.Property<DateTime?>("AnonimizadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("anonimizado_em");
 
                     b.Property<string>("Cpf")
                         .IsRequired()

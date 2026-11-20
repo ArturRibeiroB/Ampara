@@ -175,7 +175,7 @@ public sealed class EspelhoDeFaturas(
 
         var espelhada = new FaturaEspelhada(
             dados.IdInvoice, dados.Competencia, dados.Valor, dados.DataVencimento, dados.Situacao, dados.LinkPagamento, dados.PagaEm,
-            dados.FormaPagamento, Avulsa: dados.IdSubscription is null);
+            dados.FormaPagamento, Avulsa: dados.IdSubscription is null, dados.ForaDaInadimplencia);
 
         Fatura? fatura = await faturas.ObterPorStripeAsync(dados.IdInvoice, cancellationToken);
         if (fatura is null)
@@ -280,12 +280,13 @@ internal sealed class FaturaPagaDomainEventHandler(
     IPagamentoGateway gateway,
     IFinanceiroUnitOfWork unitOfWork,
     ITenantsApi tenants,
-    IEventBus eventBus)
+    IEventBus eventBus,
+    TimeProvider timeProvider)
     : IDomainEventHandler<FaturaPagaDomainEvent>
 {
     public async Task Handle(FaturaPagaDomainEvent domainEvent, CancellationToken cancellationToken)
     {
-        if (await faturas.ObterAsync(domainEvent.IdFatura, cancellationToken) is not Fatura fatura
+        if (await faturas.ObterAsync(domainEvent.IdFatura, cancellationToken) is not { ForaDaInadimplencia: false } fatura
             || await assinaturas.ObterDoContratoAsync(fatura.IdContrato, cancellationToken) is not Assinatura assinatura)
         {
             return;
@@ -294,7 +295,7 @@ internal sealed class FaturaPagaDomainEventHandler(
         await LancarEncargosAsync(fatura, assinatura, cancellationToken);
 
         IReadOnlyList<Fatura> doContrato = await faturas.ListarDoContratoAsync(fatura.IdContrato, cancellationToken);
-        if (doContrato.Any(f => f.Status == StatusFatura.Vencida))
+        if (doContrato.Any(f => f.Status == StatusFatura.Vencida && !f.ForaDaInadimplencia))
         {
             return;
         }
@@ -317,7 +318,10 @@ internal sealed class FaturaPagaDomainEventHandler(
             return;
         }
 
-        DateOnly dataPagamento = DateOnly.FromDateTime(pagaEm);
+        // O pagamento vem em UTC; o dia que conta é o do calendário local, como o vencimento. Sem isso, um boleto pago às 22h de
+        // Brasília no dia do vencimento caía no dia seguinte e pagava multa e um dia de juros.
+        DateOnly dataPagamento = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.SpecifyKind(pagaEm, DateTimeKind.Utc), timeProvider.LocalTimeZone));
         ParametrosCobrancaDto? parametros = await tenants.ObterParametrosCobrancaAsync(fatura.TenantId, cancellationToken);
         if (!fatura.AtrasoCobravel(dataPagamento) || parametros is null || assinatura.IdStripeCustomer is null
             || await contas.ObterDaFunerariaAsync(cancellationToken) is not ContaPagamento conta)

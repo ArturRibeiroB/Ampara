@@ -68,6 +68,9 @@ public sealed class Atribuicao : AggregateRoot<Guid>, ITenantEntity, IAuditableE
 
     public Result Recusar(DateTime agora, string motivo) => Responder(agora, StatusAtribuicao.Recusada, motivo.Trim());
 
+    /// <summary>Política de retenção (SEG-01): o resumo passa a ter só dados sem relação com as pessoas.</summary>
+    public void AnonimizarResumo(string resumo) => Resumo = resumo;
+
     /// <summary>O módulo de origem concluiu ou cancelou o serviço.</summary>
     public void Encerrar(bool concluida) => Status = concluida ? StatusAtribuicao.Concluida : StatusAtribuicao.Cancelada;
 
@@ -149,6 +152,8 @@ public interface IAtribuicaoRepository
 
     /// <summary>Atribuições de um terceiro, das mais recentes para as mais antigas.</summary>
     Task<IReadOnlyList<Atribuicao>> ListarDoTerceiroAsync(Guid idTerceiro, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Atribuicao>> ListarDasOrigensAsync(IReadOnlyCollection<Guid> idsOrigem, CancellationToken cancellationToken = default);
 
     void Adicionar(Atribuicao atribuicao);
 }

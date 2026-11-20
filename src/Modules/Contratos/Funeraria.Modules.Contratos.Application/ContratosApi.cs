@@ -45,6 +45,9 @@ public sealed class ContratosApi(IContratoRepository contratos, TimeProvider tim
         return await contratos.ClientesComContratoAsync(lido, cancellationToken);
     }
 
+    public Task<IReadOnlyList<Guid>> TitularesSemContratoVigenteDesdeAsync(DateOnly limite, CancellationToken cancellationToken = default) =>
+        contratos.TitularesComContratosEncerradosAntesDeAsync(limite, cancellationToken);
+
     public async Task<ElegibilidadeDto?> VerificarElegibilidadeAsync(Guid idPessoaCoberta, CancellationToken cancellationToken = default)
     {
         Contrato? contrato = await contratos.ObterPorPessoaCobertaAsync(idPessoaCoberta, cancellationToken);
